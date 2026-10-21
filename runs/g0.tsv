@@ -1,0 +1,5 @@
+# G0: can a one-plane Pb grid be reconstructed cleanly with fine slices? One sim (fine 0.25 A simulation slices),
+# four slice counts through the standard 27.525 A box: dz 1.53 / 0.98 / 0.74 / 0.50 A. The 1.53 A run is also the
+# link to the campaign's kernels (same recon, but those were simulated with 0.9 A slices).
+# el	alpha	aber	slice	zvac	fs	src	T	nl_list
+Pb	80	arm	0.25	4	0	0	-	18,28,37,55

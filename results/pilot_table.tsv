@@ -1,0 +1,59 @@
+el	alpha	name	probe	fs_A	src_A	T_K	dz_A	peak_rad	conc	sig_m_A	sig_g_A	tag
+Pb	70	coherent	fixed	0	0		1.966	0.813	0.90	1.81	0.64	armf_a070
+Pb	75	coherent	fixed	0	0		1.720	0.685	0.82	1.79	0.82	armf_a075
+Pb	80	coherent	fixed	0	0		1.529	0.686	0.80	1.76	0.73	armf_a080
+Pb	80	fs 7.29 + src 0.4	fixed	7.29	0.4		1.529	0.049	0.30	4.65	0.97	armf_a080_coh
+Pb	80	fs 0.75	fixed	0.75	0		1.529	0.672	0.79	1.83	0.73	armf_a080_fs0p75_fixed
+Pb	80	fs 1.5	fixed	1.5	0		1.529	0.634	0.77	2.09	0.75	armf_a080_fs1p5_fixed
+Pb	80	fs 2.5	fixed	2.5	0		1.529	0.568	0.72	2.66	0.78	armf_a080_fs2p5_fixed
+Pb	80	fs 2.5 + src 0.1	fixed	2.5	0.1		1.529	0.405	0.68	2.78	1.02	armf_a080_fs2p5_src0p1_fixed
+Pb	80	fs 2.5 + src 0.1 (modes)	modes	2.5	0.1		1.529	0.386	0.55	2.00	1.74	armf_a080_fs2p5_src0p1_mixF
+Pb	80	fs 2.5 + src 0.2	fixed	2.5	0.2		1.529	0.274	0.63	2.82	1.29	armf_a080_fs2p5_src0p2_fixed
+Pb	80	fs 2.5 + src 0.2 (modes)	modes	2.5	0.2		1.529	0.293	0.57	2.13	1.79	armf_a080_fs2p5_src0p2_mixF
+Pb	80	fs 3.5	fixed	3.5	0		1.529	0.504	0.66	3.23	0.81	armf_a080_fs3p5_fixed
+Pb	80	fs 3.5 + src 0.1	fixed	3.5	0.1		1.529	0.357	0.60	3.35	1.07	armf_a080_fs3p5_src0p1_fixed
+Pb	80	fs 3.5 + src 0.2	fixed	3.5	0.2		1.529	0.252	0.58	3.36	1.23	armf_a080_fs3p5_src0p2_fixed
+Pb	80	fs 5	fixed	5	0		1.529	0.353	0.55	3.79	0.98	armf_a080_fs5_fixed
+Pb	80	fs 7.29	fixed	7.29	0		1.529	0.174	0.27	4.39	0.80	armf_a080_fs7p29_fixed
+Pb	80	fs 7.29 (modes)	modes	7.29	0		1.529	0.344	0.37	3.76	1.08	armf_a080_fs7p29_mix
+Pb	80	295 K	fixed	0	0	295	1.529	0.144	0.50	2.20	2.43	armf_a080_ph16
+Pb	80	100 K	fixed	0	0	100	1.529	0.230	0.56	1.94	1.98	armf_a080_ph16_T100
+Pb	80	fs 2.5 + src 0.1 + 100 K (modes)	modes	2.5	0.1	100	1.529	0.208	0.48	2.32	2.48	armf_a080_ph16_T100_fs2p5_src0p1_mixF
+Pb	80	fs 2.5 + src 0.1 + 100 K	fixed	2.5	0.1	100	1.529	0.179	0.48	2.73	2.11	armf_a080_ph16_T100_fs2p5_src0p1_mixF_fixed
+Pb	80	fs 2.5 + src 0.1 + 20 K (modes)	modes	2.5	0.1	20	1.529	0.278	0.53	2.18	2.19	armf_a080_ph16_T20_fs2p5_src0p1_mixF
+Pb	80	fs 2.5 + src 0.1 + 20 K	fixed	2.5	0.1	20	1.529	0.262	0.54	2.64	1.57	armf_a080_ph16_T20_fs2p5_src0p1_mixF_fixed
+Pb	80	fs 7.29 + src 0.4 + 295 K	fixed	7.29	0.4	295	1.529	0.030	0.23	4.45	5.44	armf_a080_ph16_coh_fixed
+Pb	80	src 0.05	fixed	0	0.05		1.529	0.653	0.79	1.75	0.74	armf_a080_src0p05_fixed
+Pb	80	src 0.1	fixed	0	0.1		1.529	0.549	0.77	1.73	0.84	armf_a080_src0p1_fixed
+Pb	80	src 0.2	fixed	0	0.2		1.529	0.327	0.64	1.73	1.33	armf_a080_src0p2_fixed
+Pb	80	src 0.4	fixed	0	0.4		1.529	0.145	0.51	2.15	1.87	armf_a080_src0p4_fixed
+Pb	90	coherent	fixed	0	0		1.197	0.645	0.74	2.74	0.46	armf_a090
+Ti	70	coherent	fixed	0	0		1.966	0.196	0.72	2.16	1.33	armf_a070
+Ti	75	coherent	fixed	0	0		1.720	0.162	0.65	2.09	1.65	armf_a075
+Ti	80	coherent	fixed	0	0		1.529	0.158	0.63	2.06	1.40	armf_a080
+Ti	80	fs 7.29 + src 0.4	fixed	7.29	0.4		1.529	0.023	0.32	4.32	1.39	armf_a080_coh
+Ti	80	fs 0.75	fixed	0.75	0		1.529	0.154	0.62	2.11	1.42	armf_a080_fs0p75_fixed
+Ti	80	fs 1.5	fixed	1.5	0		1.529	0.144	0.60	2.28	1.47	armf_a080_fs1p5_fixed
+Ti	80	fs 2.5	fixed	2.5	0		1.529	0.129	0.55	2.76	1.47	armf_a080_fs2p5_fixed
+Ti	80	fs 2.5 + src 0.1	fixed	2.5	0.1		1.529	0.114	0.54	2.77	1.62	armf_a080_fs2p5_src0p1_fixed
+Ti	80	fs 2.5 + src 0.1 (modes)	modes	2.5	0.1		1.529	0.130	0.53	2.22	2.23	armf_a080_fs2p5_src0p1_mixF
+Ti	80	fs 2.5 + src 0.2	fixed	2.5	0.2		1.529	0.092	0.55	2.71	1.63	armf_a080_fs2p5_src0p2_fixed
+Ti	80	fs 2.5 + src 0.2 (modes)	modes	2.5	0.2		1.529	0.106	0.51	2.60	2.02	armf_a080_fs2p5_src0p2_mixF
+Ti	80	fs 3.5	fixed	3.5	0		1.529	0.117	0.50	3.29	1.39	armf_a080_fs3p5_fixed
+Ti	80	fs 3.5 + src 0.1	fixed	3.5	0.1		1.529	0.105	0.50	3.29	1.50	armf_a080_fs3p5_src0p1_fixed
+Ti	80	fs 3.5 + src 0.2	fixed	3.5	0.2		1.529	0.084	0.53	3.17	1.49	armf_a080_fs3p5_src0p2_fixed
+Ti	80	fs 5	fixed	5	0		1.529	0.100	0.46	3.81	1.30	armf_a080_fs5_fixed
+Ti	80	fs 7.29	fixed	7.29	0		1.529	0.066	0.38	4.41	1.24	armf_a080_fs7p29_fixed
+Ti	80	fs 7.29 (modes)	modes	7.29	0		1.529	0.112	0.23	4.02	3.52	armf_a080_fs7p29_mix
+Ti	80	295 K	fixed	0	0	295	1.529	0.079	0.51	2.09	2.27	armf_a080_ph16
+Ti	80	100 K	fixed	0	0	100	1.529	0.103	0.55	2.09	2.02	armf_a080_ph16_T100
+Ti	80	fs 2.5 + src 0.1 + 100 K (modes)	modes	2.5	0.1	100	1.529	0.098	0.46	2.38	2.89	armf_a080_ph16_T100_fs2p5_src0p1_mixF
+Ti	80	fs 2.5 + src 0.1 + 100 K	fixed	2.5	0.1	100	1.529	0.084	0.49	2.62	2.07	armf_a080_ph16_T100_fs2p5_src0p1_mixF_fixed
+Ti	80	fs 2.5 + src 0.1 + 20 K (modes)	modes	2.5	0.1	20	1.529	0.106	0.47	2.30	2.68	armf_a080_ph16_T20_fs2p5_src0p1_mixF
+Ti	80	fs 2.5 + src 0.1 + 20 K	fixed	2.5	0.1	20	1.529	0.091	0.50	2.65	1.97	armf_a080_ph16_T20_fs2p5_src0p1_mixF_fixed
+Ti	80	fs 7.29 + src 0.4 + 295 K	fixed	7.29	0.4	295	1.529	0.016	0.24	4.41	5.53	armf_a080_ph16_coh_fixed
+Ti	80	src 0.05	fixed	0	0.05		1.529	0.151	0.62	2.06	1.50	armf_a080_src0p05_fixed
+Ti	80	src 0.1	fixed	0	0.1		1.529	0.138	0.60	2.06	1.67	armf_a080_src0p1_fixed
+Ti	80	src 0.2	fixed	0	0.2		1.529	0.110	0.56	2.08	1.84	armf_a080_src0p2_fixed
+Ti	80	src 0.4	fixed	0	0.4		1.529	0.058	0.53	2.09	2.18	armf_a080_src0p4_fixed
+Ti	90	coherent	fixed	0	0		1.197	0.105	0.47	3.50	1.43	armf_a090

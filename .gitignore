@@ -1,0 +1,6 @@
+__pycache__/
+*.npy
+*.tgz
+*.h5
+*.mat
+data/
