@@ -16,10 +16,14 @@
 # encode SLICE or ZVAC, which is why this does not go through it. Results land under ZB_ROOT ($SHARE/phucrh/zblur_runs);
 # the pack is $SHARE/phucrh/zblur_<points>_<timestamp>.tgz (kernels, check images, manifest).
 #
-# Points file (tab-separated, '#' comments): el alpha aber slice zvac fs src T nl_list
+# Points file (tab-separated, '#' comments): el alpha aber c1 geom step win slice zvac fs src T nl_list
 #   el      Pb | Ti
 #   alpha   convergence semi-angle (mrad)
 #   aber    ideal (no aberrations) | arm (the ARM200F tableau row armf_a<alpha> of campaign/ceos_sweep.tsv)
+#   c1      ideal only: the probe defocus in the simulator's (abTEM) convention, A; - for arm (the tableau's own)
+#   geom    grid (the campaign's S1 kernel: one plane, 3 A spacing) | single (one atom alone in vacuum, as in Lei &
+#           Wang, arXiv 2506.22352 SI Note 5)
+#   step    scan step (A);  win  scan window (A)
 #   slice   the SIMULATION's slice thickness (A)
 #   zvac    vacuum above and below the 5-cell box (A); the box is 5 x 3.905 + 2 zvac, the atom plane at its centre
 #   fs      chromatic focal spread (A rms), 0 = none
@@ -38,7 +42,7 @@ PYBIN="${CONDA_ENV:-${SHARE:-/springbrook/share/physics}/phucrh/envs/abtem}/bin/
 TSV="${PTYCHO_ROOT}/campaign/ceos_sweep.tsv"
 DRY_RUN="${DRY_RUN:-0}"
 
-STEP=0.5; WIN=20; GRIDSP=3; BIN=2; CELL_Z=3.905; THIN=5; NITER=200; BETA_LSQ=0.05; GROUPING=32; PHONON_N=16
+GRIDSP=3; BIN=2; CELL_Z=3.905; THIN=5; NITER=200; BETA_LSQ=0.05; GROUPING=32; PHONON_N=16
 
 for f in sim/run_sim.slurm run_recon_synthetic_ML.slurm analysis/atomfind/extract_psf.py campaign/ceos_sweep.tsv; do
     [ -f "${PTYCHO_ROOT}/${f}" ] || { echo "PTYCHO_ROOT=${PTYCHO_ROOT} has no ${f}" >&2; exit 1; }
@@ -66,18 +70,22 @@ submit() {
 num() { echo "$1" | sed 's/\./p/'; }
 
 [ "$DRY_RUN" = "1" ] || mkdir -p "${ZB_ROOT}/logs" "${ZB_ROOT}/psf" "${ZB_ROOT}/manifests"
-[ "$DRY_RUN" = "1" ] || printf "sim\tnl\tdz_A\tzdrop\tboxz_A\tzvac_A\tel\talpha\taber\tslice_A\tfs_A\tsrc_A\tT_K\tsim_job\trecon_job\textract_job\tptycho_pin\n" >"$MAN"
+[ "$DRY_RUN" = "1" ] || printf "sim\tnl\tdz_A\tzdrop\tboxz_A\tzvac_A\tel\talpha\taber\tc1_A\tgeom\tstep_A\twin_A\tslice_A\tfs_A\tsrc_A\tT_K\tsim_job\trecon_job\textract_job\tptycho_pin\n" >"$MAN"
 
 EXTRACT_JOBS=(); PSF_NAMES=(); SEEN=" "
-while IFS=$'\t' read -r el alpha aber slice zvac fs src T nls rest; do
+while IFS=$'\t' read -r el alpha aber c1 geom step win slice zvac fs src T nls rest; do
     case "${el:-}" in ''|\#*) continue;; esac
     [ -z "${rest:-}" ] || { echo "too many columns: $el $alpha ..." >&2; exit 1; }
     case "$el" in Pb|Ti) ;; *) echo "el must be Pb or Ti, not $el" >&2; exit 1;; esac
     case "$aber" in ideal|arm) ;; *) echo "aber must be ideal or arm, not $aber" >&2; exit 1;; esac
+    case "$geom" in grid|single) ;; *) echo "geom must be grid or single, not $geom" >&2; exit 1;; esac
+    [ "$aber" = "arm" ] && [ "$c1" != "-" ] && { echo "arm takes the tableau's own C1: put - in the c1 column" >&2; exit 1; }
+    [ "$aber" = "ideal" ] && [ "$c1" = "-" ] && { echo "ideal needs a c1 (0 = in focus)" >&2; exit 1; }
     a3=$(printf '%03d' "$alpha")
     boxz=$(awk -v t="$THIN" -v c="$CELL_Z" -v v="$zvac" 'BEGIN{printf "%.3f", t*c + 2*v}')
     atomz=$(awk -v b="$boxz" 'BEGIN{printf "%.4f", b/2}')
-    name="${el}_a${a3}_${aber}_s$(num "$slice")_v$(num "$zvac")"
+    name="${el}_a${a3}_${aber}"; [ "$aber" = "ideal" ] && name="${name}_df$(num "$c1")"
+    name="${name}_${geom}_st$(num "$step")_w$(num "$win")_s$(num "$slice")_bz$(num "$boxz")"
     [ "$fs" != "0" ] && name="${name}_fs$(num "$fs")"
     [ "$src" != "0" ] && name="${name}_src$(num "$src")"
     [ "$T" != "-" ] && name="${name}_T${T}"
@@ -91,12 +99,12 @@ while IFS=$'\t' read -r el alpha aber slice zvac fs src T nls rest; do
         [ -n "$row" ] || { echo "no armf_a${a3} row in ${TSV}" >&2; exit 1; }
         c5=$(echo "$row" | cut -f3); c3=$(echo "$row" | cut -f4); c1=$(echo "$row" | cut -f5); aj=$(echo "$row" | cut -f9)
     else
-        c5=0; c3=0; c1=0; aj='{"C30":0.0,"C50":0.0}'
+        c5=0; c3=0; aj='{"C30":0.0,"C50":0.0}'
     fi
     export ABERRATIONS_JSON="$aj"     # has commas: read from the environment by run_sim.slurm (--export=ALL)
 
     # ---- physics
-    exp="ALL,JOB_DIR=${sdir},SLICE_THICKNESS=${slice},SCAN_STEP=${STEP},CONVERGENCE=${alpha},PHONON_SIGMA=0.08,PHONON_SEED=1"
+    exp="ALL,JOB_DIR=${sdir},SLICE_THICKNESS=${slice},SCAN_STEP=${step},CONVERGENCE=${alpha},PHONON_SIGMA=0.08,PHONON_SEED=1"
     if [ "$T" = "-" ]; then
         exp="${exp},PHONONS=0,PER_SPECIES_SIGMA=0"; stime=24:00:00     # 0.25 A slices: ~3.6x the 0.9 A sims
     elif [ "$T" = "295" ]; then
@@ -107,8 +115,9 @@ while IFS=$'\t' read -r el alpha aber slice zvac fs src T nls rest; do
     [ "$fs" != "0" ] && exp="${exp},FOCAL_SPREAD=${fs}"
     [ "$src" != "0" ] && exp="${exp},SOURCE_FWHM=${src}"
     exp="${exp},BIN_FACTOR=${BIN},RECON_FULL_BOX=1,Z_VACUUM=${zvac},ABERRATED=1,PROBE_INITIAL=nominal"
-    exp="${exp},CS=${c3},C5=${c5},DEFOCUS=${c1},OVERWRITE=0,SCAN_WINDOW=${WIN}"
-    exp="${exp},SINGLE_ATOM=${el},ATOM_Z=${atomz},GRID_SPACING=${GRIDSP},GRID_BOX_Z=${boxz}"
+    exp="${exp},CS=${c3},C5=${c5},DEFOCUS=${c1},OVERWRITE=0,SCAN_WINDOW=${win}"
+    if [ "$geom" = "grid" ]; then gsp="$GRIDSP"; else gsp=0; fi        # GRID_SPACING 0 = one atom (build_single_atom)
+    exp="${exp},SINGLE_ATOM=${el},ATOM_Z=${atomz},GRID_SPACING=${gsp},GRID_BOX_Z=${boxz}"
 
     if [ -e "${sdir}/01/data_dp.hdf5" ]; then
         sj=""; echo "  ${name}: sim exists, reused" >&2
@@ -124,7 +133,13 @@ while IFS=$'\t' read -r el alpha aber slice zvac fs src T nls rest; do
     IFS=',' read -r -a NLS <<<"$nls"
     for nl in "${NLS[@]}"; do
         dz=$(awk -v b="$boxz" -v n="$nl" 'BEGIN{printf "%.4f", b/n}')
-        zdrop=$(awk -v v="$zvac" -v d="$dz" 'BEGIN{printf "%d", v/d + 0.5}')
+        # grid: drop the vacuum bands, crop +-30 px (the 3 A grid allows no more). single: keep the depth (drop 2 A
+        # at each face, where the box edges collect junk) and crop +-80 px (3.9 A) so the x-z section keeps the cone.
+        if [ "$geom" = "grid" ]; then
+            zdrop=$(awk -v v="$zvac" -v d="$dz" 'BEGIN{printf "%d", v/d + 0.5}'); xargs="--half-xy 30"
+        else
+            zdrop=$(awk -v d="$dz" 'BEGIN{printf "%d", 2/d + 0.5}'); xargs="--single --half-xy 80"
+        fi
         rdir="${ZB_ROOT}/recon_${name}_NL${nl}"
         if [ "$DRY_RUN" != "1" ]; then
             mkdir -p "${rdir}/01"
@@ -139,11 +154,11 @@ while IFS=$'\t' read -r el alpha aber slice zvac fs src T nls rest; do
         pname="${name}_NL${nl}"
         ej=$(submit --job-name="zb_psf_${pname}" --time=00:30:00 --mem=16G --cpus-per-task=2 --dependency="afterok:${rj}" \
              --output="${ZB_ROOT}/logs/zb_psf_%j.out" --error="${ZB_ROOT}/logs/zb_psf_%j.err" \
-             --wrap="'${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} --out '${ZB_ROOT}/psf'")
+             --wrap="'${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} ${xargs} --out '${ZB_ROOT}/psf'")
         EXTRACT_JOBS+=("$ej"); PSF_NAMES+=("$pname")
-        [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-            "$name" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$slice" "$fs" "$src" "$T" "${sj:-reused}" "$rj" "$ej" "$PIN" >>"$MAN"
-        echo "  ${pname}: dz ${dz} A, zdrop ${zdrop}; sim ${sj:-reused}, recon ${rj}, kernel ${ej}" >&2
+        [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+            "$name" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$slice" "$fs" "$src" "$T" "${sj:-reused}" "$rj" "$ej" "$PIN" >>"$MAN"
+        echo "  ${pname}: dz ${dz} A, zdrop ${zdrop} (${geom}, zvac ${zvac}); sim ${sj:-reused}, recon ${rj}, kernel ${ej}" >&2
     done
 done <"$PTS"
 

@@ -72,3 +72,49 @@ def kernel_width(path, nl, boxz=BOXZ, zvac=ZVAC):
     if out is not None:
         out.update(dz=dz, nl=nl, layers=K.shape[0])
     return out
+
+
+# ---------------------------------------------------------------------------------------------- the 3-D PSF (G0 on)
+DX = 0.0492          # A/px, the campaign object pixel at BIN 2 (extract_psf.py DX_DEFAULT)
+
+
+def centre_profile(K):
+    """The phase through the atom's centre column, per layer, minus that layer's median (its background): the depth
+    profile Lei & Wang plot (arXiv 2506.22352, SI Fig. 6m-o)."""
+    nz, ny, nx = K.shape
+    return np.array([K[k, ny // 2, nx // 2] - np.median(K[k]) for k in range(nz)])
+
+
+def fwhm_interp(x, y):
+    """Full width at half maximum of a single-peaked curve, by linear interpolation either side of its maximum."""
+    k = int(np.argmax(y)); h = y[k] / 2
+    i = k
+    while i > 0 and y[i] > h:
+        i -= 1
+    j = k
+    while j < len(y) - 1 and y[j] > h:
+        j += 1
+    if y[i] > h or y[j] > h:
+        return np.nan                                     # never falls to half: the peak is not contained
+    xl = x[i] + (h - y[i]) * (x[i + 1] - x[i]) / (y[i + 1] - y[i])
+    xr = x[j - 1] + (h - y[j - 1]) * (x[j] - x[j - 1]) / (y[j] - y[j - 1])
+    return float(xr - xl)
+
+
+def psf3d(K, dz, z0=0.0, dx=DX, core_A=4.0):
+    """The 3-D PSF of one kernel: depth profile through the centre, its FWHM, a Gaussian depth width fitted within
+    +-core_A of the peak (so the broad pedestal does not drag it), the share of the depth profile's positive phase in
+    that core, the lateral FWHM in the peak layer, and the x-z section through the centre."""
+    p = centre_profile(K)
+    z = z0 + (np.arange(len(p)) + 0.5) * dz
+    k = int(np.argmax(p))
+    sel = np.abs(z - z[k]) <= core_A
+    g = fit(p[sel], dz, z0=z[sel][0] - dz / 2)
+    pp = np.clip(p, 0, None)
+    nz, ny, nx = K.shape
+    row = K[k, ny // 2, :] - np.median(K[k])
+    xs = (np.arange(nx) - nx // 2) * dx
+    return dict(z=z, p=p, peak=float(p[k]), z_peak=float(z[k]), fwhm_z=fwhm_interp(z, p),
+                sigma_z=(g["sigma"] if g else np.nan), sigma_z_err=(g["sigma_err"] if g else np.nan),
+                core_share=float(pp[sel].sum() / max(pp.sum(), 1e-12)), fwhm_xy=fwhm_interp(xs, row),
+                xz=K[:, ny // 2, :] - np.median(K, axis=(1, 2))[:, None], x=xs)

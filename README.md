@@ -11,10 +11,11 @@ PX915 aberration campaign (`../ptychoshelves-clean`), started 2026-10-21. The pl
 |---|---|
 | `runs/PLAN.md` | the question, the hypotheses, the gates G0-G3 with costs |
 | `runs/zb_submit.sh` | submits sims -> recons -> kernels -> pack on Blythe, through ptychoshelves-clean's own job scripts |
-| `runs/g0.tsv` | G0: fine slicing on one Pb grid |
+| `runs/g0.tsv` | G0: fine slicing on one Pb grid (G0a) and Lei & Wang's lone-atom test (G0b) |
 | `tests/test_submit_dry.sh` | dry run of the submitter, checks the job wiring (run before every change) |
 | `analysis/zprofile.py` | the depth profile of a kernel and its widths |
 | `analysis/pilot_kernels.py` | phase 0: the campaign's existing kernels, every condition |
+| `analysis/g0_report.py` | G0: the 3-D PSF of each kernel in a pack, convergence with slicing, the 2.8 Å reference |
 | `results/`, `figs/` | tables and figures |
 
 ## Needs
@@ -42,4 +43,5 @@ name); the pack holds the kernels, their check images and the manifest.
 ## Status
 
 - 2026-10-21: phase 0 done from the campaign's kernels (`runs/PLAN.md`, `figs/pilot_profiles.png`,
-  `results/pilot_table.tsv`); G0 built and dry-run, not yet submitted.
+  `results/pilot_table.tsv`). G0 built and dry-run, not yet submitted: after reading Lei & Wang's SI it has a second arm,
+  their lone-atom test (target: 2.8 Å FWHM at 80 mrad).

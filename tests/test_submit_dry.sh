@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.."
 PTS="${1:-runs/g0.tsv}"; PR="${2:-../ptychoshelves-clean}"
 out="$(DRY_RUN=1 ALLOW_DIRTY=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share bash runs/zb_submit.sh "$PTS" 2>&1)"
 fail=0; ok(){ echo "ok   $1"; }; bad(){ echo "FAIL $1"; fail=1; }
-npts=$(grep -vc '^#' "$PTS" || true); nrec=$(grep -v '^#' "$PTS" | awk -F'\t' '{n += split($9, a, ",")} END{print n}')
+npts=$(grep -vc '^#' "$PTS" || true); nrec=$(grep -v '^#' "$PTS" | awk -F'\t' '{n += split($13, a, ",")} END{print n}')
 nsim=$(echo "$out" | grep -c 'job-name=zb_sim_' || true); nr=$(echo "$out" | grep -c 'job-name=zb_rec_' || true)
 ne=$(echo "$out" | grep -c 'job-name=zb_psf_' || true); np=$(echo "$out" | grep -c 'job-name=zb_pack_' || true)
 [ "$nsim" = "$npts" ] && ok "one sim per point ($nsim)" || bad "sims $nsim, points $npts"
@@ -21,10 +21,17 @@ echo "$out" | awk '/^DRY\[/{id=substr($1,5); sub(/\].*/,"",id); if ($0 ~ /zb_sim
 [ ! -s /tmp/zbdep.$$ ] && ok "dependencies wired" || { bad "dependencies"; cat /tmp/zbdep.$$; }; rm -f /tmp/zbdep.$$
 d=$(echo "$out" | grep -o 'job-name=zb_rec_[^ ]*' | sort | uniq -d); [ -z "$d" ] && ok "recon names unique" || bad "duplicate $d"
 echo "$out" | grep -q 'cd '"$PR"')' && ok "sbatch from the ptychoshelves checkout" || bad "submit dir"
-echo "$out" | grep 'dz .* zdrop' | awk '{dz=$3; zd=$6; sub(",","",zd)} END{}' >/dev/null
-bz=$(echo "$out" | grep -o 'GRID_BOX_Z=[0-9.]*' | head -1 | cut -d= -f2)
-echo "$out" | grep -E 'dz [0-9.]+ A, zdrop [0-9]+' | sed -E 's/.*dz ([0-9.]+) A, zdrop ([0-9]+).*/\1 \2/' | \
-  awk '{z = int(4 / $1 + 0.5); if (z != $2) {print "zdrop " $2 " at dz " $1 ", expected " z; e = 1}} END{exit e}' \
-  && ok "zdrop = round(4 / dz) (box ${bz} A)" || bad "zdrop"
+# zdrop: grid = round(zvac / dz) (the vacuum bands); single = round(2 / dz) (2 A at each face)
+echo "$out" | grep -E 'dz [0-9.]+ A, zdrop [0-9]+ \(' | sed -E 's/.*dz ([0-9.]+) A, zdrop ([0-9]+) \((grid|single), zvac ([0-9.]+)\).*/\1 \2 \3 \4/' | \
+  awk '{z = ($3 == "grid") ? int($4 / $1 + 0.5) : int(2 / $1 + 0.5); if (z != $2) {print "zdrop " $2 " at dz " $1 " (" $3 "), expected " z; e = 1}} END{exit e}' \
+  && ok "zdrop per geometry" || bad "zdrop"
+# crops: a single atom is extracted with --single and a wide crop, a grid with the 30 px crop and never --single
+sg=$(echo "$out" | grep 'job-name=zb_psf_.*_single_' | grep -c -- '--single --half-xy 80' || true)
+ns=$(echo "$out" | grep -c 'job-name=zb_psf_.*_single_' || true)
+gr=$(echo "$out" | grep 'job-name=zb_psf_.*_grid_' | grep -v -- '--single' | grep -c -- '--half-xy 30' || true)
+ng=$(echo "$out" | grep -c 'job-name=zb_psf_.*_grid_' || true)
+[ "$sg" = "$ns" ] && [ "$gr" = "$ng" ] && ok "kernel crops: ${ns} single, ${ng} grid" || bad "kernel crops (single ${sg}/${ns}, grid ${gr}/${ng})"
+echo "$out" | grep 'job-name=zb_sim_.*_single_' | grep -q 'GRID_SPACING=0' && ok "single atom has GRID_SPACING=0" || { [ "$ns" = 0 ] || bad "single GRID_SPACING"; }
+echo "$out" | grep 'job-name=zb_sim_.*_ideal_' | grep -q 'CS=0,C5=0,DEFOCUS=-7' && ok "ideal probe: CS 0, C5 0, its own defocus" || { echo "$out" | grep -q '_ideal_' && bad "ideal probe exports"; true; }
 echo "$out" | grep -q 'SLICE_THICKNESS=0.25' && ok "sim slice 0.25 A reaches the sim" || bad "sim slice"
 [ "$fail" = 0 ] && echo "ALL OK" || { echo "SOME CHECKS FAILED"; echo "$out" | tail -5; exit 1; }

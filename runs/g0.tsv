@@ -1,5 +1,11 @@
-# G0: can a one-plane Pb grid be reconstructed cleanly with fine slices? One sim (fine 0.25 A simulation slices),
-# four slice counts through the standard 27.525 A box: dz 1.53 / 0.98 / 0.74 / 0.50 A. The 1.53 A run is also the
-# link to the campaign's kernels (same recon, but those were simulated with 0.9 A slices).
-# el	alpha	aber	slice	zvac	fs	src	T	nl_list
-Pb	80	arm	0.25	4	0	0	-	18,28,37,55
+# G0: can fine slices be reconstructed cleanly, and does our pipeline reproduce Lei & Wang's single atom?
+# G0a  the campaign's S1 kernel (one-plane Pb grid, ARM aberrations known), 0.25 A simulation slices, standard
+#      27.525 A box, four slice counts: dz 1.53 / 0.98 / 0.74 / 0.50 A. NL 18 is also the link to the campaign kernels
+#      (same recon, but simulated with 0.9 A slices).
+# G0b  Lei & Wang's single-atom test (arXiv 2506.22352 SI Note 5: one atom in vacuum, aberration-free probe, 4 nm box;
+#      their 80 mrad FWHM is 2.8 A): one Pb atom, ideal probe at their crystal-run defocus (-0.7 nm, ~1 A probe) so a
+#      0.25 A step over 10 A overlaps well at the campaign's per-iteration cost (they used defocus 0 and a 160 x 160
+#      scan), 40 A box, dz 1.0 and 0.5 A.
+# el	alpha	aber	c1	geom	step	win	slice	zvac	fs	src	T	nl_list
+Pb	80	arm	-	grid	0.5	20	0.25	4	0	0	-	18,28,37,55
+Pb	80	ideal	-7	single	0.25	10	0.25	10.2375	0	0	-	40,80
