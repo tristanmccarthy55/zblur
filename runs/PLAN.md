@@ -11,8 +11,22 @@ Hypotheses, each to be tested, not assumed:
 
 - **H1, focal spread is a depth blur of its own size.** A chromatic focal spread of δ Å rms is, to first order, the
   probe's focus wandering along z by δ, so it should blur the atom along z by about δ.
-- **H2, the blurs combine as a convolution.** In the transfer function the partial-coherence envelopes multiply; in
-  real space that is a convolution of the PSFs, so widths add in quadrature (variances add) and core contrasts multiply.
+- **H2, the blurs combine as a convolution, whatever the base shape.** The base response (for an alpha, the aberrations
+  and the recorded angle) rings rather than falling like a Gaussian (G0), so H2 is tested on transfer functions, not
+  widths: T(k) = FT of the 3-D PSF; each source's envelope is E(k) = T_source(k) / T_base(k) (where |T_base| is well
+  above noise); convolution means T_combination = T_base x E_1 x E_2 x ... Predicted envelopes, each with its own
+  direction:
+
+  | source | predicted envelope | acts along |
+  |---|---|---|
+  | chromatic focal spread delta (rms) | exp(-2 pi^2 delta^2 kz^2) | depth only |
+  | source size, sigma_s = FWHM / 2.355 | exp(-2 pi^2 sigma_s^2 (kx^2 + ky^2)) | sideways only |
+  | phonons, u per axis | exp(-2 pi^2 u^2 abs(k)^2), plus thermal diffuse scattering | all directions |
+  | aberrations (probe known) | not an envelope: they change T_base itself | - |
+
+  Needs every condition on one grid (same alpha, recorded angle, slice count, box) so transfer functions divide point
+  by point, and a lateral crop wide enough for the low lateral frequencies (the hourglass): the lone atom (+-3.9 A),
+  or if it keeps failing a sparser grid (6 A spacing, +-3 A crop) rather than the 3 A grid's +-1.5 A.
 - **H3, the wall is at a unit cell.** The focal-spread wall (good to 3.5 Å, off from 5 Å) sits at about one unit
   cell. If the total depth blur reaching ~3.9 Å is what kills it, the other sources' walls should sit at the same
   total blur.
