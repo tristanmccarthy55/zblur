@@ -1,0 +1,9 @@
+# G0c-2: is the core's depth width set by the highest angle recorded? The G0a grid, recorded to 160 and 120 mrad
+# instead of 200: if the width goes ~ lambda / (alpha theta_max) it should widen ~1.25x and ~1.7x. 28 and 37 slices,
+# where 200 mrad is already measured, at the standard engine settings.
+# G0c-3: Lei & Wang's lone atom as they ran it: an in-focus ideal probe (defocus 0) with a dense scan, 0.1 A steps over
+# 8 A (6561 positions; they used 160 x 160), 40 A box, 40 slices. G0b's -0.7 nm probe and 1600 positions never locked on.
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+Pb	80	arm	-	grid	0.5	20	160	0.25	4	0	0	-	28,37
+Pb	80	arm	-	grid	0.5	20	120	0.25	4	0	0	-	28,37
+Pb	80	ideal	0	single	0.1	8	200	0.25	10.2375	0	0	-	40

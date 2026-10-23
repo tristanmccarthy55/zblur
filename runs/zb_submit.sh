@@ -16,7 +16,7 @@
 # encode SLICE or ZVAC, which is why this does not go through it. Results land under ZB_ROOT ($SHARE/phucrh/zblur_runs);
 # the pack is $SHARE/phucrh/zblur_<points>_<timestamp>.tgz (kernels, check images, manifest).
 #
-# Points file (tab-separated, '#' comments): el alpha aber c1 geom step win slice zvac fs src T nl_list
+# Points file (tab-separated, '#' comments): el alpha aber c1 geom step win det slice zvac fs src T nl_list
 #   el      Pb | Ti
 #   alpha   convergence semi-angle (mrad)
 #   aber    ideal (no aberrations) | arm (the ARM200F tableau row armf_a<alpha> of campaign/ceos_sweep.tsv)
@@ -24,12 +24,17 @@
 #   geom    grid (the campaign's S1 kernel: one plane, 3 A spacing) | single (one atom alone in vacuum, as in Lei &
 #           Wang, arXiv 2506.22352 SI Note 5)
 #   step    scan step (A);  win  scan window (A)
+#   det     the largest angle recorded (mrad); 200 = the campaign's recording (not passed to the sim, so those sims are
+#           reused unchanged), anything else is passed as DETECTOR_MAX_ANGLE and named _d<det>
 #   slice   the SIMULATION's slice thickness (A)
 #   zvac    vacuum above and below the 5-cell box (A); the box is 5 x 3.905 + 2 zvac, the atom plane at its centre
 #   fs      chromatic focal spread (A rms), 0 = none
 #   src     source size (A FWHM), 0 = none
 #   T       phonons: - = none, 295 = room temperature (per species), else a Debye temperature in K (per species)
 #   nl_list reconstruction slice counts, comma-separated
+#
+# Per submission (environment): BETA_LSQ (0.05), GROUPING (32), NITER (200), RTAG (appended to every reconstruction and
+# kernel name, so a rerun with other engine settings never lands in an earlier run's folder).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,15 +47,22 @@ PYBIN="${CONDA_ENV:-${SHARE:-/springbrook/share/physics}/phucrh/envs/abtem}/bin/
 TSV="${PTYCHO_ROOT}/campaign/ceos_sweep.tsv"
 DRY_RUN="${DRY_RUN:-0}"
 
-GRIDSP=3; BIN=2; CELL_Z=3.905; THIN=5; NITER=200; BETA_LSQ=0.05; GROUPING=32; PHONON_N=16
+GRIDSP=3; BIN=2; CELL_Z=3.905; THIN=5; PHONON_N=16; LAM=0.0196877
+NITER="${NITER:-200}"; BETA_LSQ="${BETA_LSQ:-0.05}"; GROUPING="${GROUPING:-32}"; RTAG="${RTAG:-}"
 
 for f in sim/run_sim.slurm run_recon_synthetic_ML.slurm analysis/atomfind/extract_psf.py campaign/ceos_sweep.tsv; do
     [ -f "${PTYCHO_ROOT}/${f}" ] || { echo "PTYCHO_ROOT=${PTYCHO_ROOT} has no ${f}" >&2; exit 1; }
 done
-# the parts of ptychoshelves this uses must be the committed version, so the pin below means something
-if ! git -C "$PTYCHO_ROOT" diff --quiet HEAD -- sim run_recon_synthetic_ML.slurm ptycho analysis/atomfind/extract_psf.py; then
-    [ "${ALLOW_DIRTY:-0}" = "1" ] || { echo "PTYCHO_ROOT has uncommitted changes in sim/, ptycho/ or the recon/extract scripts; commit or ALLOW_DIRTY=1" >&2; exit 1; }
+# the SOURCE this uses must be the committed version, so the pin below means something. Compiled MEX binaries are not
+# checked (Blythe rebuilds get_LSQ_step_mex.mexa64 for its own MATLAB/CUDA, which every campaign run also uses); their
+# checksum goes into the manifest instead, so the exact engine binary is still on record.
+if ! git -C "$PTYCHO_ROOT" diff --quiet HEAD -- sim run_recon_synthetic_ML.slurm ':(glob)ptycho/**/*.m' analysis/atomfind/extract_psf.py; then
+    [ "${ALLOW_DIRTY:-0}" = "1" ] || { echo "PTYCHO_ROOT has uncommitted changes in sim/, ptycho/*.m or the recon/extract scripts:" >&2
+        git -C "$PTYCHO_ROOT" diff --stat HEAD -- sim run_recon_synthetic_ML.slurm ':(glob)ptycho/**/*.m' analysis/atomfind/extract_psf.py >&2
+        echo "commit them, or ALLOW_DIRTY=1 if you know why" >&2; exit 1; }
 fi
+MEX="${PTYCHO_ROOT}/ptycho/+engines/+GPU/+LSQML/private/get_LSQ_step_mex.mexa64"
+MEXSUM="$( [ -f "$MEX" ] && cksum "$MEX" | awk '{print $1}' || echo none)"
 PIN="$(git -C "$PTYCHO_ROOT" rev-parse --short HEAD)"
 TS="$(date +%Y%m%d_%H%M%S)"; TAG="$(basename "$PTS" .tsv)"
 MAN="${ZB_ROOT}/manifests/${TAG}_${TS}.tsv"
@@ -70,10 +82,10 @@ submit() {
 num() { echo "$1" | sed 's/\./p/'; }
 
 [ "$DRY_RUN" = "1" ] || mkdir -p "${ZB_ROOT}/logs" "${ZB_ROOT}/psf" "${ZB_ROOT}/manifests"
-[ "$DRY_RUN" = "1" ] || printf "sim\tnl\tdz_A\tzdrop\tboxz_A\tzvac_A\tel\talpha\taber\tc1_A\tgeom\tstep_A\twin_A\tslice_A\tfs_A\tsrc_A\tT_K\tsim_job\trecon_job\textract_job\tptycho_pin\n" >"$MAN"
+[ "$DRY_RUN" = "1" ] || printf "sim\tnl\tdz_A\tzdrop\tboxz_A\tzvac_A\tel\talpha\taber\tc1_A\tgeom\tstep_A\twin_A\tdet_mrad\tdx_A\tslice_A\tfs_A\tsrc_A\tT_K\tbeta_lsq\tgrouping\tniter\trtag\tkernel\tsim_job\trecon_job\textract_job\tptycho_pin\tmex_cksum\n" >"$MAN"
 
 EXTRACT_JOBS=(); PSF_NAMES=(); SEEN=" "
-while IFS=$'\t' read -r el alpha aber c1 geom step win slice zvac fs src T nls rest; do
+while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T nls rest; do
     case "${el:-}" in ''|\#*) continue;; esac
     [ -z "${rest:-}" ] || { echo "too many columns: $el $alpha ..." >&2; exit 1; }
     case "$el" in Pb|Ti) ;; *) echo "el must be Pb or Ti, not $el" >&2; exit 1;; esac
@@ -89,6 +101,8 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win slice zvac fs src T nls r
     [ "$fs" != "0" ] && name="${name}_fs$(num "$fs")"
     [ "$src" != "0" ] && name="${name}_src$(num "$src")"
     [ "$T" != "-" ] && name="${name}_T${T}"
+    [ "$det" != "200" ] && name="${name}_d${det}"
+    dx=$(awk -v l="$LAM" -v t="$det" 'BEGIN{printf "%.5f", l / (2 * t / 1000)}')    # object pixel = lambda / (2 theta_max)
     case "$SEEN" in *" ${name} "*) echo "duplicate point ${name} in ${PTS}" >&2; exit 1;; esac
     SEEN="${SEEN}${name} "
     sdir="${ZB_ROOT}/sim_${name}"
@@ -118,6 +132,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win slice zvac fs src T nls r
     exp="${exp},CS=${c3},C5=${c5},DEFOCUS=${c1},OVERWRITE=0,SCAN_WINDOW=${win}"
     if [ "$geom" = "grid" ]; then gsp="$GRIDSP"; else gsp=0; fi        # GRID_SPACING 0 = one atom (build_single_atom)
     exp="${exp},SINGLE_ATOM=${el},ATOM_Z=${atomz},GRID_SPACING=${gsp},GRID_BOX_Z=${boxz}"
+    [ "$det" != "200" ] && exp="${exp},DETECTOR_MAX_ANGLE=${det}"
 
     if [ -e "${sdir}/01/data_dp.hdf5" ]; then
         sj=""; echo "  ${name}: sim exists, reused" >&2
@@ -133,32 +148,36 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win slice zvac fs src T nls r
     IFS=',' read -r -a NLS <<<"$nls"
     for nl in "${NLS[@]}"; do
         dz=$(awk -v b="$boxz" -v n="$nl" 'BEGIN{printf "%.4f", b/n}')
-        # grid: drop the vacuum bands, crop +-30 px (the 3 A grid allows no more). single: keep the depth (drop 2 A
-        # at each face, where the box edges collect junk) and crop +-80 px (3.9 A) so the x-z section keeps the cone.
+        # grid: drop the vacuum bands, crop +-1.48 A (30 px at the campaign's 0.0492 A pixel; the 3 A grid allows no
+        # more). single: keep the depth (drop 2 A at each face, where the box edges collect junk) and crop +-3.9 A so
+        # the x-z section keeps the cone. The pixel follows the recorded angle, so the crops are set in A.
         if [ "$geom" = "grid" ]; then
-            zdrop=$(awk -v v="$zvac" -v d="$dz" 'BEGIN{printf "%d", v/d + 0.5}'); xargs="--half-xy 30"
+            zdrop=$(awk -v v="$zvac" -v d="$dz" 'BEGIN{printf "%d", v/d + 0.5}')
+            xargs="--half-xy $(awk -v d="$dx" 'BEGIN{printf "%d", 1.476/d + 0.5}') --dx ${dx}"
         else
-            zdrop=$(awk -v d="$dz" 'BEGIN{printf "%d", 2/d + 0.5}'); xargs="--single --half-xy 80"
+            zdrop=$(awk -v d="$dz" 'BEGIN{printf "%d", 2/d + 0.5}')
+            xargs="--single --half-xy $(awk -v d="$dx" 'BEGIN{printf "%d", 3.937/d + 0.5}') --dx ${dx}"
         fi
-        rdir="${ZB_ROOT}/recon_${name}_NL${nl}"
+        rdir="${ZB_ROOT}/recon_${name}_NL${nl}${RTAG}"
         if [ "$DRY_RUN" != "1" ]; then
             mkdir -p "${rdir}/01"
             for f in data_dp.hdf5 data_position.hdf5 sim_meta.mat; do ln -sf "${sdir}/01/${f}" "${rdir}/01/${f}"; done
             ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial.mat"    # the true probe, held fixed
         fi
         if [ "$nl" -le 20 ]; then rtime=10:00:00; elif [ "$nl" -le 40 ]; then rtime=24:00:00; else rtime=48:00:00; fi
-        rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="zb_rec_${name}_NL${nl}" --time="$rtime" --mem=96G \
+        rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="zb_rec_${name}_NL${nl}${RTAG}" --time="$rtime" --mem=96G \
              ${dep[@]+"${dep[@]}"} --output="${rdir}/slurm_%j.out" --error="${rdir}/slurm_%j.err" \
              --export="ALL,NLAYERS=${nl},SIM_BASE=${rdir}/,REGLAYER=0,PROBE_MODES=1,NITER=${NITER},SAVE_EVERY=${NITER},GROUPING=${GROUPING},BETA_LSQ=${BETA_LSQ}" \
              "${PTYCHO_ROOT}/run_recon_synthetic_ML.slurm")
-        pname="${name}_NL${nl}"
+        pname="${name}_NL${nl}${RTAG}"
         ej=$(submit --job-name="zb_psf_${pname}" --time=00:30:00 --mem=16G --cpus-per-task=2 --dependency="afterok:${rj}" \
              --output="${ZB_ROOT}/logs/zb_psf_%j.out" --error="${ZB_ROOT}/logs/zb_psf_%j.err" \
              --wrap="'${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} ${xargs} --out '${ZB_ROOT}/psf'")
         EXTRACT_JOBS+=("$ej"); PSF_NAMES+=("$pname")
-        [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-            "$name" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$slice" "$fs" "$src" "$T" "${sj:-reused}" "$rj" "$ej" "$PIN" >>"$MAN"
-        echo "  ${pname}: dz ${dz} A, zdrop ${zdrop} (${geom}, zvac ${zvac}); sim ${sj:-reused}, recon ${rj}, kernel ${ej}" >&2
+        [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+            "$name" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$det" "$dx" "$slice" \
+            "$fs" "$src" "$T" "$BETA_LSQ" "$GROUPING" "$NITER" "${RTAG:--}" "$pname" "${sj:-reused}" "$rj" "$ej" "$PIN" "$MEXSUM" >>"$MAN"
+        echo "  ${pname}: dz ${dz} A, zdrop ${zdrop} (${geom}, zvac ${zvac}), dx ${dx} A; sim ${sj:-reused}, recon ${rj}, kernel ${ej}" >&2
     done
 done <"$PTS"
 
@@ -169,6 +188,6 @@ pack="${PACK_DIR}/zblur_${TAG}_${TS}.tgz"
 pj=$(submit --job-name="zb_pack_${TAG}" --time=00:20:00 --mem=4G --cpus-per-task=1 --dependency="afterany:${deps}" \
      --output="${ZB_ROOT}/logs/zb_pack_%j.out" --error="${ZB_ROOT}/logs/zb_pack_%j.err" \
      --wrap="cd '${ZB_ROOT}' && cp '${MAN}' manifest_${TAG}_${TS}.tsv && tar czf '${pack}' --ignore-failed-read manifest_${TAG}_${TS}.tsv ${files}")
-echo "ptychoshelves pin ${PIN}; manifest ${MAN}" >&2
+echo "ptychoshelves pin ${PIN} (LSQ MEX cksum ${MEXSUM}); beta_LSQ ${BETA_LSQ}, grouping ${GROUPING}, ${NITER} it, tag '${RTAG}'; manifest ${MAN}" >&2
 echo "pack job ${pj} -> ${pack}" >&2
 echo "PULL: scp -O 'phucrh@blythe.scrtp.warwick.ac.uk:${PACK_DIR}/zblur_${TAG}_2*.tgz' ~/Desktop/zblur/" >&2

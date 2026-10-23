@@ -1,0 +1,5 @@
+kernel	sim	nl	dz_A	dx_A	peak_rad	z_peak_A	fwhm_z_A	sigma_z_A	core_share	dip	side_lobe	fwhm_xy_A
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_NL18	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525	18	1.529	0.0492	1.457	14.53	2.52	0.21	0.86	-0.19	0.32	0.103
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_NL28	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525	28	0.983	0.0492	1.567	14.25	1.75	0.05	0.92	-0.30	0.28	0.071
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_NL37	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525	37	0.744	0.0492	1.246	13.76	1.45	0.05	0.85	-0.32	0.35	0.075
+Pb_a080_ideal_df-7_single_st0p25_w10_s0p25_bz40p000_NL40	Pb_a080_ideal_df-7_single_st0p25_w10_s0p25_bz40p000	40	1.000	0.0492	3.145	34.50	0.58	0.05	0.24	-0.82	1.00	0.025

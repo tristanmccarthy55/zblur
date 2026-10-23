@@ -8,9 +8,12 @@ each run's slice counts overlaid, with Lei & Wang's 80 mrad FWHM of 2.8 A as a r
 figs/<pack>_xz.png (x-z sections through the atom, as their SI Fig. 6).
 
     mkdir -p ~/Desktop/zblur/g0 && tar xzf ~/Desktop/zblur/zblur_g0_<ts>.tgz -C ~/Desktop/zblur/g0
-    ~/hyperspy-bundle/bin/python analysis/g0_report.py ~/Desktop/zblur/g0
+    ~/hyperspy-bundle/bin/python analysis/g0_report.py ~/Desktop/zblur/g0 [~/Desktop/zblur/g0c ...]
 
-G0 passes when each run's FWHM_z and sigma_z stop changing between its two finest slice counts.
+Several packs are merged (a rerun's slices join the sim they came from). Per simulation with three or more slice
+counts it fits FWHM_z^2 = W^2 + (c dz)^2: W is the core's own depth width, c dz what the slicing adds. The depth
+response rings rather than falling like a Gaussian, so the side lobes are reported too: the deepest dip within 3 A
+of the peak and the highest secondary lobe 2-6 A from it, both relative to the peak.
 """
 from __future__ import annotations
 
@@ -28,37 +31,61 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LEI_WANG_FWHM_80 = 2.8     # A, a single Pr atom, 300 kV, 80 mrad, full pattern (arXiv 2506.22352 SI Note 5)
 
 
+def lobes(z, p, zpk, peak):
+    after = (np.abs(z - zpk) <= 3.0) & (np.abs(z - zpk) > 0.2)
+    side = (np.abs(z - zpk) >= 2.0) & (np.abs(z - zpk) <= 6.0)
+    return (float(p[after].min() / peak) if after.any() else np.nan, float(p[side].max() / peak) if side.any() else np.nan)
+
+
 def load(pack):
-    man = sorted(glob.glob(os.path.join(pack, "manifest_*.tsv")))
-    if not man:
-        raise SystemExit(f"no manifest_*.tsv in {pack}")
-    rows = list(csv.DictReader(open(man[-1]), delimiter="\t"))
     out = []
-    for r in rows:
-        f = os.path.join(pack, "psf", f"psf_{r['sim']}_NL{r['nl']}_vol.npy")
-        if not os.path.exists(f):
-            print(f"  missing kernel {os.path.basename(f)} (recon or extraction failed?)")
+    for man in sorted(glob.glob(os.path.join(pack, "manifest_*.tsv"))):
+        for r in csv.DictReader(open(man), delimiter="\t"):
+            kern = r.get("kernel") or f"{r['sim']}_NL{r['nl']}"
+            f = os.path.join(pack, "psf", f"psf_{kern}_vol.npy")
+            if not os.path.exists(f):
+                print(f"  missing kernel {os.path.basename(f)} (recon or extraction failed?)")
+                continue
+            K = zp.load_phase(f)
+            dz, zdrop = float(r["dz_A"]), int(r["zdrop"])
+            dx = float(r.get("dx_A") or zp.DX)
+            m = zp.psf3d(K, dz, z0=zdrop * dz, dx=dx)
+            dip, side = lobes(m["z"], m["p"], m["z_peak"], m["peak"])
+            out.append(dict(r, **m, dz=dz, dx=dx, dip=dip, side=side, kern=kern, file=f))
+    if not out and not glob.glob(os.path.join(pack, "manifest_*.tsv")):
+        raise SystemExit(f"no manifest_*.tsv in {pack}")
+    return out
+
+
+def slicing_fit(rs):
+    """Per sim: FWHM_z^2 = W^2 + (c dz)^2, a straight line in dz^2. -> {sim: (W, c, n)}."""
+    fits = {}
+    for s in dict.fromkeys(r["sim"] for r in rs):
+        g = [r for r in rs if r["sim"] == s and np.isfinite(r["fwhm_z"])]
+        if len(g) < 3:
             continue
-        K = zp.load_phase(f)
-        dz, zdrop = float(r["dz_A"]), int(r["zdrop"])
-        m = zp.psf3d(K, dz, z0=zdrop * dz)
-        out.append(dict(r, **m, dz=dz, file=f))
-    return out, os.path.basename(os.path.normpath(pack))
+        x = np.array([r["dz"] ** 2 for r in g]); y = np.array([r["fwhm_z"] ** 2 for r in g])
+        c2, w2 = np.polyfit(x, y, 1)
+        fits[s] = (float(np.sqrt(max(w2, 0))), float(np.sqrt(max(c2, 0))), len(g))
+    return fits
 
 
-def main(pack):
-    rs, tag = load(pack)
+def main(*packs):
+    rs = [r for p in packs for r in load(p)]
+    tag = "_".join(os.path.basename(os.path.normpath(p)) for p in packs)
     if not rs:
         raise SystemExit("no kernels")
     os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
     with open(os.path.join(HERE, "results", f"{tag}_table.tsv"), "w") as fh:
-        fh.write("sim\tnl\tdz_A\tpeak_rad\tz_peak_A\tfwhm_z_A\tsigma_z_A\tcore_share\tfwhm_xy_A\n")
+        fh.write("kernel\tsim\tnl\tdz_A\tdx_A\tpeak_rad\tz_peak_A\tfwhm_z_A\tsigma_z_A\tcore_share\tdip\tside_lobe\tfwhm_xy_A\n")
         for r in rs:
-            fh.write(f"{r['sim']}\t{r['nl']}\t{r['dz']:.3f}\t{r['peak']:.3f}\t{r['z_peak']:.2f}\t{r['fwhm_z']:.2f}\t"
-                     f"{r['sigma_z']:.2f}\t{r['core_share']:.2f}\t{r['fwhm_xy']:.3f}\n")
-    print(f"{'sim':<58} {'NL':>3} {'dz':>5} {'FWHMz':>6} {'sig_z':>6} {'core':>5} {'FWHMxy':>7}")
+            fh.write(f"{r['kern']}\t{r['sim']}\t{r['nl']}\t{r['dz']:.3f}\t{r['dx']:.4f}\t{r['peak']:.3f}\t{r['z_peak']:.2f}\t"
+                     f"{r['fwhm_z']:.2f}\t{r['sigma_z']:.2f}\t{r['core_share']:.2f}\t{r['dip']:.2f}\t{r['side']:.2f}\t{r['fwhm_xy']:.3f}\n")
+    print(f"{'kernel':<66} {'dz':>5} {'FWHMz':>6} {'core':>5} {'dip':>6} {'side':>5} {'FWHMxy':>7}")
     for r in rs:
-        print(f"{r['sim']:<58} {r['nl']:>3} {r['dz']:5.2f} {r['fwhm_z']:6.2f} {r['sigma_z']:6.2f} {r['core_share']:5.2f} {r['fwhm_xy']:7.3f}")
+        print(f"{r['kern']:<66} {r['dz']:5.2f} {r['fwhm_z']:6.2f} {r['core_share']:5.2f} {r['dip']:6.2f} {r['side']:5.2f} {r['fwhm_xy']:7.3f}")
+    for s, (w, c, n) in slicing_fit(rs).items():
+        print(f"slicing fit {s}: FWHM_z^2 = W^2 + (c dz)^2 over {n} slicings -> W = {w:.2f} A, c = {c:.2f}")
     plot(rs, tag)
 
 

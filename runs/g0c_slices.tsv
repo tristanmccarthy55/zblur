@@ -1,0 +1,6 @@
+# G0c-1: rescue the fine slices. G0a's 55-slice reconstruction (and G0b's 80) died on NaNs at beta_LSQ 0.05 with
+# batches of 32. Same simulation as G0a (reused: same name), 46 and 55 slices, submitted with a smaller step and larger
+# batches: BETA_LSQ=0.02 GROUPING=64 RTAG=_b002g64. With 18 / 28 / 37 these pin the core width W in
+# FWHM^2 = W^2 + (c dz)^2 (c ~ 1.55, W ~ 0.9 A from the first three).
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+Pb	80	arm	-	grid	0.5	20	200	0.25	4	0	0	-	46,55

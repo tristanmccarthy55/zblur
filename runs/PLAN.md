@@ -69,6 +69,30 @@ pipeline must reproduce before any blur is measured.
 - **Then:** if G0b reproduces 2.8 A, the single-atom recipe becomes G1's base (it also gives the full x-z PSF, which
   the 3 A grid crop cannot); the grid arm stays as the link to the campaign's kernels.
 
+## G0 results (2026-10-22, pack zblur_g0_20261022_134338)
+
+- **G0a reconstructs cleanly at fine slices** (18 / 28 / 37 layers): the x-z sections show Lei & Wang's shape, a sharp
+  core inside the hourglass (missing cone), flat vacuum. 55 layers died on NaNs at beta_LSQ 0.05, batches of 32.
+- **The depth profile is not a Gaussian.** Through the core it is a narrow central lobe with a dip just after it
+  (-0.2 to -0.3 of the peak) and side lobes 0.3 high 2-6 A away: ringing, the depth version of an Airy pattern. Each
+  lateral frequency is resolved in depth over a limited band (wide for fine detail, narrow for coarse: the hourglass),
+  and sharp-edged bands ring. A single Gaussian sigma is the wrong summary; report the central-lobe FWHM and the lobes.
+- **The central lobe narrows with the slicing:** FWHM 2.52 / 1.75 / 1.45 A at dz 1.53 / 0.98 / 0.74, fitted by
+  FWHM^2 = W^2 + (1.54 dz)^2 with **W = 0.89 A** (two parameters on three points: a hint). Far under lambda/alpha^2
+  (3.1 A) and Lei & Wang's 2.8 A. A possible reason: the core is built from the highest angles recorded, resolved in
+  depth roughly as lambda / (alpha theta_max) ~ 1.2 A at 200 mrad, not lambda / alpha^2. G0c tests it.
+- **G0b (lone atom, -0.7 nm probe, 1600 positions) never locked on:** error flat ~280 for 90 iterations, then wrapped
+  noise; 80 layers died on NaNs. The campaign's "lone atom too sparse" again; Lei & Wang used 16x the positions.
+- Runs take 1-2 h (~30 s per iteration at 40 layers), ten times faster than estimated.
+
+## G0c (`runs/g0c_slices.tsv`, `runs/g0c_det.tsv`), ~20 GPU-h
+
+1. **Rescue the fine slices:** G0a's sim, 46 and 55 layers, `BETA_LSQ=0.02 GROUPING=64 RTAG=_b002g64` -> W from five
+   slicings.
+2. **Is the core width set by the recorded angle?** G0a's grid recorded to 160 and 120 mrad (28 and 37 layers): it
+   should widen ~1.25x and ~1.7x if W ~ lambda / (alpha theta_max).
+3. **Lei & Wang's lone atom as they ran it:** in-focus ideal probe, 0.1 A steps over 8 A (6561 positions), 40 layers.
+
 ## G1: each source alone (designed after G0 picks the slicing)
 
 Base: the **ideal (aberration-free) probe**, coherent, no phonons, single atom (if G0b passes), at the slicing G0

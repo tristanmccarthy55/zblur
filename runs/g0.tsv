@@ -6,6 +6,7 @@
 #      their 80 mrad FWHM is 2.8 A): one Pb atom, ideal probe at their crystal-run defocus (-0.7 nm, ~1 A probe) so a
 #      0.25 A step over 10 A overlaps well at the campaign's per-iteration cost (they used defocus 0 and a 160 x 160
 #      scan), 40 A box, dz 1.0 and 0.5 A.
-# el	alpha	aber	c1	geom	step	win	slice	zvac	fs	src	T	nl_list
-Pb	80	arm	-	grid	0.5	20	0.25	4	0	0	-	18,28,37,55
-Pb	80	ideal	-7	single	0.25	10	0.25	10.2375	0	0	-	40,80
+# (the det column was added on 2026-10-23; 200 = the recording these ran with)
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+Pb	80	arm	-	grid	0.5	20	200	0.25	4	0	0	-	18,28,37,55
+Pb	80	ideal	-7	single	0.25	10	200	0.25	10.2375	0	0	-	40,80

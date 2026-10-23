@@ -12,6 +12,7 @@ PX915 aberration campaign (`../ptychoshelves-clean`), started 2026-10-21. The pl
 | `runs/PLAN.md` | the question, the hypotheses, the gates G0-G3 with costs |
 | `runs/zb_submit.sh` | submits sims -> recons -> kernels -> pack on Blythe, through ptychoshelves-clean's own job scripts |
 | `runs/g0.tsv` | G0: fine slicing on one Pb grid (G0a) and Lei & Wang's lone-atom test (G0b) |
+| `runs/g0c_slices.tsv`, `runs/g0c_det.tsv` | G0c: the fine slices rescued, the recorded-angle test, the lone atom retried |
 | `tests/test_submit_dry.sh` | dry run of the submitter, checks the job wiring (run before every change) |
 | `analysis/zprofile.py` | the depth profile of a kernel and its widths |
 | `analysis/pilot_kernels.py` | phase 0: the campaign's existing kernels, every condition |
@@ -45,3 +46,6 @@ name); the pack holds the kernels, their check images and the manifest.
 - 2026-10-21: phase 0 done from the campaign's kernels (`runs/PLAN.md`, `figs/pilot_profiles.png`,
   `results/pilot_table.tsv`). G0 built and dry-run, not yet submitted: after reading Lei & Wang's SI it has a second arm,
   their lone-atom test (target: 2.8 Å FWHM at 80 mrad).
+- 2026-10-22/23: G0 ran (`runs/PLAN.md`, G0 results): the grid reconstructs cleanly to 37 layers; the depth response
+  rings (central lobe + dips + side lobes), its central lobe narrowing with the slicing (W ~ 0.9 Å); the lone atom
+  failed; 55 / 80 layers hit NaNs. G0c built and dry-run.
