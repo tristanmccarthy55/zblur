@@ -39,6 +39,10 @@ scp -O 'phucrh@blythe.scrtp.warwick.ac.uk:/springbrook/share/physics/phucrh/zblu
 ~/hyperspy-bundle/bin/python analysis/pilot_kernels.py      # phase 0, from the campaign's kernels on ~/Desktop
 ```
 
+**Do not `git pull` the ptychoshelves checkout while zblur jobs are queued**: MATLAB reads the engine when a job runs,
+not when it is submitted. Each kernel records the commit it actually ran under (`psf_<name>_pin.txt`) and
+`g0_report.py` flags any that differ from the manifest's.
+
 Results land under `$SHARE/phucrh/zblur_runs` (one folder per sim and per reconstruction, every physics value in its
 name); the pack holds the kernels, their check images and the manifest.
 

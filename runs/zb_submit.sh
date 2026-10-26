@@ -172,7 +172,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         pname="${name}_NL${nl}${RTAG}"
         ej=$(submit --job-name="zb_psf_${pname}" --time=00:30:00 --mem=16G --cpus-per-task=2 --dependency="afterok:${rj}" \
              --output="${ZB_ROOT}/logs/zb_psf_%j.out" --error="${ZB_ROOT}/logs/zb_psf_%j.err" \
-             --wrap="'${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} ${xargs} --out '${ZB_ROOT}/psf'")
+             --wrap="git -C '${PTYCHO_ROOT}' rev-parse --short HEAD > '${ZB_ROOT}/psf/psf_${pname}_pin.txt'; '${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} ${xargs} --out '${ZB_ROOT}/psf'")
         EXTRACT_JOBS+=("$ej"); PSF_NAMES+=("$pname")
         [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
             "$name" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$det" "$dx" "$slice" \
@@ -183,7 +183,10 @@ done <"$PTS"
 
 [ ${#EXTRACT_JOBS[@]} -gt 0 ] || { echo "no points in $PTS" >&2; exit 1; }
 deps=$(IFS=:; echo "${EXTRACT_JOBS[*]}")
-files=""; for p in "${PSF_NAMES[@]}"; do files="${files} psf/psf_${p}_vol.npy psf/psf_${p}_check.png"; done
+# _pin.txt: the ptychoshelves commit when the kernel was extracted, just after its reconstruction ran. MATLAB reads the
+# engine when the job runs, not when it is submitted, so a pull in between would otherwise go unrecorded (it happened on
+# 2026-10-23: 8edc045 at submission, 138deb4 by the time G0c ran; that change was inert without UPSAMPLING).
+files=""; for p in "${PSF_NAMES[@]}"; do files="${files} psf/psf_${p}_vol.npy psf/psf_${p}_check.png psf/psf_${p}_pin.txt"; done
 pack="${PACK_DIR}/zblur_${TAG}_${TS}.tgz"
 pj=$(submit --job-name="zb_pack_${TAG}" --time=00:20:00 --mem=4G --cpus-per-task=1 --dependency="afterany:${deps}" \
      --output="${ZB_ROOT}/logs/zb_pack_%j.out" --error="${ZB_ROOT}/logs/zb_pack_%j.err" \

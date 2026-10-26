@@ -46,6 +46,11 @@ def load(pack):
             if not os.path.exists(f):
                 print(f"  missing kernel {os.path.basename(f)} (recon or extraction failed?)")
                 continue
+            pinf = f.replace("_vol.npy", "_pin.txt")
+            if os.path.exists(pinf):
+                ran = open(pinf).read().strip()
+                if ran and ran != r.get("ptycho_pin", ran):
+                    print(f"  NOTE {kern}: ptychoshelves {r['ptycho_pin']} at submission, {ran} when it ran -- check the diff")
             K = zp.load_phase(f)
             dz, zdrop = float(r["dz_A"]), int(r["zdrop"])
             dx = float(r.get("dx_A") or zp.DX)
