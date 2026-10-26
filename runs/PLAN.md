@@ -26,7 +26,7 @@ Hypotheses, each to be tested, not assumed:
 
   Needs every condition on one grid (same alpha, recorded angle, slice count, box) so transfer functions divide point
   by point, and a lateral crop wide enough for the low lateral frequencies (the hourglass): the lone atom (+-3.9 A),
-  or if it keeps failing a sparser grid (6 A spacing, +-3 A crop) rather than the 3 A grid's +-1.5 A.
+  which works with a dense scan (G0c), rather than the 3 A grid's +-1.5 A.
 - **H3, the wall is at a unit cell.** The focal-spread wall (good to 3.5 Å, off from 5 Å) sits at about one unit
   cell. If the total depth blur reaching ~3.9 Å is what kills it, the other sources' walls should sit at the same
   total blur.
@@ -87,10 +87,9 @@ pipeline must reproduce before any blur is measured.
 
 - **G0a reconstructs cleanly at fine slices** (18 / 28 / 37 layers): the x-z sections show Lei & Wang's shape, a sharp
   core inside the hourglass (missing cone), flat vacuum. 55 layers died on NaNs at beta_LSQ 0.05, batches of 32.
-- **The depth profile is not a Gaussian.** Through the core it is a narrow central lobe with a dip just after it
-  (-0.2 to -0.3 of the peak) and side lobes 0.3 high 2-6 A away: ringing, the depth version of an Airy pattern. Each
-  lateral frequency is resolved in depth over a limited band (wide for fine detail, narrow for coarse: the hourglass),
-  and sharp-edged bands ring. A single Gaussian sigma is the wrong summary; report the central-lobe FWHM and the lobes.
+- **The grid's depth profile is not a Gaussian.** Through the core it is a narrow central lobe with a dip just after
+  it (-0.2 to -0.3 of the peak) and side lobes 0.3 high 2-6 A away. (First read as band-limited ringing intrinsic to
+  multislice ptychography; G0c's clean lone atom rules that out as the main cause, see below.)
 - **The central lobe narrows with the slicing:** FWHM 2.52 / 1.75 / 1.45 A at dz 1.53 / 0.98 / 0.74, fitted by
   FWHM^2 = W^2 + (1.54 dz)^2 with **W = 0.89 A** (two parameters on three points: a hint). Far under lambda/alpha^2
   (3.1 A) and Lei & Wang's 2.8 A. A possible reason: the core is built from the highest angles recorded, resolved in
@@ -106,6 +105,27 @@ pipeline must reproduce before any blur is measured.
 2. **Is the core width set by the recorded angle?** G0a's grid recorded to 160 and 120 mrad (28 and 37 layers): it
    should widen ~1.25x and ~1.7x if W ~ lambda / (alpha theta_max).
 3. **Lei & Wang's lone atom as they ran it:** in-focus ideal probe, 0.1 A steps over 8 A (6561 positions), 40 layers.
+
+## G0c results (2026-10-24, packs zblur_g0c_det / zblur_g0c_slices_20261023_123321)
+
+- **Lei & Wang's lone atom works when run their way** (in-focus ideal probe, 0.1 A steps over 8 A, 6561 positions,
+  40 A box, 40 layers): a clean, nearly Gaussian depth profile, **FWHM 1.48 A** at dz 1.0 (about 1.5 slices, so
+  slice-limited), core share 0.91, lobes only -0.07 / +0.04; the x-z section a compact blob, faint hourglass. G0b's
+  failure was scan density, not the lone atom.
+- **So the grid's ringing is not intrinsic.** It appears only with the grid + ARM probe + 0.5 A scan. Prime suspect:
+  the ARM-aberrated probe (its balanced C1 / C3 give it structure along z; the side lobe sits 3.5-4.5 A downstream),
+  i.e. aberrations change the base shape (H2's table), as expected. G0d separates probe from grid / scan.
+- **Recorded angle: inconclusive.** At 160 mrad the grid's core widens ~1.3x (2.29 vs 1.75 A at NL 28; 1.97 vs 1.45
+  at NL 37), close to the predicted 1.25x; at 120 mrad it does not (1.77, 1.62 A) but its side lobes grow to 0.4-0.5
+  and its core share falls.
+- **Fine slices still fail:** 46 and 55 layers at beta_LSQ 0.02, batches of 64 left no kernel (logs pending).
+
+## G0d (`runs/g0d.tsv`): the lone atom in a 20 A box, ideal and ARM probes
+
+Every crash so far was at 46+ layers. A 20 A box gives dz 0.5 A at 40 layers: (1) whether the crash follows the
+layer count or the slice thickness, (2) the lone atom's own width at dz 1.0 / 0.74 / 0.5, (3) the ARM probe on the
+same lone atom (0.2 A steps over 16 A, as the probe is wide): if the ringing appears, it is the aberrated probe.
+~30 GPU-h.
 
 ## G1: each source alone (designed after G0 picks the slicing)
 

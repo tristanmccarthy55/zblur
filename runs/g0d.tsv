@@ -1,0 +1,9 @@
+# G0d: the lone atom (G0c's working recipe: 0.1 A steps, dense scan) in a 20 A box, so fine slices need few layers.
+# Every NaN so far came at 46+ layers; 40 layers in 20 A is dz 0.5 A. Tells whether the crash follows the layer count
+# or the slice thickness, and resolves the lone atom's own width (1.48 A at dz 1.0, about 1.5 slices: slice-limited).
+# The second sim puts the ARM probe on the same lone atom: if the grid's ringing comes from the aberrated probe, it
+# appears here; if not, it came from the grid / coarse scan. The ARM probe is wide, so 0.2 A steps over 16 A
+# (also 6561 positions) keep the field larger than the probe.
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	-	20,27,40
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	-	20,40

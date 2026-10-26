@@ -120,4 +120,4 @@ def plot(rs, tag):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~/Desktop/zblur/g0"))
+    main(*(sys.argv[1:] or [os.path.expanduser("~/Desktop/zblur/g0")]))
