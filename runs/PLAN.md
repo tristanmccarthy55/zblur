@@ -71,6 +71,26 @@ Every campaign run was scored with Pb and Ti kernels made with the same physics 
 Limits: 1.53 Å slices cannot resolve the clean core (it sits in one layer, below the slicing); the ±8 Å crop clips
 the large blurs; the sims used 0.9 Å slices.
 
+### Phase 0 addendum (2026-10-27): the wall is a core-contrast threshold?
+
+Ranking every fixed-probe pilot kernel (Pb, 80 mrad) by the core contrast it keeps relative to the coherent beam, next
+to the campaign's own verdict for that condition (PHASE1.md), one number sorts all 21 conditions -- energy spread,
+source size, phonons and their combinations:
+
+| core contrast kept | verdict | conditions |
+|---|---|---|
+| 1.00 - 0.59 | good, all | fs 0.75-3.5; src 0.05-0.1; fs 2.5 + src 0.1 |
+| 0.52, 0.48 | okay | fs 3.5 + src 0.1; src 0.2 |
+| <= 0.51 | off, all | fs 5, 7.29; src 0.4; fs 2.5 / 3.5 + src 0.2; phonons 100 / 295 K; the cooled runs; the cold FEG |
+
+Hypothesis **H3'**: the wall is where an atom's core keeps about half its contrast, whatever the source. A correlation
+from coarse kernels (grid, ARM probe, 1.53 A slices), one fuzzy pair at the boundary (fs 5: 0.51 off; 0.52 and 0.48
+okay); probe-mode runs do not follow it (a different reconstruction). The two single-source walls sit where each blur
+reaches the blob's own scale in its direction: sideways the source wall (0.1-0.4 A) against the core's lateral width
+(~0.13 A); in depth the focal-spread wall (3.5-5 A) against the LATTICE spacing (3.9 A), not the core's depth width
+(1.25 A), because focal spread moves weight into a pedestal rather than widening the core. G1 tests the rule on clean
+blobs; G2's pairs at several spacings test whether the half-contrast point moves with the spacing.
+
 ## What Lei & Wang's SI gives us (arXiv 2506.22352, SI Notes 4-5, Table 3, Fig. 6)
 
 The group's own single-atom depth test, with the same PtychoShelves LSQML engine (probe updated from the first slice):
