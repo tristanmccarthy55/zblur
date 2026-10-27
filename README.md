@@ -14,6 +14,7 @@ PX915 aberration campaign (`../ptychoshelves-clean`), started 2026-10-21. The pl
 | `runs/g0.tsv` | G0: fine slicing on one Pb grid (G0a) and Lei & Wang's lone-atom test (G0b) |
 | `runs/g0c_slices.tsv`, `runs/g0c_det.tsv` | G0c: the fine slices rescued, the recorded-angle test, the lone atom retried |
 | `runs/g0d.tsv` | G0d: the lone atom in a 20 Å box (fine slices, few layers), ideal and ARM probes |
+| `runs/g1.tsv` | G1: every blur source alone, combinations, and α, on the clean base |
 | `tests/test_submit_dry.sh` | dry run of the submitter, checks the job wiring (run before every change) |
 | `analysis/zprofile.py` | the depth profile of a kernel and its widths |
 | `analysis/pilot_kernels.py` | phase 0: the campaign's existing kernels, every condition |
@@ -57,3 +58,6 @@ name); the pack holds the kernels, their check images and the manifest.
 - 2026-10-26: G0c: the lone atom works with a dense in-focus scan (clean, near-Gaussian, FWHM 1.48 Å at dz 1.0), so
   the grid's ringing is not intrinsic (suspect: the ARM probe); the recorded-angle test is inconclusive; 46 / 55
   layers still fail. G0d built and dry-run.
+- 2026-10-27: G0d: the engine has a slice-thickness floor (~0.6-0.7 Å; 0.5 Å gives noise whatever the layer count);
+  the ideal-probe lone atom is a clean near-Gaussian base (FWHM 1.25 Å at dz 1.0); the ARM probe makes the ringing.
+  G1 built and dry-run.

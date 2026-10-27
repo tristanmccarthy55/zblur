@@ -1,0 +1,15 @@
+kernel	sim	nl	dz_A	dx_A	peak_rad	z_peak_A	fwhm_z_A	sigma_z_A	core_share	dip	side_lobe	fwhm_xy_A
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_NL18	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525	18	1.529	0.0492	1.457	14.53	2.52	0.21	0.86	-0.19	0.32	0.103
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_NL28	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525	28	0.983	0.0492	1.567	14.25	1.75	0.05	0.92	-0.30	0.28	0.071
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_NL37	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525	37	0.744	0.0492	1.246	13.76	1.45	0.05	0.85	-0.32	0.35	0.075
+Pb_a080_ideal_df-7_single_st0p25_w10_s0p25_bz40p000_NL40	Pb_a080_ideal_df-7_single_st0p25_w10_s0p25_bz40p000	40	1.000	0.0492	3.145	34.50	0.58	0.05	0.24	-0.82	1.00	0.025
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d160_NL28	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d160	28	0.983	0.0615	0.918	13.27	2.29	0.78	0.79	-0.33	0.45	0.180
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d160_NL37	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d160	37	0.744	0.0615	0.687	13.76	1.97	0.66	0.83	-0.35	0.51	0.056
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d120_NL28	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d120	28	0.983	0.0820	0.694	13.27	1.77	0.08	0.76	-0.23	0.41	0.179
+Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d120_NL37	Pb_a080_arm_grid_st0p5_w20_s0p25_bz27p525_d120	37	0.744	0.0820	0.540	13.02	1.62	0.66	0.64	-0.41	0.51	0.168
+Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz40p000	40	1.000	0.0492	1.542	20.50	1.48	0.61	0.91	-0.07	0.04	0.139
+Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000	20	1.000	0.0492	1.698	10.50	1.25	0.47	0.96	-0.05	0.05	0.133
+Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL27	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000	27	0.741	0.0492	1.080	10.74	1.53	0.52	0.94	-0.13	0.07	0.150
+Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL40	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000	40	0.500	0.0492	3.069	16.75	nan	0.75	0.55	-1.00	0.97	0.333
+Pb_a080_arm_single_st0p2_w16_s0p25_bz20p000_NL20	Pb_a080_arm_single_st0p2_w16_s0p25_bz20p000	20	1.000	0.0492	2.419	10.50	1.32	0.05	0.94	-0.22	0.22	0.096
+Pb_a080_arm_single_st0p2_w16_s0p25_bz20p000_NL40	Pb_a080_arm_single_st0p2_w16_s0p25_bz20p000	40	0.500	0.0492	1.135	10.25	1.25	0.45	0.81	-0.75	0.23	0.094

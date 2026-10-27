@@ -1,0 +1,32 @@
+# G1: each blur source alone, then combined, on the G0d base: one Pb atom alone in vacuum, ideal probe in focus, 80 mrad,
+# 0.1 A steps over 8 A (6561 positions), 20 A box, 0.25 A simulation slices, 20 layers (dz 1.0 A: the finest slicing
+# that reconstructs cleanly; 0.5 A gave noise for every probe). The base itself is G0d's
+# Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20 (FWHM_z 1.25 A, lobes ~0.05) and is not rerun here.
+# Each source is then an envelope E(k) = T_source(k) / T_base(k) (runs/PLAN.md H2), and the combinations test
+# T_combination = T_base x E_1 x E_2. The ARM probe on the same atom is G0d's (it reshapes the base: lobes +-0.22).
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+# chromatic focal spread alone (A rms)
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0.75	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	1.5	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	3.5	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	5	0	-	20
+# source size alone (A FWHM)
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.05	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.1	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.2	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.4	-	20
+# phonons alone (K; 295 = room temperature)
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	295	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	100	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	20	20
+# combinations (the convolution test)
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0.1	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0.2	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0	20	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.1	20	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0.1	20	20
+# the perfect atom against alpha (40 mrad's response is wider: a 40 A box at the same dz)
+Pb	60	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	-	20
+Pb	100	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	-	20
+Pb	40	ideal	0	single	0.1	8	200	0.25	10.2375	0	0	-	40

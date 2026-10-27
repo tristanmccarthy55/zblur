@@ -127,21 +127,36 @@ layer count or the slice thickness, (2) the lone atom's own width at dz 1.0 / 0.
 same lone atom (0.2 A steps over 16 A, as the probe is wide): if the ringing appears, it is the aberrated probe.
 ~30 GPU-h.
 
-## G1: each source alone (designed after G0 picks the slicing)
+## G0d results (2026-10-26, pack zblur_g0d_20261026_131446)
 
-Base: the **ideal (aberration-free) probe**, coherent, no phonons, single atom (if G0b passes), at the slicing G0
-picks; Pb first, Ti after.
+- **The engine has a slice-thickness floor, not a layer-count limit.** In the 20 A box, 40 layers (dz 0.5 A) did not
+  crash but came out as wrapped noise for the ideal probe and heavily degraded for the ARM probe; dz 1.0 and 0.74 A are
+  clean. With the 27.5 A box's NaNs at 46 / 55 layers (dz 0.60 / 0.50), the floor is ~0.6-0.7 A: below it the data no
+  longer pin neighbouring slices down separately (about half the atom's own depth width). So the slicing-law
+  extrapolation (W ~ 0.9 A) cannot be pushed to dz -> 0 and is dropped.
+- **The base: an ideal probe on a lone atom is clean and near-Gaussian.** FWHM_z 1.25 A at dz 1.0 (1.53 A at 0.74),
+  lobes <= 0.13, a faint hourglass.
+- **The ARM probe makes the ringing.** On the same lone atom: the same central width (1.32 A) but dips and side lobes
+  of +-0.22 (ideal +-0.05) and a strong hourglass. Aberrations reshape the base (H2's table); the grid adds a little
+  (0.3-0.5).
+- Timing: a coherent lone-atom sim ~40 min, a 20-layer reconstruction ~4.6 h (6561 positions).
+
+## G1 (`runs/g1.tsv`): each source alone, combinations, and alpha, on the base
+
+The base (ideal probe, lone Pb atom, 80 mrad, 0.1 A steps over 8 A, 20 A box, 0.25 A sim slices, dz 1.0 A) is G0d's
+own run. Twenty points, each one sim and one 20-layer reconstruction:
 
 | set | points |
 |---|---|
-| α, the perfect atom | 40, 60, 80, 100 mrad |
-| aberrations | ARM tableau at 80 mrad (known) |
-| chromatic focal spread | 0.75, 1.5, 2.5, 3.5, 5, 7.29 Å |
-| source size | 0.05, 0.1, 0.2, 0.4 Å |
-| phonons | 295, 100, 20 K |
+| chromatic focal spread alone | 0.75, 1.5, 2.5, 3.5, 5 A rms |
+| source size alone | 0.05, 0.1, 0.2, 0.4 A FWHM |
+| phonons alone | 295, 100, 20 K |
+| combinations | fs 2.5 + src 0.1; fs 2.5 + src 0.2; fs 2.5 + 20 K; src 0.1 + 20 K; fs 2.5 + src 0.1 + 20 K |
+| the perfect atom against alpha | 60, 100 mrad (20 A box); 40 mrad (40 A box, 40 layers) |
 
-About 18 points per element. At NL ~37-55 that is **~200-300 GPU-h for Pb**. If G0's large-blur tails reach the box,
-G1 uses a deeper box (`zvac` 8 Å instead of 4).
+Cost: 17 sims carry 16 configurations (coherence or phonons), so ~3-16x a coherent sim's 40 min each (the campaign's
+own walltime rule assumes ~3x); 20 reconstructions ~4.6 h (the 40 mrad one ~9 h): **~150-290 GPU-h**, a day or two
+with the queue free. The ARM base (G0d) gives the aberrations' own row; G1b later puts the key sources on it.
 
 ## G2: combinations (the convolution test)
 
