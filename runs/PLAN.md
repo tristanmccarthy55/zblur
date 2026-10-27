@@ -31,6 +31,28 @@ Hypotheses, each to be tested, not assumed:
   cell. If the total depth blur reaching ~3.9 Å is what kills it, the other sources' walls should sit at the same
   total blur.
 
+## The end goal: blobs you can compute with (the user, 2026-10-27)
+
+Treat a reconstruction as a superposition of single-atom responses ("blobs"), each a sum of simple, parameterised
+blurs, and answer: near a zone axis, **how far must the crystal be tilted for one atom's depth blur to miss the next
+atom's lateral blur?** The response belongs to the probe and beam, not the specimen, so for a few degrees of tilt the
+blob is the same in beam coordinates and tilting only moves the atoms: neighbours along a column (spacing c ~ 3.9 A)
+sit dz ~ c and dx ~ c theta apart, and their separation is the overlap of one blob with a shifted copy of itself.
+
+So the analysis must fit each kernel to a small model, not just quote widths:
+- **core**: a Gaussian, sigma_xy and sigma_z (G0d ideal: FWHM_xy ~0.13 A, FWHM_z ~1.25 A at dz 1.0);
+- **cone**: the hourglass, its opening angle and its weight against |z| (G0's sections suggest ~0.1 rad);
+- **lobes**: for the aberrated probe, side lobes along z (ARM: +-0.22 at ~+3 A, close to one unit cell);
+and how each blur source moves those parameters (focal spread -> sigma_z, source -> sigma_xy, phonons -> amplitude
+and both). Two criteria fall out: core clears core when c theta > FWHM_xy (~33 mrad, ~2 deg); the next atom leaves the
+previous one's cone only when theta exceeds the cone's opening (~0.1 rad, ~5 deg). The cone's weight says which
+matters.
+
+**What G1 cannot test is the superposition itself**: at a zone axis the beam channels along the column, which is
+where adding single-atom blobs could fail. G2 (below) adds that test: a two-atom column, 3.9 A apart in depth, offset
+sideways by 0 / 0.1 / 0.2 / 0.3 / 0.5 A (0-7 deg), against the sum of two single-atom blobs. It needs a two-atom
+geometry in ptychoshelves' simulator (not there yet).
+
 ## Phase 0, done 2026-10-21: the campaign's own kernels (`analysis/pilot_kernels.py`)
 
 Every campaign run was scored with Pb and Ti kernels made with the same physics as the run, so single-atom PSFs at
@@ -171,7 +193,14 @@ a pure lateral one. So each source's envelope E = T_source / T_base should come 
 ideal one, while the aberrations only set the base (its ringing). Where the envelopes differ, multiple scattering
 through the aberrated probe's structure breaks the first-order picture. Same cost as G1, ~150-290 GPU-h.
 
-## G2: combinations (the convolution test)
+## G2: the superposition test (two-atom columns), then the tilt answer
+
+A pair of Pb atoms 3.9 A apart in depth, offset sideways by 0, 0.1, 0.2, 0.3, 0.5 A, ideal and ARM probes: the
+reconstruction against the sum of two G0d/G1 single-atom blobs. If the sum holds off axis but fails on axis, the
+tilt at which it starts to hold is the answer to the end goal, with the blob model giving it for any spacing and
+blur budget. Needs a `--atoms` (explicit positions) option in sim/simulate_4dstem.py.
+
+## (was G2) combinations (the convolution test)
 
 fs 2.5 + src 0.1; fs 2.5 + src 0.2; fs 3.5 + src 0.1; fs 2.5 + 20 K; src 0.1 + 20 K; fs 2.5 + src 0.1 + 20 K; and
 the campaign's own point, ARM + fs 2.5 + src 0.1 + 20 K. Measured against the prediction from G1's single sources.
