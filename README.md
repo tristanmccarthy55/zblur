@@ -15,6 +15,7 @@ PX915 aberration campaign (`../ptychoshelves-clean`), started 2026-10-21. The pl
 | `runs/g0c_slices.tsv`, `runs/g0c_det.tsv` | G0c: the fine slices rescued, the recorded-angle test, the lone atom retried |
 | `runs/g0d.tsv` | G0d: the lone atom in a 20 Å box (fine slices, few layers), ideal and ARM probes |
 | `runs/g1.tsv` | G1: every blur source alone, combinations, and α, on the clean base |
+| `runs/g1b.tsv` | G1b: the same on the ARM-aberrated base, and the ARM α series (40-90 mrad) |
 | `tests/test_submit_dry.sh` | dry run of the submitter, checks the job wiring (run before every change) |
 | `analysis/zprofile.py` | the depth profile of a kernel and its widths |
 | `analysis/pilot_kernels.py` | phase 0: the campaign's existing kernels, every condition |

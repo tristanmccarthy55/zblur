@@ -1,0 +1,36 @@
+# G1b: G1 again on the ABERRATED base -- the ARM200F tableau (campaign/ceos_sweep.tsv armf_a<alpha>, retuned per
+# angle), the probe the paper is about. Same lone Pb atom, 0.2 A steps over 16 A (the ARM probe is wide; G0d's recipe),
+# 20 A box, 0.25 A sim slices, 20 layers. The base is G0d's Pb_a080_arm_single_st0p2_w16_s0p25_bz20p000_NL20 (FWHM_z
+# 1.32 A, lobes +-0.22) and is not rerun.
+# The test: to first order the blurs do not care about the aberrations (a defocus offset is free-space propagation, so
+# a focal spread slides the focus along z; a source shift slides the probe sideways), so each source's envelope
+# E = T_source / T_base should match G1's on the ideal base. Where it does not, multiple scattering through the
+# aberrated probe's structure breaks the first-order picture.
+# Alpha: the ARM tableau at 40, 60 and 90 mrad (the paper's first section: opening the aperture with a bad corrector);
+# 100 mrad is left out -- its balanced probe is ~11 A across, and the campaign needed a larger window there.
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+# chromatic focal spread alone (A rms)
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0.75	0	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	1.5	0	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	3.5	0	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	5	0	-	20
+# source size alone (A FWHM)
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.05	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.1	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.2	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.4	-	20
+# phonons alone (K; 295 = room temperature)
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	295	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	100	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	20	20
+# combinations (the convolution test)
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0.1	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0.2	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0	20	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.1	20	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0.1	20	20
+# the ARM-aberrated atom against alpha (40 mrad: a 40 A box at the same dz)
+Pb	60	arm	-	single	0.2	16	200	0.25	0.2375	0	0	-	20
+Pb	90	arm	-	single	0.2	16	200	0.25	0.2375	0	0	-	20
+Pb	40	arm	-	single	0.2	16	200	0.25	10.2375	0	0	-	40

@@ -158,6 +158,19 @@ Cost: 17 sims carry 16 configurations (coherence or phonons), so ~3-16x a cohere
 own walltime rule assumes ~3x); 20 reconstructions ~4.6 h (the 40 mrad one ~9 h): **~150-290 GPU-h**, a day or two
 with the queue free. The ARM base (G0d) gives the aberrations' own row; G1b later puts the key sources on it.
 
+## G1b (`runs/g1b.tsv`): the same sources on the aberrated base
+
+The ARM200F tableau is the probe the paper is about, so G1 is mirrored on G0d's ARM base (lone Pb atom, ARM probe at
+80 mrad, 0.2 A steps over 16 A, 20 A box, dz 1.0): the same 17 sources and combinations, and the ARM-aberrated atom
+against alpha (40, 60, 90 mrad, each with its own retuned tableau row; 100 mrad left out, its ~11 A probe needs a
+larger window).
+
+The test it adds: to first order the blurs ignore the aberrations. A defocus offset is free-space propagation, so a
+focal spread slides the (aberrated) focus along z, a pure depth convolution; a source shift slides the probe sideways,
+a pure lateral one. So each source's envelope E = T_source / T_base should come out the same on the ARM base as on the
+ideal one, while the aberrations only set the base (its ringing). Where the envelopes differ, multiple scattering
+through the aberrated probe's structure breaks the first-order picture. Same cost as G1, ~150-290 GPU-h.
+
 ## G2: combinations (the convolution test)
 
 fs 2.5 + src 0.1; fs 2.5 + src 0.2; fs 3.5 + src 0.1; fs 2.5 + 20 K; src 0.1 + 20 K; fs 2.5 + src 0.1 + 20 K; and
