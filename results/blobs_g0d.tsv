@@ -1,0 +1,6 @@
+name	contrast	sigma_xy	sigma_z	fwhm_z	dip	side	opening	cone_below	cone_above	w_fs	w_src	w_T	C0	theta10	theta5	kernel
+ideal 80 mrad NL20	nan	0.0630	0.5305	1.2493	-0.0522	0.0543	0.0935	0.0185	0.0444	nan	nan	nan	0.0324	0.0000	0.0000	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20
+ideal 80 mrad NL27	nan	0.0803	0.6509	1.5326	-0.1253	0.0692	0.3992	0.0212	0.0572	nan	nan	nan	0.0331	0.0000	0.0000	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL27
+ideal 80 mrad NL40  [NOT CLEAN]	nan	0.0431	nan	nan	-0.9987	0.9731	0.3363	nan	0.2698	nan	nan	nan	0.4018	0.0825	nan	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL40
+arm 80 mrad NL20	nan	0.0321	0.5618	1.3229	-0.2177	0.2224	0.0612	0.0709	0.0876	nan	nan	nan	0.3035	0.1225	0.1500	Pb_a080_arm_single_st0p2_w16_s0p25_bz20p000_NL20
+arm 80 mrad NL40  [NOT CLEAN]	nan	0.0569	0.5303	1.2489	-0.7490	0.2346	0.0607	0.1070	0.1175	nan	nan	nan	0.1233	0.0175	0.0350	Pb_a080_arm_single_st0p2_w16_s0p25_bz20p000_NL40

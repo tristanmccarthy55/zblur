@@ -20,6 +20,7 @@ PX915 aberration campaign (`../ptychoshelves-clean`), started 2026-10-21. The pl
 | `analysis/zprofile.py` | the depth profile of a kernel and its widths |
 | `analysis/pilot_kernels.py` | phase 0: the campaign's existing kernels, every condition |
 | `analysis/g0_report.py` | G0: the 3-D PSF of each kernel in a pack, convergence with slicing, the 2.8 Å reference |
+| `analysis/blobs.py` | the blob model per kernel (core, lobes, cone), each source's envelope against its base, and the tilt curve |
 | `results/`, `figs/` | tables and figures |
 
 ## Needs

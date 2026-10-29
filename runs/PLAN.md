@@ -183,6 +183,15 @@ same lone atom (0.2 A steps over 16 A, as the probe is wide): if the ringing app
   (0.3-0.5).
 - Timing: a coherent lone-atom sim ~40 min, a 20-layer reconstruction ~4.6 h (6561 positions).
 
+### First tilt answer, from the two G0d bases (`analysis/blobs.py`, superposition assumed)
+
+C(theta) = how much of one atom's blob lands on the next atom's core 3.905 A down a column tilted by theta:
+- **ideal probe**: ~3 % at the zone axis and <= 5 % at every tilt -- superposition alone predicts no confusion, so any
+  zone-axis failure with a near-perfect probe would have to be channelling (G2);
+- **ARM probe**: 30 % at the zone axis (its downstream lobe sits ~one cell away), falling in two stages: the lobe
+  slides off by ~50 mrad (3 deg, to ~12-13 %), then the cone holds until ~120 mrad (7 deg) for 10 % and 150 mrad
+  (8.6 deg) for 5 %.
+
 ## G1 (`runs/g1.tsv`): each source alone, combinations, and alpha, on the base
 
 The base (ideal probe, lone Pb atom, 80 mrad, 0.1 A steps over 8 A, 20 A box, 0.25 A sim slices, dz 1.0 A) is G0d's
