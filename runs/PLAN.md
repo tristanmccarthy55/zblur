@@ -254,6 +254,33 @@ over the missing-cone support):
   ARM grid's 0.73 / 0.48 -- one plane of many atoms holds contrast better than a lone atom, so the half-contrast rule
   from the grid kernels does not transfer to lone atoms as a number.
 
+## The deconvolution test (2026-10-29, `analysis/deconv_test.py` -> results/deconv_g0d_g1_g1b.tsv)
+
+Can the blurs be deconvolved out? Deconvolution assumes reconstruction = clean atom (*) blur. The physics fixes each
+kernel: a source = sideways Gaussian sigma = FWHM / 2.355; focal spread = Gaussian along the beam of its rms; vibration =
+3-D Gaussian of Pb's per-axis rms from the simulator's Debye model (0.0385 / 0.0635 / 0.1068 A at 20 / 100 / 295 K).
+The clean (base) kernel blurred that way (P) against the reconstruction from blurred data (A), within r <= 1.5 A through
+the box, P aligned to A first (+-1 slice in z, sub-pixel sideways from the projections' centroids):
+- Control (0.05 A source): 11-16 % apart, the floor between two near-identical reconstructions.
+- Focal spread is not a blur along the beam: perfect probe 2.5 A -> P 6.1 A deep at 0.36 rad, A 2.1 A deep at 0.63 rad
+  (sharper and brighter than the smear); |A - P| 71 % (89 % at 5 A). The projection (sum along z), which no z-blur can
+  change, changes by 27-43 % from 2.5 to 5 A. The core also sits off its true depth, one way each time: -1 A at 2.5 A,
+  -2 A at 3.5-5 A (perfect), -1 A (ARM 2.5-3.5). Defocus samples are symmetric Gaussian quantiles (zero mean), so this
+  is not sampling.
+- ARM: the blurred reconstruction is closer to the clean atom (37 %) than to the clean atom blurred (95 %) at 2.5 A: the
+  z-blur would wipe the ringing, the reconstruction keeps it and loses the core.
+- Vibration: thermal smear keeps 1.20 rad at 20 K, the reconstruction 0.50 (2.4x less); 295 K 0.43 vs 0.20. Sideways S
+  0.08 A vs u 0.0385 at 20 K (2x the motion).
+- Source: sideways width right (S = sigma), depth and contrast lost beyond it: 0.2 A -> A 2.8 A / 0.37 rad vs P 1.7 A /
+  0.59 rad. Only a 0.1 A source on the ARM probe comes close to a blur (28 %).
+- Total phase within 2 A (perfect probe) kept 0.85-0.98: the phase is mostly moved, not deleted -- the loss is of the
+  core's contrast and of where the phase sits (lobes, next-site weight, depth shift). (The sum is meaningless on the ARM
+  base: its ringing sums to ~0.) |H| > 1 (frequencies a blur would have to amplify): ~0 on the perfect probe, up to 12 %
+  of the support on the ARM probe -- weak evidence, not used on the page.
+Caveat: true coherent probe held fixed. Lone atoms with probe modes not run.
+Contrast in combinations (perfect probe, an observation from 5 points, not on the page): 1/c - 1 adds over the blurs
+(all three: predicted 0.171, measured 0.173; product rule 0.062). Fails on the ARM probe (0.18 vs 0.31).
+
 ## G1b (`runs/g1b.tsv`): the same sources on the aberrated base
 
 The ARM200F tableau is the probe the paper is about, so G1 is mirrored on G0d's ARM base (lone Pb atom, ARM probe at
