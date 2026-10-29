@@ -209,6 +209,32 @@ Cost: 17 sims carry 16 configurations (coherence or phonons), so ~3-16x a cohere
 own walltime rule assumes ~3x); 20 reconstructions ~4.6 h (the 40 mrad one ~9 h): **~150-290 GPU-h**, a day or two
 with the queue free. The ARM base (G0d) gives the aberrations' own row; G1b later puts the key sources on it.
 
+## G1 results (2026-10-29, pack zblur_g1_20261027_155520; `analysis/blobs.py`, figs/g1_look_*.png)
+
+Envelopes fitted separably (S from the kz = 0 row, D from E(q, kz) / E(q, 0); a joint fit trades one for the other
+over the missing-cone support):
+- **Sideways it is a clean convolution world.** The source-size blur equals the true source: S = 0.020 / 0.046 /
+  0.091 A against sigma = 0.021 / 0.042 / 0.085 A for 0.05 / 0.1 / 0.2 A FWHM (0.4 A saturates, its kernel very weak).
+  Lateral widths ADD IN QUADRATURE in every combination: measured S 0.091 / 0.065 / 0.104 / 0.101 / 0.092 against the
+  sum of the singles 0.092 / 0.065 / 0.103 / 0.102 / 0.092 A. H2 holds laterally.
+- **In depth it is not a convolution of its own size.** Focal spread of 2.5-5 A widens the core by only ~0.6-0.7 A
+  (D 0.65 / 0.61 / 0.57 at 2.5 / 3.5 / 5 A; in real space the 2.5 A core goes 0.53 -> 0.91 A sigma, a quadrature excess
+  of 0.74 A). Its damage is lost contrast (0.37 at 2.5 A) and structured lobes along z (side lobes 0.4-0.8), and
+  cross-talk onto the next atom (C(0) 11 % at 2.5 A, 20 % at 3.5 A). That is why the focal-spread wall sits near a
+  lattice spacing, not near the core's depth width. (Focal spread also blurs sideways a little: S 0.05-0.07 A.)
+- **Source size also costs depth** (the depth profile broadens): depth is carried by fine lateral detail, so a lateral
+  blur on the hourglass base removes depth information -- consistent with a lateral convolution of a non-separable blob.
+- **Phonons**: a lateral blur S 0.080 / 0.095 / 0.111 A at 20 / 100 / 295 K plus a large contrast loss (0.29 / 0.16 /
+  0.12 of the base core even at 20 K).
+- **Alpha**: 60 / 80 / 100 mrad sit at the 1 A slicing (FWHM ~1.25 A), indistinguishable; 40 mrad is resolved at
+  ~3.1 A FWHM, far below lambda / alpha^2 (12 A).
+- **Tilt** (superposition assumed): the base needs none (3 %); blur adds zone-axis cross-talk -- fs 2.5: 11 % (< 10 %
+  by 15 mrad), fs 3.5: 20 % (37 mrad for 10 %, 125 mrad for 5 %), src 0.4: 17 % (80 mrad).
+- **H3' is base-dependent**: at the campaign's wall points the ideal lone atom keeps much less contrast (fs 3.5: 0.36;
+  src 0.2: 0.22) than the ARM grid did (0.73, 0.48); compare G1b (ARM lone atom) before drawing a threshold.
+- Limits: the 20 A box clips focal-spread tails from 3.5 A; the 1 A slicing floor; the depth envelope is sampled at
+  only 8 kz points.
+
 ## G1b (`runs/g1b.tsv`): the same sources on the aberrated base
 
 The ARM200F tableau is the probe the paper is about, so G1 is mirrored on G0d's ARM base (lone Pb atom, ARM probe at

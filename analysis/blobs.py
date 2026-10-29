@@ -144,6 +144,35 @@ def envelope(r, b):
     return E, KZ, Q, ok
 
 
+def fit_envelope2(E, KZ, Q, ok):
+    """Joint fit of log E = -2 pi^2 (D^2 kz^2 + S^2 q^2): the source's depth width D and lateral width S (A), the form a
+    3-D Gaussian blur predicts. A pure focal spread is D only, a source S only, phonons both (D = S = u)."""
+    y = np.log(np.clip(E[ok], 1e-4, None))
+    X = -2 * np.pi ** 2 * np.stack([KZ[ok] ** 2, Q[ok] ** 2], 1)
+    (a, b), *_ = np.linalg.lstsq(X, y, rcond=None)
+    return float(np.sqrt(max(a, 0))), float(np.sqrt(max(b, 0))), float(np.sqrt(np.mean((X @ np.array([a, b]) - y) ** 2)))
+
+
+def fit_separable(E, KZ, Q, ok):
+    """The predicted envelope is separable, E = E_z(kz) E_q(q), but over the base's support kz^2 and q^2 rise together
+    (the missing cone), so a joint fit trades one width for the other. Separated instead: S from the kz = 0 row
+    (log E_q = -2 pi^2 S^2 q^2), D from E(q, kz) / E(q, 0) along kz at every q (log E_z = -2 pi^2 D^2 kz^2).
+    Points within 2 % of the clip floor are dropped (below the noise the log stops falling)."""
+    k0 = int(np.argmin(np.abs(KZ[:, 0])))
+    e0, q0, m0 = E[k0], Q[k0], ok[k0] & (E[k0] > 0.02)
+    S = np.nan
+    if m0.sum() >= 3:
+        x, y = q0[m0] ** 2, np.log(e0[m0])
+        S = float(np.sqrt(max(-np.sum(x * y) / np.sum(x * x), 0) / (2 * np.pi ** 2)))
+    R = E / np.where(np.isfinite(e0) & (e0 > 0.02), e0, np.nan)[None, :]
+    m = ok & np.isfinite(R) & (R > 0.02) & (np.abs(KZ) > 0) & np.isfinite(e0)[None, :] & (e0 > 0.02)[None, :]
+    D = np.nan
+    if m.sum() >= 3:
+        x, y = KZ[m] ** 2, np.log(np.clip(R[m], 1e-4, None))
+        D = float(np.sqrt(max(-np.sum(x * y) / np.sum(x * x), 0) / (2 * np.pi ** 2)))
+    return D, S
+
+
 def fit_envelope(E, KZ, Q, ok, kind):
     """The effective width of the predicted form for this kind of source (A), by least squares on log E."""
     y = np.log(np.clip(E[ok], 1e-6, None))
@@ -200,36 +229,78 @@ def main(*packs):
     for r in rs:
         c = core(r); cn = cone(r, c); tc = tilt_curve(r, c)
         b = bases.get(base_key(r))
-        # a kernel that is noise (0.5 A slices: the engine's floor) has a peak no stronger than its own lobes
-        clean = bool(np.isfinite(c["fwhm_z"]) and c["side"] < 0.6 and c["dip"] > -0.6)
+        # a kernel that is noise (0.5 A slices: the engine's floor) has no contained peak and dips as deep as it
+        # rises; a strongly blurred blob may have side lobes as high as its peak (fs 5), which is physics, not noise
+        clean = bool(np.isfinite(c["fwhm_z"]) and c["dip"] > -0.9)
         row = dict(name=describe(r) + ("" if clean else "  [NOT CLEAN]"), kernel=r["kernel"], clean=clean, **c, **cn,
-                   contrast=np.nan, w_fs=np.nan, w_src=np.nan, w_T=np.nan,
+                   contrast=np.nan, w_fs=np.nan, w_src=np.nan, w_T=np.nan, D=np.nan, S=np.nan, fit_rms=np.nan, E=None,
                    theta10=crossing(tc, 0.10), theta5=crossing(tc, 0.05), C0=float(tc[0]), tilt=tc, r=r)
         if b is not None and b is not r:
             row["contrast"] = c["peak"] / core(b)["peak"]
             E, KZ, Q, ok = envelope(r, b)
             for kind in ("fs", "src", "T"):
                 row[f"w_{kind}"] = fit_envelope(E, KZ, Q, ok, kind)
+            _, _, row["fit_rms"] = fit_envelope2(E, KZ, Q, ok)
+            row["D"], row["S"] = fit_separable(E, KZ, Q, ok)
+            row["E"] = (E, ok)
         rows.append(row)
+    combos(rows)
     write(rows, packs)
+
+
+def combos(rows):
+    """For each combination: its single sources on the same base, the convolution prediction (D^2, S^2 add) and the
+    direct Fourier test, the rms of log E_combination - sum of log E_single over the region every one of them covers."""
+    def key(w):
+        r = w["r"]
+        return base_key(r), r["fs"], r["src"], r["T"]
+    by = {key(w): w for w in rows if w["E"] is not None}
+    for w in rows:
+        r = w["r"]
+        parts = [(r["fs"], 0.0, None), (0.0, r["src"], None), (0.0, 0.0, r["T"])]
+        parts = [p for p, on in zip(parts, (r["fs"] > 0, r["src"] > 0, r["T"] is not None)) if on]
+        w.update(D_pred=np.nan, S_pred=np.nan, fourier_rms=np.nan, parts="")
+        if len(parts) < 2 or w["E"] is None:
+            continue
+        singles = [by.get((base_key(r),) + p) for p in parts]
+        if any(sg is None for sg in singles):
+            continue
+        w["D_pred"] = float(np.sqrt(sum(sg["D"] ** 2 for sg in singles)))
+        w["S_pred"] = float(np.sqrt(sum(sg["S"] ** 2 for sg in singles)))
+        E, ok = w["E"]
+        common = ok.copy()
+        tot = np.zeros_like(E)
+        for sg in singles:
+            Es, oks = sg["E"]
+            common &= oks
+            tot = tot + np.log(np.clip(np.nan_to_num(Es, nan=1e-4), 1e-4, None))
+        common &= np.isfinite(E)
+        if common.sum() > 10:
+            d = np.log(np.clip(E[common], 1e-4, None)) - tot[common]
+            w["fourier_rms"] = float(np.sqrt(np.mean(d ** 2)))
+            w["fourier_mean"] = float(np.mean(d))
+        w["parts"] = " x ".join(sg["name"].split(", ", 1)[1] for sg in singles)
 
 
 def write(rows, packs):
     tag = "_".join(os.path.basename(os.path.normpath(p)) for p in packs)
     os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
     cols = ["name", "contrast", "sigma_xy", "sigma_z", "fwhm_z", "dip", "side", "opening", "cone_below", "cone_above",
-            "w_fs", "w_src", "w_T", "C0", "theta10", "theta5", "kernel"]
+            "D", "S", "fit_rms", "D_pred", "S_pred", "fourier_rms", "C0", "theta10", "theta5", "kernel"]
     with open(os.path.join(HERE, "results", f"blobs_{tag}.tsv"), "w") as fh:
         fh.write("\t".join(cols) + "\n")
         for w in rows:
             fh.write("\t".join(f"{w[k]:.4f}" if isinstance(w[k], float) else str(w[k]) for k in cols) + "\n")
-    print(f"{'blob':<34} {'contr':>5} {'s_xy':>5} {'s_z':>5} {'dip':>5} {'side':>5} {'open':>5} {'cone@c':>6} "
-          f"{'w_fs':>5} {'w_src':>5} {'w_T':>5} {'C(0)':>5} {'th10':>5} {'th5':>5}")
+    print(f"{'blob':<44} {'contr':>5} {'s_xy':>5} {'s_z':>5} {'dip':>5} {'side':>5} {'D':>5} {'S':>6} {'rms':>5} "
+          f"{'C(0)':>5} {'th10':>5} {'th5':>5}")
+    f = lambda v, d=2: "  -  " if not np.isfinite(v) else f"{v:5.{d}f}"
     for w in sorted(rows, key=lambda w: w["name"]):
-        f = lambda v, d=2: "  -  " if not np.isfinite(v) else f"{v:5.{d}f}"
-        print(f"{w['name']:<34} {f(w['contrast'])} {f(w['sigma_xy'], 3)} {f(w['sigma_z'])} {f(w['dip'])} {f(w['side'])} "
-              f"{f(w['opening'], 3)} {f(np.nanmean([w['cone_below'], w['cone_above']])):>6} {f(w['w_fs'])} {f(w['w_src'], 3)} "
-              f"{f(w['w_T'], 3)} {f(w['C0'])} {f(w['theta10'], 3)} {f(w['theta5'], 3)}")
+        print(f"{w['name']:<44} {f(w['contrast'])} {f(w['sigma_xy'], 3)} {f(w['sigma_z'])} {f(w['dip'])} {f(w['side'])} "
+              f"{f(w['D'])} {f(w['S'], 3):>6} {f(w['fit_rms'])} {f(w['C0'])} {f(w['theta10'], 3)} {f(w['theta5'], 3)}")
+    print("\nconvolution test (combinations): D^2 and S^2 should add; Fourier rms = log E_comb - sum log E_single")
+    for w in sorted([w for w in rows if np.isfinite(w.get("D_pred", np.nan))], key=lambda w: w["name"]):
+        print(f"  {w['name']:<44} D {f(w['D'])} vs {f(w['D_pred'])}   S {f(w['S'], 3)} vs {f(w['S_pred'], 3)}   "
+              f"Fourier rms {f(w['fourier_rms'])} (mean {f(w.get('fourier_mean', np.nan))})   [{w['parts']}]")
     plot_tilt(rows, tag)
 
 
