@@ -10,7 +10,8 @@ For every kernel in the packs given (G0d / G1 / G1b, lone atoms):
   cone     the hourglass: its opening (the radius of the strongest ring against |dz|, a straight-line fit) and its height
            one lattice spacing away (the ring's phase at |dz| = SPACING, relative to the core)
   envelope E(q, kz) = |T_source| / |T_base| (T = FFT of the windowed kernel, averaged over azimuth), fitted to the
-           predicted form of its source: exp(-2 pi^2 d^2 kz^2) (focal spread d), exp(-2 pi^2 s^2 q^2) (source
+           predicted form of its source (D < 0: it rises along kz, impossible for a convolution):
+           exp(-2 pi^2 d^2 kz^2) (focal spread d), exp(-2 pi^2 s^2 q^2) (source
            s = FWHM / 2.355), exp(-2 pi^2 u^2 (q^2 + kz^2)) (phonons) -- each returns an effective width to compare
            with the true one. A combination's envelope is compared with the product of its single sources'.
   tilt     neighbours along a column spacing SPACING, tilted by theta, sit at d = SPACING (sin theta, 0, cos theta)
@@ -169,7 +170,11 @@ def fit_separable(E, KZ, Q, ok):
     D = np.nan
     if m.sum() >= 3:
         x, y = KZ[m] ** 2, np.log(np.clip(R[m], 1e-4, None))
-        D = float(np.sqrt(max(-np.sum(x * y) / np.sum(x * x), 0) / (2 * np.pi ** 2)))
+        a = -np.sum(x * y) / np.sum(x * x)
+        # a < 0: the envelope RISES along kz, which no depth convolution can do (it only damps). Reported as a negative D
+        # so it cannot pass for "no depth blur": on the ARM base the probe's ~4 A axial ringing survives a blur that
+        # takes the core.
+        D = float(np.sign(a) * np.sqrt(abs(a) / (2 * np.pi ** 2)))
     return D, S
 
 

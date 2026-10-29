@@ -235,6 +235,25 @@ over the missing-cone support):
 - Limits: the 20 A box clips focal-spread tails from 3.5 A; the 1 A slicing floor; the depth envelope is sampled at
   only 8 kz points.
 
+## G1b results (2026-10-29, pack zblur_g1b_20261027_155518; figs/g1b_look_*.png)
+
+- **The ARM blob rings along z with a ~4 A period** (~lambda / alpha^2, about one lattice spacing): peak, dip at +1 A,
+  lobe at +3-4 A, dip at +5 A -- alternating bands down the axis.
+- **Every blur takes the core and leaves the ringing.** Focal spread 2.5 A drops the core 2.42 -> 0.99 rad (contrast
+  0.41), source 0.1 A to 0.41, 20 K to 0.39; the +-0.5 rad ringing keeps its absolute strength, so blurred ARM blobs
+  become ringing-dominated. A 2.5 A depth convolution would damp a 4 A ripple ~2000-fold; here it is untouched, so the
+  depth envelope RISES along kz for every ARM kernel (D < 0, more negative as the blur grows). On the aberrated base
+  too, the depth part is not a convolution; the probe's axial structure is not attached to the atom by the blur.
+- **Laterally, roughly a convolution for small blurs**: source S = 0.019 / 0.037 / 0.053 / 0.061 A against 0.021 /
+  0.042 / 0.085 / 0.170 (good at 0.05-0.1 A, saturating beyond); combinations within ~10-20 % of the quadrature sums.
+- **Opening the aperture with this corrector (the paper's first section)**: 60 mrad smooth, no ringing (sigma_z ~0.86
+  A, 7 % onto the next atom); 80 mrad ringing (lobes 0.22, 30 %); 90 mrad stronger ringing (lobes 0.31, dip -0.34, 20
+  %, 10 % only by ~45 mrad tilt). The bad corrector's price for a sharper core is axial ringing at about the lattice
+  period. **40 mrad (ARM) failed**: wrapped noise (logs not read yet).
+- **H3' is setup-dependent**: at the wall points the ARM lone atom keeps 0.37 (fs 3.5) and 0.32 (src 0.2) against the
+  ARM grid's 0.73 / 0.48 -- one plane of many atoms holds contrast better than a lone atom, so the half-contrast rule
+  from the grid kernels does not transfer to lone atoms as a number.
+
 ## G1b (`runs/g1b.tsv`): the same sources on the aberrated base
 
 The ARM200F tableau is the probe the paper is about, so G1 is mirrored on G0d's ARM base (lone Pb atom, ARM probe at
