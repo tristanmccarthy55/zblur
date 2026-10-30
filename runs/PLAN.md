@@ -352,3 +352,22 @@ core-minus-ring metrics (`pilot_kernels.py`) stay for the coarse kernels.
 
 A depth-blur budget: each source's added blur against its size (and against instruments), the combinations'
 measured blur against the convolution prediction, and a line at one unit cell.
+
+## Correction (2026-10-30): every vibration run moved the atom sqrt(3) too far
+
+The simulator (ptychoshelves-clean `sim/simulate_4dstem.py`) passed abTEM `sigmas = sqrt(3) u`, right on abTEM 1.0.5
+(sigmas = 3-D rms) and wrong on Blythe's 1.0.9 (sigmas = per-axis std; measured: the old code gives 1.74 u per axis on
+1.0.9, 1.00 u on 1.0.5). Fixed in ptychoshelves-clean a8b9264 (`abtem_sigmas()`, `sim/test_phonon_sigma.py`). Every
+zblur sim with a T ran before the fix on Blythe, so the lone Pb atom moved 0.0667 / 0.110 / 0.185 A per axis in the runs
+labelled 20 / 100 / 295 K: in the Debye model, as at ~110 / ~310 / ~890 K. `analysis/deconv_test.py` now smears with what
+the atoms got (`PB_U_GOT`). What changes (ideal probe; ARM in brackets):
+- the reconstruction's peak against the smear's: 0.50 vs 0.77 at "20 K" (was 0.50 vs 1.20, "2.4x"), 0.27 vs 0.42 at
+  "100 K", 0.20 vs 0.18 at "295 K" (matches); ARM "20 K": 0.93 vs 0.64, the reconstruction keeps MORE peak than the smear;
+- left unexplained by the smear: 72 / 63 / 68 % (was 92 / 84 / 75 %): still not a smear, against the 11-16 % floor;
+  ARM 47 % at "20 K" (partly), 68 % at "100 K" (was 38 / 48 %);
+- G1's lateral widening S 0.080 / 0.095 / 0.111 A reads against 0.067 / 0.110 / 0.185 A of motion, not 0.039 / 0.064 /
+  0.107: at "20 K" 1.2x the motion, not 2x;
+- H3' (the core-contrast rule) relates each kernel to its own run's verdict, so it holds as a relation; its phonon
+  conditions were warmer than labelled.
+Reruns at the true temperatures: the T rows of g1.tsv / g1b.tsv after a `git pull` of ptychoshelves-clean on Blythe
+(`sim/test_phonon_sigma.py` must PASS first).

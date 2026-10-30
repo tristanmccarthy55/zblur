@@ -6,8 +6,11 @@ physics predicts, and the atom's total phase before and after.
 Deconvolution assumes  reconstruction = clean atom (*) blur kernel.  The physics fixes the kernel for each source:
   source size   sideways Gaussian, sigma = FWHM / 2.355
   focal spread  Gaussian along the beam, sigma = the focal spread (rms)
-  vibration     isotropic 3-D Gaussian, sigma = Pb's per-axis rms displacement at T, from the simulator's own Debye
-                model (sim/simulate_4dstem.py, B_at_temperature): 0.0385 / 0.0635 / 0.1068 A at 20 / 100 / 295 K
+  vibration     isotropic 3-D Gaussian, sigma = Pb's per-axis rms displacement in the sims. Meant: the simulator's own
+                Debye model (sim/simulate_4dstem.py, B_at_temperature), 0.0385 / 0.0635 / 0.1068 A at 20 / 100 / 295 K.
+                Got: sqrt(3) x that (0.0667 / 0.110 / 0.185 A, as at ~110 / ~310 / ~890 K): every zblur sim so far ran
+                before 2026-10-30 on Blythe's abTEM 1.0.9, where the simulator's sigmas = sqrt(3) u moved each atom
+                sqrt(3) u per axis (ptychoshelves-clean a8b9264). The kernel uses what the atoms got (PB_U_GOT)
   combinations  the sources' Gaussians compounded (variances add per axis)
 For every blurred kernel A with base B (same probe, alpha, scan, box) and prediction P = B (*) kernel, inside a cylinder
 r <= R_CMP around the atom through the whole box (background = each layer's median, as everywhere in zblur):
@@ -42,7 +45,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 import blobs  # noqa: E402
 import zprofile as zp  # noqa: E402
 
-PB_U = {20: 0.0385, 100: 0.0635, 295: 0.1068}     # A, per-axis rms (B / 8 pi^2)^0.5 from the simulator's Debye model
+PB_U = {20: 0.0385, 100: 0.0635, 295: 0.1068}     # A, per-axis rms MEANT: (B / 8 pi^2)^0.5, the simulator's Debye model
+PB_U_GOT = {T: float(np.sqrt(3.0) * u) for T, u in PB_U.items()}   # A, what the pre-2026-10-30 sims gave (abTEM 1.0.9)
 R_CMP = 1.5                                       # A, the comparison cylinder
 R_SUM = 2.0                                       # A, the cylinder for the total phase
 
@@ -55,7 +59,7 @@ def kernel_sigmas(r):
     """(sigma along the beam, sigma sideways) in A of the convolution the physics predicts for r's blur sources."""
     sz, sxy = r["fs"], r["src"] / 2.3548
     if r["T"] is not None:
-        u = PB_U[int(round(r["T"]))]
+        u = PB_U_GOT[int(round(r["T"]))]
         sz, sxy = np.hypot(sz, u), np.hypot(sxy, u)
     return sz, sxy
 
