@@ -281,6 +281,36 @@ Caveat: true coherent probe held fixed. Lone atoms with probe modes not run.
 Contrast in combinations (perfect probe, an observation from 5 points, not on the page): 1/c - 1 adds over the blurs
 (all three: predicted 0.171, measured 0.173; product rule 0.062). Fails on the ARM probe (0.18 vs 0.31).
 
+### Is it expected? Literature check (2026-10-30, on the weekly page §02)
+- The usual accounting assumes a smear: Chen et al., Science 372, 826 (2021) (arXiv 2101.00465) model the atom width as
+  the static potential convolved with instrument + thermal Gaussians, added in quadrature, and the chromatic depth blur
+  of conventional imaging as Cc dE/E0 convolved with lambda/alpha^2 (2.7 + 4.3 nm -> 5.1 nm); 12 probe modes on
+  experiment; experimental depth resolution 2x the simulated, put partly to chromatic + spatial partial coherence.
+- Linear theory: partial coherence = envelopes on the transfer (a filter = a smear) only for weak objects; strong
+  scatterers need the TCC (Ishizuka, Ultramicroscopy 5, 55 (1980), doi 10.1016/0304-3991(80)90011-X). Pb here is
+  1.7-2.4 rad.
+- Our reading (a derivation, untested on its own): the blur averages intensities, a smear averages amplitudes. The term
+  linear in the potential (interference with the unscattered beam) averages identically (a common shift of probe + atom
+  cancels in psi0* psi_s; a common z-shift in vacuum cancels likewise), so a smear gets that part right. The
+  scattered-on-scattered term does not: <|psi_s|^2> >= |<psi_s>|^2, so blurred data keep scattered power a smeared atom
+  cannot make (for vibration the difference is the TDS). The solver keeps the atom compact (85-98 % of the phase within
+  2 A kept) and loses peak / moves phase to match the damped interference. Testable: compare the |psi_s|^2 power of the
+  data against that of the smear's forward model.
+- Behan, Cosgriff, Kirkland, Nellist, Phil Trans A 367, 3825 (2009): missing cone, depth resolution depends on lateral
+  size, deconvolution of limited use.
+- Mixed states model the blur instead: Thibault & Menzel, Nature 494, 68 (2013); Chen et al., Nat Commun 11, 2994
+  (2020); Xu et al., arXiv 2406.06640 (2024).
+- Vibration seen independently: Herdegen, Diederichs, Mueller-Caspary, PRB 110, 064102 (2024): pixel-wise inverse
+  multislice of frozen-phonon SrTiO3 underestimates the phase maxima at all sites, TDS artefacts, MSDs < 5 % of theory;
+  a parametrised model (Diederichs et al., Nat Commun 2024, doi 10.1038/s41467-023-44268-x) recovers them.
+- Ringing: expected in kind for incoherent sectioning (missing cone; the probe's axial profile is the depth response,
+  shaped by residual aberrations and Cc: Borisevich, Lupini, Pennycook PNAS 2006; Jones & Nellist J Microsc 254, 47
+  (2014)). NOT explained with the probe given: in weak-object theory the aberrations divide out (parallax depth PSF =
+  standard sectioning modes, Terzoudis-Lumsden et al., M&M 29, 1409 (2023)); no report found of aberration-tied depth
+  ringing in MEP with the probe known. Candidates: strong scattering; depth frequencies the aberrated probe carries
+  weakly, unrecovered at 200 iterations; the 72 A probe vs the 16 A scan. Open.
+- Tilt: Dong et al., Nat Commun 16 (2025), tilt-coupled MEP, >3x depth resolution from small +-theta tilts.
+
 ## G1b (`runs/g1b.tsv`): the same sources on the aberrated base
 
 The ARM200F tableau is the probe the paper is about, so G1 is mirrored on G0d's ARM base (lone Pb atom, ARM probe at
