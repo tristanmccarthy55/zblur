@@ -35,6 +35,16 @@
 #
 # Per submission (environment): BETA_LSQ (0.05), GROUPING (32), NITER (200), RTAG (appended to every reconstruction and
 # kernel name, so a rerun with other engine settings never lands in an earlier run's folder).
+#
+# PROBE_MODES (1; 2026-10-30, the user: give the lone atom the modes the main reconstructions get): above 1, the probe is
+# RELEASED and reconstructed as that many incoherent modes, as the campaign's mode legs are (campaign/run_thin_atomfind.sh,
+# kick_job with KICK_START=mixed): a point with focal spread or source size starts from the top PROBE_MODES eigenmodes of
+# its own sim's partially coherent state (sim/make_mixed_probe.py, run in the job via PROBE_MIXED); a coherent point
+# starts from the true probe with the engine's own extra modes. The probe updates from PROBE_START (40) in the presolve and
+# PROBE_START2 (20) in the full engine, inside the aperture (PROBE_SUPPORT_FFT=1). RTAG defaults to _m<modes>, so a mode
+# run never lands in a fixed-probe run's folder. (The mixed state holds the focal spread and source size, not vibration,
+# as in the campaign's cooled mode legs.)
+#   PROBE_MODES=8 NITER=250 bash runs/zb_submit.sh runs/g1m.tsv
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,6 +59,18 @@ DRY_RUN="${DRY_RUN:-0}"
 
 GRIDSP=3; BIN=2; CELL_Z=3.905; THIN=5; PHONON_N=16; LAM=0.0196877
 NITER="${NITER:-200}"; BETA_LSQ="${BETA_LSQ:-0.05}"; GROUPING="${GROUPING:-32}"; RTAG="${RTAG:-}"
+PROBE_MODES="${PROBE_MODES:-1}"; PROBE_START="${PROBE_START:-40}"; PROBE_START2="${PROBE_START2:-20}"
+case "$PROBE_MODES" in ''|*[!0-9]*|0) echo "PROBE_MODES must be a whole number >= 1, not '${PROBE_MODES}'" >&2; exit 1;; esac
+[ "$PROBE_MODES" -gt 1 ] && [ -z "$RTAG" ] && RTAG="_m${PROBE_MODES}"
+# Phonon points need the frozen-phonon sigma fix (ptychoshelves-clean a8b9264, 2026-10-30): before it, abTEM 1.0.9 moved
+# every atom sqrt(3) too far. Their sims are named _T<T>v2 so the pre-fix _T<T> folders are never reused, and they are
+# refused unless the checkout contains the fix. Checked before anything is submitted.
+PHONON_FIX="${PHONON_FIX:-a8b9264}"
+ph=$(awk -F'\t' '$0 !~ /^#/ && NF >= 13 && $13 != "-" {print $1, $2, $3, "T=" $13}' "$PTS")
+if [ -n "$ph" ] && ! git -C "$PTYCHO_ROOT" merge-base --is-ancestor "$PHONON_FIX" HEAD 2>/dev/null; then
+    printf "phonon points need the frozen-phonon sigma fix %s in PTYCHO_ROOT (%s); pull it there first and run\nsim/test_phonon_sigma.py with the sim env. Points:\n%s\n" "$PHONON_FIX" "$PTYCHO_ROOT" "$ph" >&2
+    exit 1
+fi
 
 for f in sim/run_sim.slurm run_recon_synthetic_ML.slurm analysis/atomfind/extract_psf.py campaign/ceos_sweep.tsv; do
     [ -f "${PTYCHO_ROOT}/${f}" ] || { echo "PTYCHO_ROOT=${PTYCHO_ROOT} has no ${f}" >&2; exit 1; }
@@ -82,7 +104,7 @@ submit() {
 num() { echo "$1" | sed 's/\./p/'; }
 
 [ "$DRY_RUN" = "1" ] || mkdir -p "${ZB_ROOT}/logs" "${ZB_ROOT}/psf" "${ZB_ROOT}/manifests"
-[ "$DRY_RUN" = "1" ] || printf "sim\tnl\tdz_A\tzdrop\tboxz_A\tzvac_A\tel\talpha\taber\tc1_A\tgeom\tstep_A\twin_A\tdet_mrad\tdx_A\tslice_A\tfs_A\tsrc_A\tT_K\tbeta_lsq\tgrouping\tniter\trtag\tkernel\tsim_job\trecon_job\textract_job\tptycho_pin\tmex_cksum\n" >"$MAN"
+[ "$DRY_RUN" = "1" ] || printf "sim\tnl\tdz_A\tzdrop\tboxz_A\tzvac_A\tel\talpha\taber\tc1_A\tgeom\tstep_A\twin_A\tdet_mrad\tdx_A\tslice_A\tfs_A\tsrc_A\tT_K\tbeta_lsq\tgrouping\tniter\trtag\tkernel\tsim_job\trecon_job\textract_job\tptycho_pin\tmex_cksum\tprobe_modes\tprobe_start\n" >"$MAN"
 
 EXTRACT_JOBS=(); PSF_NAMES=(); SEEN=" "
 while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T nls rest; do
@@ -100,7 +122,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
     name="${name}_${geom}_st$(num "$step")_w$(num "$win")_s$(num "$slice")_bz$(num "$boxz")"
     [ "$fs" != "0" ] && name="${name}_fs$(num "$fs")"
     [ "$src" != "0" ] && name="${name}_src$(num "$src")"
-    [ "$T" != "-" ] && name="${name}_T${T}"
+    [ "$T" != "-" ] && name="${name}_T${T}v2"          # v2: simulated after the sigma fix (the old _T<T> moved sqrt(3) u)
     [ "$det" != "200" ] && name="${name}_d${det}"
     dx=$(awk -v l="$LAM" -v t="$det" 'BEGIN{printf "%.5f", l / (2 * t / 1000)}')    # object pixel = lambda / (2 theta_max)
     case "$SEEN" in *" ${name} "*) echo "duplicate point ${name} in ${PTS}" >&2; exit 1;; esac
@@ -159,25 +181,44 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             xargs="--single --half-xy $(awk -v d="$dx" 'BEGIN{printf "%d", 3.937/d + 0.5}') --dx ${dx}"
         fi
         rdir="${ZB_ROOT}/recon_${name}_NL${nl}${RTAG}"
+        # the start probe: fixed = the true one; modes = the sim's mixed state (written by the job) or, coherent, the true
+        # one with the engine's extra modes
+        pstart=fixed
+        if [ "$PROBE_MODES" -gt 1 ]; then
+            if [ "$fs" != "0" ] || [ "$src" != "0" ]; then pstart=mixed; else pstart=seeded; fi
+        fi
         if [ "$DRY_RUN" != "1" ]; then
             mkdir -p "${rdir}/01"
             for f in data_dp.hdf5 data_position.hdf5 sim_meta.mat; do ln -sf "${sdir}/01/${f}" "${rdir}/01/${f}"; done
-            ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial.mat"    # the true probe, held fixed
+            if [ "$pstart" = mixed ]; then
+                # the job writes probe_initial.mat HERE: it must not be a link, or the writer would write through it and
+                # replace the sim's own true probe. The writer reads the true probe for the record.
+                ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial_true.mat"
+                rm -f "${rdir:?}/01/probe_initial.mat" "${rdir:?}/01/probe_initial.json"
+            else
+                ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial.mat"    # the true probe (held fixed when 1 mode)
+            fi
+        fi
+        rexp="ALL,NLAYERS=${nl},SIM_BASE=${rdir}/,REGLAYER=0,PROBE_MODES=${PROBE_MODES},NITER=${NITER},SAVE_EVERY=${NITER},GROUPING=${GROUPING},BETA_LSQ=${BETA_LSQ}"
+        if [ "$PROBE_MODES" -gt 1 ]; then
+            rexp="${rexp},PROBE_START=${PROBE_START},PROBE_START2=${PROBE_START2},PROBE_SUPPORT_FFT=1"
+            [ "$pstart" = mixed ] && rexp="${rexp},PROBE_MIXED=${PROBE_MODES}"
         fi
         if [ "$nl" -le 20 ]; then rtime=10:00:00; elif [ "$nl" -le 40 ]; then rtime=24:00:00; else rtime=48:00:00; fi
+        [ "$PROBE_MODES" -gt 1 ] && rtime=48:00:00         # modes multiply the work: the crystal's 8-mode legs ran ~2.4x
         rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="zb_rec_${name}_NL${nl}${RTAG}" --time="$rtime" --mem=96G \
              ${dep[@]+"${dep[@]}"} --output="${rdir}/slurm_%j.out" --error="${rdir}/slurm_%j.err" \
-             --export="ALL,NLAYERS=${nl},SIM_BASE=${rdir}/,REGLAYER=0,PROBE_MODES=1,NITER=${NITER},SAVE_EVERY=${NITER},GROUPING=${GROUPING},BETA_LSQ=${BETA_LSQ}" \
-             "${PTYCHO_ROOT}/run_recon_synthetic_ML.slurm")
+             --export="$rexp" "${PTYCHO_ROOT}/run_recon_synthetic_ML.slurm")
         pname="${name}_NL${nl}${RTAG}"
         ej=$(submit --job-name="zb_psf_${pname}" --time=00:30:00 --mem=16G --cpus-per-task=2 --dependency="afterok:${rj}" \
              --output="${ZB_ROOT}/logs/zb_psf_%j.out" --error="${ZB_ROOT}/logs/zb_psf_%j.err" \
              --wrap="git -C '${PTYCHO_ROOT}' rev-parse --short HEAD > '${ZB_ROOT}/psf/psf_${pname}_pin.txt'; '${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} ${xargs} --out '${ZB_ROOT}/psf'")
         EXTRACT_JOBS+=("$ej"); PSF_NAMES+=("$pname")
-        [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+        [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
             "$name" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$det" "$dx" "$slice" \
-            "$fs" "$src" "$T" "$BETA_LSQ" "$GROUPING" "$NITER" "${RTAG:--}" "$pname" "${sj:-reused}" "$rj" "$ej" "$PIN" "$MEXSUM" >>"$MAN"
-        echo "  ${pname}: dz ${dz} A, zdrop ${zdrop} (${geom}, zvac ${zvac}), dx ${dx} A; sim ${sj:-reused}, recon ${rj}, kernel ${ej}" >&2
+            "$fs" "$src" "$T" "$BETA_LSQ" "$GROUPING" "$NITER" "${RTAG:--}" "$pname" "${sj:-reused}" "$rj" "$ej" "$PIN" "$MEXSUM" \
+            "$PROBE_MODES" "$pstart" >>"$MAN"
+        echo "  ${pname}: dz ${dz} A, zdrop ${zdrop} (${geom}, zvac ${zvac}), dx ${dx} A; probe ${pstart}, ${PROBE_MODES} mode(s); sim ${sj:-reused}, recon ${rj}, kernel ${ej}" >&2
     done
 done <"$PTS"
 

@@ -47,6 +47,38 @@ if [ -n "$rt" ]; then
   nt=$(echo "$out" | grep -E 'job-name=zb_(rec|psf)_' | grep -v -c -- "NL[0-9]*${rt} " || true)
   [ "$nt" = 0 ] && ok "tag ${rt} on every recon and kernel" || bad "tag missing on ${nt}"
 fi
+# probe modes (PROBE_MODES > 1): every recon released with the campaign's mode-leg switches and tagged _m<modes> (unless
+# RTAG is given); a point with focal spread or source size starts from its mixed state, a coherent one does not; 48 h
+pm="${PROBE_MODES:-1}"
+if [ "$pm" -gt 1 ]; then
+  rec=$(echo "$out" | grep 'job-name=zb_rec_')
+  nm=$(echo "$rec" | grep -v -c "PROBE_MODES=${pm},.*PROBE_START=${PROBE_START:-40},PROBE_START2=${PROBE_START2:-20},PROBE_SUPPORT_FFT=1" || true)
+  [ "$nm" = 0 ] && ok "${pm} modes, probe released (${PROBE_START:-40} / ${PROBE_START2:-20}), aperture on, every recon" || bad "mode switches missing on ${nm}"
+  nmix=$(grep -v '^#' "$PTS" | awk -F'\t' '$11 != "0" || $12 != "0" {n += split($14, a, ",")} END{print n + 0}')
+  gmix=$(echo "$rec" | grep -c "PROBE_MIXED=${pm}" || true)
+  cmix=$(echo "$rec" | grep 'PROBE_MIXED' | grep -v -c -E '_(fs|src)[0-9p]+' || true)
+  [ "$gmix" = "$nmix" ] && [ "$cmix" = 0 ] && ok "mixed-state start on the ${nmix} blurred recons, none on a coherent one" \
+    || bad "PROBE_MIXED on ${gmix} (want ${nmix}), on ${cmix} coherent"
+  tg="${RTAG:-_m${pm}}"; nt=$(echo "$out" | grep -E 'job-name=zb_(rec|psf)_' | grep -v -c -- "NL[0-9]*${tg} " || true)
+  [ "$nt" = 0 ] && ok "tag ${tg} on every recon and kernel" || bad "mode tag missing on ${nt}"
+  nw=$(echo "$rec" | grep -v -c -- '--time=48:00:00' || true); [ "$nw" = 0 ] && ok "48 h walltime on every mode recon" || bad "walltime on ${nw}"
+else
+  echo "$out" | grep 'job-name=zb_rec_' | grep -q -E 'PROBE_MIXED|PROBE_START' && bad "a 1-mode recon got mode switches" \
+    || ok "1 mode: probe held fixed (no PROBE_START / PROBE_MIXED)"
+fi
+# phonon sims (the sigma fix, ptychoshelves a8b9264): named _T<T>v2 so a pre-fix _T<T> folder is never reused, and
+# refused, before anything is submitted, when the checkout lacks the fix (here: a commit it does not have)
+nT=$(grep -v '^#' "$PTS" | awk -F'\t' '$13 != "-"' | wc -l | tr -d ' ')
+if [ "$nT" -gt 0 ]; then
+  nv=$(echo "$out" | grep 'job-name=zb_sim_' | grep -c -E '_T[0-9]+v2[_ ]' || true)
+  nold=$(echo "$out" | grep -E 'job-name=zb_(sim|rec|psf)_' | grep -c -E '_T[0-9]+(_|NL| )' || true)
+  [ "$nv" = "$nT" ] && [ "$nold" = 0 ] && ok "phonon sims named _T<T>v2 (${nv}), no pre-fix name" || bad "phonon names: v2 ${nv} of ${nT}, old ${nold}"
+fi
+tmp="$(mktemp "${TMPDIR:-/tmp}/zbph.XXXXXX")"; { grep -v '^#' "$PTS" | head -1 | awk -F'\t' 'BEGIN{OFS="\t"} {$13 = "20"; print}'; } >"$tmp"
+po="$(PHONON_FIX=0123456789abcdef0123456789abcdef01234567 DRY_RUN=1 ALLOW_DIRTY=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share bash runs/zb_submit.sh "$tmp" 2>&1)" && pe=0 || pe=$?
+rm -f "$tmp"
+[ "$pe" != 0 ] && ! echo "$po" | grep -q '^DRY\[' && echo "$po" | grep -q 'need the frozen-phonon sigma fix' \
+  && ok "phonon point refused without the sigma fix, nothing submitted" || bad "phonon guard (exit ${pe})"
 echo "$out" | grep 'job-name=zb_sim_.*_single_' | grep -q 'GRID_SPACING=0' && ok "single atom has GRID_SPACING=0" || { [ "$ns" = 0 ] || bad "single GRID_SPACING"; }
 echo "$out" | grep -q 'job-name=zb_sim_.*_ideal_' && { echo "$out" | grep 'job-name=zb_sim_.*_ideal_' | grep -q 'CS=0,C5=0,DEFOCUS=' \
   && ok "ideal probe: CS 0, C5 0, its own defocus" || bad "ideal probe exports"; }

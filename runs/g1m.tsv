@@ -1,0 +1,30 @@
+# G1m (2026-10-30, the user: "try with the same amount of modes we give the main recons ... 8 modes, and see if it
+# becomes a convolution"): G1 / G1b's lone Pb atom, the same sims (reused; no new simulation), reconstructed with the
+# probe RELEASED as 8 modes started from each sim's own mixed state -- the campaign's mode-leg recipe (mono300 _mixF:
+# PROBE_MIXED, probe update from iteration 40 / 20, aperture constraint, 250 iterations). Run with
+#   PROBE_MODES=8 NITER=250 bash runs/zb_submit.sh runs/g1m.tsv        (RTAG defaults to _m8)
+# Three outcomes, read against G1 / G1b's fixed-probe kernels and the deconvolution test (analysis/deconv_test.py):
+#   the reconstruction returns to the nothing-added atom  -> the modes take the blur into the beam (what mixed-state
+#                                                            ptychography is for: Thibault & Menzel 2013)
+#   it matches the smear of the nothing-added atom        -> with modes the blur IS a convolution
+#   it stays as lossy as with the fixed probe             -> 8 modes do not capture it
+# The coherent points are the controls: what releasing the probe with 8 modes does to an atom with nothing added.
+# Phonon points are left out: the old sims moved the atom sqrt(3) too far, and new ones (_T<T>v2) need ptychoshelves'
+# sigma fix pulled on Blythe first (zb_submit refuses them without it). For a lone atom, moving the atom equals moving
+# the probe, so vibration is a source + focal spread of the atom's own rms; the source and focal-spread points below
+# speak for it until then.
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+# no-aberration probe (G0d base, G1 blurs): 0.1 A steps over 8 A
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	5	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.1	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.2	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0.1	-	20
+# ARM200F probe (G0d base, G1b blurs): 0.2 A steps over 16 A
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	5	0	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.1	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.2	-	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0.1	-	20

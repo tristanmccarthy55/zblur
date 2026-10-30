@@ -324,6 +324,24 @@ a pure lateral one. So each source's envelope E = T_source / T_base should come 
 ideal one, while the aberrations only set the base (its ringing). Where the envelopes differ, multiple scattering
 through the aberrated probe's structure breaks the first-order picture. Same cost as G1, ~150-290 GPU-h.
 
+## G1m (`runs/g1m.tsv`, 2026-10-30): the lone atom with the main reconstructions' 8 probe modes
+
+The user: "try with the same amount of modes we give the main recons ... 8 modes, and see if it becomes a convolution".
+G1 / G1b's sims, reused (no new simulation), reconstructed with the probe released as 8 modes from each sim's own mixed
+state: the campaign's mode-leg recipe (mono300 `_mixF`: `PROBE_MIXED`, probe update from iteration 40 / 20,
+`PROBE_SUPPORT_FFT=1`, 250 iterations), via `PROBE_MODES=8` in `zb_submit.sh` (tag `_m8`). Both probes, 80 mrad, NL 20:
+nothing added (the control: what releasing the probe does to a clean atom), fs 2.5, fs 5, src 0.1, src 0.2, fs 2.5 +
+src 0.1. 12 reconstructions, ~11-15 h each if they run ~2.4-3x the fixed 4.6 h as the crystal's mode legs did; walltime
+48 h; ~130-180 GPU-h. GROUPING 32 as the fixed runs (8 modes x 32 may not fit an L40: check the first 20 min; fallback
+GROUPING=16 RTAG=_m8g16).
+Read each against G1 / G1b and the deconvolution test. Three outcomes: back to the nothing-added atom (the modes take the
+blur into the beam: what mixed states are for); the smear (with modes the blur is a convolution); still lossy (8 modes
+do not hold it; a 0.2 A source leaves 26 % in one mode). Prediction: the first, as far as 8 modes hold the state --
+for a lone atom every one of these blurs is exactly a mixture of probes.
+`zb_submit.sh` also now names phonon sims `_T<T>v2` and refuses phonon points unless PTYCHO_ROOT contains the sigma fix
+(a8b9264): the pre-fix `_T<T>` folders were reused by name. Dry run `tests/test_submit_dry.sh` (modes checks, the
+guard); every committed points file gives the same sbatch lines as before apart from those names.
+
 ## G2: the superposition test (two-atom columns), then the tilt answer
 
 A pair of Pb atoms 3.9 A apart in depth, offset sideways by 0, 0.1, 0.2, 0.3, 0.5 A, ideal and ARM probes: the
