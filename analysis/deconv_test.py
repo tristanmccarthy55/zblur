@@ -10,7 +10,8 @@ Deconvolution assumes  reconstruction = clean atom (*) blur kernel.  The physics
                 Debye model (sim/simulate_4dstem.py, B_at_temperature), 0.0385 / 0.0635 / 0.1068 A at 20 / 100 / 295 K.
                 Got: sqrt(3) x that (0.0667 / 0.110 / 0.185 A, as at ~110 / ~310 / ~890 K): every zblur sim so far ran
                 before 2026-10-30 on Blythe's abTEM 1.0.9, where the simulator's sigmas = sqrt(3) u moved each atom
-                sqrt(3) u per axis (ptychoshelves-clean a8b9264). The kernel uses what the atoms got (PB_U_GOT)
+                sqrt(3) u per axis (ptychoshelves-clean a8b9264). The kernel uses what the atoms got: PB_U_GOT for those,
+                PB_U for kernels named _T<T>v2 (made after the fix)
   combinations  the sources' Gaussians compounded (variances add per axis)
 For every blurred kernel A with base B (same probe, alpha, scan, box) and prediction P = B (*) kernel, inside a cylinder
 r <= R_CMP around the atom through the whole box (background = each layer's median, as everywhere in zblur):
@@ -59,7 +60,8 @@ def kernel_sigmas(r):
     """(sigma along the beam, sigma sideways) in A of the convolution the physics predicts for r's blur sources."""
     sz, sxy = r["fs"], r["src"] / 2.3548
     if r["T"] is not None:
-        u = PB_U_GOT[int(round(r["T"]))]
+        # a _T<T>v2 kernel (zb_submit, b0388f4) ran with the fix: the atom moved as meant. An old _T<T> kernel moved sqrt(3) too far
+        u = (PB_U if "v2" in r["kernel"].split("_T")[-1] else PB_U_GOT)[int(round(r["T"]))]
         sz, sxy = np.hypot(sz, u), np.hypot(sxy, u)
     return sz, sxy
 

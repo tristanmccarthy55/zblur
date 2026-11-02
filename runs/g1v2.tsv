@@ -1,0 +1,15 @@
+# G1v2 (the user, 2026-11-02: a gate for the paper): every lone-atom row with vibration again at its TRUE motion; the G1 and G1b rows
+# ran before the abTEM sigma fix with the atom moved sqrt(3) too far (runs/PLAN.md Correction). Sims come out as _T<T>v2.
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	295	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	100	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	20	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0	20	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.1	20	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0.1	20	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	295	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	100	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0	20	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0	20	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	0	0.1	20	20
+Pb	80	arm	-	single	0.2	16	200	0.25	0.2375	2.5	0.1	20	20
