@@ -2,13 +2,20 @@
 # @file test_submit_dry.sh
 # @brief Dry-run runs/zb_submit.sh on a points file against a local ptychoshelves checkout and check the wiring:
 #        one sim per point, one recon per slice count waiting on its sim, one kernel job per recon waiting on it, one
-#        pack waiting on every kernel, unique names, and zdrop = round(zvac / dz).
+#        pack waiting on every kernel, unique names, and zdrop = round(zvac / dz). Then, whatever the points file, the guards
+#        of 2026-11-04: the window (calibrated against abTEM), old files' lines against HEAD's script, a side, a truncated sim,
+#        a failed recon's leftovers, REDO, kernels only, PACK_ALSO, CLEAN_RAW, the disk check.
 #   bash tests/test_submit_dry.sh [runs/g0.tsv] [path/to/ptychoshelves-clean]
 #   BETA_LSQ=0.02 GROUPING=64 RTAG=_x bash tests/test_submit_dry.sh runs/g0c_slices.tsv   # overrides are checked too
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PTS="${1:-runs/g0.tsv}"; PR="${2:-../ptychoshelves-clean}"
-out="$(DRY_RUN=1 ALLOW_DIRTY=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share bash runs/zb_submit.sh "$PTS" 2>&1)"
+PYG=""; for p in "${ZB_GUARD_PY:-}" "$HOME/hyperspy-bundle/bin/python" "${SHARE:-/springbrook/share/physics}/phucrh/envs/abtem/bin/python" python3; do
+  [ -n "$p" ] && "$p" -c 'import numpy, h5py' 2>/dev/null && { PYG="$p"; break; }; done
+[ -n "$PYG" ] || { echo "no python with numpy and h5py for the guards (set ZB_GUARD_PY)"; exit 1; }
+export ZB_GUARD_PY="$PYG"; export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-$(mktemp -d)}"
+# ALLOW_CUT: this first part tests the wiring of any file, ARM rows included; the window guard has its own checks below
+out="$(ALLOW_CUT=1 DRY_RUN=1 ALLOW_DIRTY=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share bash runs/zb_submit.sh "$PTS" 2>&1)"
 fail=0; ok(){ echo "ok   $1"; }; bad(){ echo "FAIL $1"; fail=1; }
 npts=$(grep -vc '^#' "$PTS" || true); nrec=$(grep -v '^#' "$PTS" | awk -F'\t' '{n += split($14, a, ",")} END{print n}')
 nsim=$(echo "$out" | grep -c 'job-name=zb_sim_' || true); nr=$(echo "$out" | grep -c 'job-name=zb_rec_' || true)
@@ -83,4 +90,119 @@ echo "$out" | grep 'job-name=zb_sim_.*_single_' | grep -q 'GRID_SPACING=0' && ok
 echo "$out" | grep -q 'job-name=zb_sim_.*_ideal_' && { echo "$out" | grep 'job-name=zb_sim_.*_ideal_' | grep -q 'CS=0,C5=0,DEFOCUS=' \
   && ok "ideal probe: CS 0, C5 0, its own defocus" || bad "ideal probe exports"; }
 echo "$out" | grep -q 'job-name=zb_sim_' && { echo "$out" | grep -q 'SLICE_THICKNESS=0.25' && ok "sim slice 0.25 A reaches the sim" || bad "sim slice"; }
+
+# ============================================================ the guards of 2026-11-04
+PRA="$(cd "$PR" && pwd)"; T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
+dry(){ ALLOW_DIRTY=1 DRY_RUN=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share "$@" 2>&1; }
+# -- the window, against abTEM's own Probe on the same tableau (square window as plan_probe.window_loss; 2026-11-04, abTEM 1.0.5, grids 140-420 A).
+# PIPELINE_BIBLE and runs/PLAN.md say 35.7 / 40.8 % at 35 A: neither that square nor a disc gives it; 52.5, 70 and 105 A agree with the planner's records.
+wl(){ local row; row=$(awk -F'\t' -v L="armf_a0$1" '$1==L' "$PR/campaign/ceos_sweep.tsv"); "$PYG" runs/window_loss.py --alpha "$1" --defocus="$(echo "$row" | cut -f5)" --aber "$(echo "$row" | cut -f9)" --window "$2"; }
+e=""; for c in "80 35.004 32.0" "80 52.5 15.0" "80 70 9.0" "80 105 3.35" "60 35.004 0.6" "90 35.004 43.0" "90 140 5.1"; do
+  set -- $c; g=$(wl "$1" "$2"); awk -v a="$g" -v b="$3" 'BEGIN{d = a - b; if (d < 0) d = -d; exit !(d <= 0.5)}' || e="${e} ${1}mrad@${2}A=${g} (want ${3})"; done
+[ -z "$e" ] && ok "window_loss within 0.5 points of abTEM at seven settings" || bad "window_loss:${e}"
+# -- the guard refuses the old ARM rows, before anything; the ideal rows pass
+o="$(dry bash runs/zb_submit.sh runs/g1v2.tsv)" && rc=0 || rc=$?
+n=$(echo "$o" | grep -c '_arm_single.*outside its' || true)
+[ "$rc" != 0 ] && ! echo "$o" | grep -q '^DRY\[' && echo "$o" | grep -q '^NOT SUBMITTED' && [ "$n" = 6 ] \
+  && ok "g1v2.tsv as written refused before anything is submitted; its 6 ARM rows named" || bad "g1v2 guard (exit ${rc}, ${n} rows named)"
+for f in runs/g0.tsv runs/g0d.tsv runs/g1b.tsv runs/g1m.tsv; do dry bash runs/zb_submit.sh "$f" >/dev/null && bad "${f}: ARM rows not refused"; done; ok "the ARM rows of g0, g0d, g1b, g1m refused too"
+grep -E '^#|ideal' runs/g1v2.tsv >"$T/ideal.tsv"
+o="$(dry bash runs/zb_submit.sh "$T/ideal.tsv")" && rc=0 || rc=$?
+[ "$rc" = 0 ] && [ "$(echo "$o" | grep -c 'job-name=zb_sim_')" = 6 ] && ok "g1v2's six ideal rows pass the guard" || bad "ideal rows refused: $(echo "$o" | grep -m1 'NOT SUB')"
+# -- old files: every line as HEAD's script writes it, but for the check in the kernel job and the count in the pack
+git show HEAD:runs/zb_submit.sh >"$T/zb_ref.sh"
+norm(){ grep '^DRY\[' | sed -E "s#--wrap=[^|]*check_outputs\.py' recon '[^']*' \|\| exit 1; #--wrap=#; s#; rc=[$][?]; miss=0; for f in .*##; s/[0-9]{8}_[0-9]{6}/TS/g"; }
+e=""; for f in runs/g0.tsv runs/g0c_det.tsv runs/g0c_slices.tsv runs/g0d.tsv runs/g1.tsv runs/g1b.tsv runs/g1m.tsv runs/g1v2.tsv; do
+  a="$(DRY_RUN=1 ALLOW_DIRTY=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share bash "$T/zb_ref.sh" "$f" 2>&1 | norm)"
+  b="$(dry env ALLOW_CUT=1 bash runs/zb_submit.sh "$f" | norm)"
+  [ -n "$a" ] && [ "$a" = "$b" ] || { e="${e} ${f}"; diff <(echo "$a") <(echo "$b") | head -4 | cut -c1-200 || true; }
+done
+[ -z "$e" ] && ok "all 8 old files: names, exports, times, dependencies as HEAD's script" || bad "lines differ from HEAD's:${e}"
+# -- g1v2_redo.tsv is g1v2's first five rows, verbatim
+[ "$(grep -v '^#' runs/g1v2_redo.tsv)" = "$(grep -v '^#' runs/g1v2.tsv | head -5)" ] && ok "g1v2_redo.tsv = g1v2 rows 1-5, verbatim" || bad "g1v2_redo.tsv rows"
+# -- a side: named, exported, sized from the row; a row that cannot fit refused
+o="$(dry env ALLOW_CUT=1 GROUPING='32;16' bash runs/zb_submit.sh runs/g1w.tsv)" && rc=0 || rc=$?
+s1=$(echo "$o" | grep 'job-name=zb_sim_.*_w16_s0p25_bz20p000_d133 '); s2=$(echo "$o" | grep 'job-name=zb_sim_.*_rs210_d133 ')
+r2=$(echo "$o" | grep 'job-name=zb_rec_.*_rs210_d133_NL20 ')
+[ "$rc" = 0 ] && [ "$(echo "$o" | grep -c 'job-name=zb_rec_')" = 4 ] && [[ "$s1" != *REGION_SIDE* ]] && [[ "$s2" == *"REGION_SIDE=210"* && "$s2" == *"DETECTOR_MAX_ANGLE=133"* && "$s2" == *"SLICE_THICKNESS=0.25"* ]] \
+  && [[ "$r2" == *"--mem=175G"* && "$r2" == *"GROUPING=32;16"* ]] && [ "$(echo "$s1" | sed -E 's/.*--export=//; s/JOB_DIR=[^,]*,//')" = "$(echo "$s2" | sed -E 's/.*--export=//; s/JOB_DIR=[^,]*,//; s/,REGION_SIDE=210//')" ] \
+  && ok "g1w: _rs210 named and exported; the pair's sims differ by REGION_SIDE alone; 175G for 1420 px ($(echo "$r2" | grep -o -- '--time=[^ ]*'))" || { bad "g1w side"; echo "$o" | tail -3 | cut -c1-200; }
+o="$(dry env GROUPING='32;16' bash runs/zb_submit.sh runs/g1w.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'bz20p000_d133: .* outside its 35.004' && ! echo "$o" | grep -q 'rs210_d133: .* outside its' && ok "g1w's cut row refused without ALLOW_CUT; its 105 A row not named" || bad "g1w guard"
+o="$(dry env -u GROUPING ALLOW_CUT=1 bash runs/zb_submit.sh runs/g1w.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'full-engine grouping' && ok "1420 px at grouping 32 refused" || bad "grouping guard"
+printf 'Pb\t80\tarm\t-\tsingle\t0.2\t16\t200\t0.25\t0.2375\t0\t0\t-\t20,28\t210\n' >"$T/literal.tsv"
+o="$(dry env GROUPING='32;16' bash runs/zb_submit.sh "$T/literal.tsv")" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'NOT SUBMITTED.*GB of patterns' && ok "105 A window at +-200 mrad and 6561 positions refused: $(echo "$o" | grep -o '[0-9]* px x [0-9]* positions = [0-9.]* GB')" || bad "size guard"
+# -- real paths, stub sbatch: what a rerun finds
+sbatch(){ local n; n=$(( $(cat "$STUB_N" 2>/dev/null || echo 1000) + 1 )); echo "$n" >"$STUB_N"; printf '%s\n' "$*" >>"$STUB_LOG"; echo "$n"; }
+squeue(){ printf '%s\n' "${STUB_SQUEUE:-}" | grep . || true; }
+mmlsquota(){ printf '%s\n' "${STUB_QUOTA-springbrook share-physics GRP 3.356T 3.91T 3.92T 0 none | 100 0 0 0 none}"; }
+export -f sbatch squeue mmlsquota
+mkdir -p "$T/env/bin"; ln -s "$(command -v "$PYG")" "$T/env/bin/python"
+fake(){ "$PYG" - "$1" "$2" <<'PYEOF'
+import os, sys
+import h5py, numpy as np
+what, d = sys.argv[1:3]
+if what.startswith("sim"):
+    s = os.path.join(d, "01"); os.makedirs(s, exist_ok=True)
+    with h5py.File(os.path.join(s, "data_dp.hdf5"), "w") as f: f.create_dataset("dp", data=np.ones((4, 8, 8), np.float32))
+    with h5py.File(os.path.join(s, "data_position.hdf5"), "w") as f: f.create_dataset("probe_positions_0", data=np.zeros((2, 4), np.float32))
+    for n in ("probe_initial_true.mat", "sim_meta.mat", "aberrations.json"): open(os.path.join(s, n), "w").write("x")
+    if what == "sim_short":
+        open(os.path.join(s, "data_dp.hdf5"), "r+b").truncate(1200); os.remove(os.path.join(s, "aberrations.json"))
+    sys.exit()
+m = os.path.join(d, "01", "MLs_L1_p1_g64_betaLSQ0.05_NpbstInf_synthetic_ML_Ndp356_step01"); os.makedirs(m, exist_ok=True)
+if what == "stub":
+    open(os.path.join(m, "Niter200.mat"), "wb").write(b"\0" * 3000)
+    open(os.path.join(d, "slurm_1.out"), "w").write("Iteration: 200 / 200\nMultislice synthetic reconstruction finished.\n")
+else:
+    a = os.path.join(d, "analysis", "S00000-00999", "S00001"); os.makedirs(a, exist_ok=True)
+    with h5py.File(os.path.join(a, "S00001_712x712_b0_ML_recon_recons.h5"), "w") as f:
+        f.create_dataset("reconstruction/object", data=np.ones((20, 1, 32, 32), np.complex64)); f.create_dataset("reconstruction/probes", data=np.ones((32, 32), np.complex64))
+    open(os.path.join(d, "slurm_1.out"), "w").write("Reconstructed scan S00001\n")
+PYEOF
+}
+real(){ # $1 root, then env and the script: real paths, stub sbatch -> the sbatch log in $1/sb.log, the screen in $1/out.txt
+  local z="$1"; shift; mkdir -p "$z"
+  ( unset DRY_RUN; env STUB_LOG="$z/sb.log" STUB_N="$z/n" ALLOW_DIRTY=1 PTYCHO_ROOT="$PRA" ZB_ROOT="$z" PACK_DIR="$z" CONDA_ENV="$T/env" DISK_PROBE_MB=1 "$@" ) >"$z/out.txt" 2>&1; }
+N6=Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_T100v2; awk -F'\t' '/^#/ || ($3 == "ideal" && $13 == "100" && $11 == "0" && $12 == "0")' runs/g1v2.tsv >"$T/one.tsv"
+Z="$T/z1"; fake sim_short "$Z/sim_${N6}"; real "$Z" bash runs/zb_submit.sh "$T/one.tsv" && rc=0 || rc=$?
+[ "$rc" != 0 ] && [ ! -s "$Z/sb.log" ] && grep -q "not a whole sim.*rm -rf" "$Z/out.txt" && [ -e "$Z/sim_${N6}/01/data_dp.hdf5" ] && ok "a sim truncated by the quota refused, with the line that removes it" || { bad "truncated sim"; tail -2 "$Z/out.txt" | cut -c1-200; }
+Z="$T/z2"; fake sim "$Z/sim_${N6}"; fake stub "$Z/recon_${N6}_NL20"; mkdir -p "$Z/psf"; : >"$Z/psf/psf_${N6}_NL20_vol.npy"; real "$Z" bash runs/zb_submit.sh "$T/one.tsv" && rc=0 || rc=$?
+[ "$rc" != 0 ] && [ ! -s "$Z/sb.log" ] && grep -q "earlier attempt.*REDO=1" "$Z/out.txt" && ok "a failed recon's leftovers (a 3 KB Niter200.mat) refused without REDO" || { bad "leftovers refused"; tail -2 "$Z/out.txt" | cut -c1-200; }
+real "$Z" REDO=1 bash runs/zb_submit.sh "$T/one.tsv" && rc=0 || rc=$?
+[ "$rc" = 0 ] && ! grep -q 'job-name=zb_sim_' "$Z/sb.log" && grep -q "job-name=zb_rec_${N6}_NL20 " "$Z/sb.log" && [ -z "$(find "$Z/recon_${N6}_NL20" -name 'Niter*.mat')" ] && [ ! -e "$Z/psf/psf_${N6}_NL20_vol.npy" ] && [ -f "$Z/recon_${N6}_NL20/slurm_1.out" ] \
+  && [ "$(readlink "$Z/recon_${N6}_NL20/01/data_dp.hdf5")" = "$Z/sim_${N6}/01/data_dp.hdf5" ] && ok "REDO=1: stub and stale kernel cleared, logs kept, same name, sim reused, no new sim" || { bad "REDO"; tail -3 "$Z/out.txt" | cut -c1-200; }
+grep "job-name=zb_psf_" "$Z/sb.log" | grep -q "check_outputs.py' recon '$Z/recon_${N6}_NL20' || exit 1; git -C" && ok "the kernel job checks the recon first" || bad "kernel job check"
+# the pack's own wrap, run: a tar shim that succeeds, then fails; the kernels there, then one gone
+mkdir -p "$T/shim"; printf '#!/bin/sh\nexit ${SHIM_TAR_RC:-0}\n' >"$T/shim/tar"; chmod +x "$T/shim/tar"
+w="$(grep "job-name=zb_pack_" "$Z/sb.log" | sed 's/.*--wrap=//')"; vf="$Z/psf/psf_${N6}_NL20_vol.npy"
+echo x >"$vf"; PATH="$T/shim:$PATH" sh -c "$w" >/dev/null 2>&1 && a=$? || a=$?
+PATH="$T/shim:$PATH" SHIM_TAR_RC=2 sh -c "$w" >/dev/null 2>&1 && b=$? || b=$?
+rm -f "$vf"; PATH="$T/shim:$PATH" sh -c "$w" >/dev/null 2>&1 && c=$? || c=$?
+[ "$a" = 0 ] && [ "$b" != 0 ] && [ "$c" != 0 ] && ok "the pack, run: exit 0 when whole, non-zero on a failed tar or a missing kernel" || bad "pack wrap (whole ${a}, tar ${b}, missing ${c})"
+Z="$T/z3"; fake sim "$Z/sim_${N6}"; fake leg "$Z/recon_${N6}_NL20"; real "$Z" bash runs/zb_submit.sh "$T/one.tsv" && rc=0 || rc=$?
+[ "$rc" != 0 ] && grep -q "whole reconstruction" "$Z/out.txt" && ok "a whole recon refused without REDO" || bad "whole recon refused"
+real "$Z" REDO=1 bash runs/zb_submit.sh "$T/one.tsv" && rc=0 || rc=$?
+[ "$rc" = 0 ] && ! grep -q 'job-name=zb_rec_' "$Z/sb.log" && grep "job-name=zb_psf_" "$Z/sb.log" | grep -v -q -- '--dependency' && [ -d "$Z/recon_${N6}_NL20/analysis" ] && ok "REDO=1 on a whole recon: kernel only, nothing cleared" || bad "kernel only"
+Z="$T/z4"; fake sim "$Z/sim_${N6}"; real "$Z" STUB_SQUEUE="zb_rec_${N6}_NL20" bash runs/zb_submit.sh "$T/one.tsv" && rc=0 || rc=$?
+[ "$rc" != 0 ] && grep -q "still in the queue" "$Z/out.txt" && ok "a recon still in the queue refused" || bad "queued recon"
+Z="$T/z5"; fake sim "$Z/sim_${N6}"; mkdir -p "$Z/manifests"; K=Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_src0p1_T20v2_NL20
+awk -v k="$K" 'BEGIN{OFS="\t"; for (i = 1; i <= 23; i++) $i = "x"; $24 = k; $1 = "x"; print}' >"$Z/manifests/g1v2_old.tsv"
+real "$Z" PACK_ALSO="$K" PACK_AFTER=9999 bash runs/zb_submit.sh "$T/one.tsv" && rc=0 || rc=$?
+grep "job-name=zb_pack_" "$Z/sb.log" | grep -q "afterany:[0-9:]*:9999" && grep "job-name=zb_pack_" "$Z/sb.log" | grep -q "psf/psf_${K}_vol.npy" && grep -q "$K" "$Z"/manifests/one_*.tsv && ok "PACK_ALSO: waits for it, packs its kernel, copies its manifest row" || bad "PACK_ALSO"
+# -- CLEAN_RAW: only where the recon is whole and the kernel exists
+Z="$T/z6"; fake sim "$Z/sim_${N6}"; real "$Z" CLEAN_RAW=1 bash runs/zb_submit.sh "$T/one.tsv"; [ -e "$Z/sim_${N6}/01/data_dp.hdf5" ] && [ ! -s "$Z/sb.log" ] && a=1 || a=0
+fake leg "$Z/recon_${N6}_NL20"; mkdir -p "$Z/psf"; echo x >"$Z/psf/psf_${N6}_NL20_vol.npy"; real "$Z" CLEAN_RAW=1 bash runs/zb_submit.sh "$T/one.tsv"
+[ "$a" = 1 ] && [ ! -e "$Z/sim_${N6}/01/data_dp.hdf5" ] && [ -e "$Z/sim_${N6}/01/sim_meta.mat" ] && [ ! -s "$Z/sb.log" ] && ok "CLEAN_RAW: keeps the sim until its recon is whole and its kernel exists; submits nothing" || bad "CLEAN_RAW"
+# -- the disk: the group's row, the margin, a real write
+o="$(dry env DISK_CHECK=1 DISK_PROBE_MB=1 DISK_PROBE_DIR="$T" bash runs/zb_submit.sh "$T/ideal.tsv")" && rc=0 || rc=$?
+[ "$rc" = 0 ] && echo "$o" | grep -q 'test write of 1 MB ok' && ok "disk: quota row read, test write done: $(echo "$o" | grep -m1 'group physics' | cut -c3-)" || { bad "disk ok case"; echo "$o" | tail -2 | cut -c1-200; }
+o="$(dry env DISK_CHECK=1 COMMITTED_GB=560 DISK_PROBE_MB=1 DISK_PROBE_DIR="$T" bash runs/zb_submit.sh "$T/ideal.tsv")" && rc=0 || rc=$?
+[ "$rc" != 0 ] && ! echo "$o" | grep -q '^DRY\[' && echo "$o" | grep -q 'NOT SUBMITTED.*margin' && ok "disk: refused when the margin would not be left" || bad "disk margin"
+o="$(dry env DISK_CHECK=1 STUB_QUOTA= DISK_PROBE_MB=1 bash runs/zb_submit.sh "$T/ideal.tsv")" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'NOT SUBMITTED: could not read' && ok "disk: refused when the quota row cannot be read" || bad "disk row"
+o="$(dry env DISK_CHECK=1 DISK_PROBE_MB=1 DISK_PROBE_DIR=/nonexistent/dir bash runs/zb_submit.sh "$T/ideal.tsv")" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'NOT SUBMITTED: the test write' && ok "disk: refused when the test write fails" || bad "disk write"
 [ "$fail" = 0 ] && echo "ALL OK" || { echo "SOME CHECKS FAILED"; echo "$out" | tail -5; exit 1; }

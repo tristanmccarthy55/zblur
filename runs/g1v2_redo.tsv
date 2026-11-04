@@ -1,0 +1,10 @@
+# G1v2 ideal rows that lost their save to the disk quota on 2026-11-04 (rows 1-5 of runs/g1v2.tsv, verbatim: same names, sims reused after the
+# completeness check). Row 3 failed on its H5 write; the others report COMPLETED with no *_recons.h5. Row 6 (fs 2.5 + src 0.1, 20 K) is not here: its
+# recon 1357349 is still running; PACK_ALSO brings its kernel into this pack. The ARM rows of g1v2.tsv stay out: window-cut, record only.
+#   REDO=1 PACK_ALSO=Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_src0p1_T20v2_NL20 PACK_AFTER=1357350 bash runs/zb_submit.sh runs/g1v2_redo.tsv
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	295	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	100	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	20	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	2.5	0	20	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0.1	20	20

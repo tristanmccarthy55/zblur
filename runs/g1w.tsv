@@ -1,0 +1,17 @@
+# G1w (2026-11-04): is it the window? runs/PREDICTIONS.md P5. One lone Pb atom under the ARM probe, 0.25 A sim slices, a 20 A box, in the cut window and
+# at the right one, everything else equal, so the pair differs by the window alone.
+#   row 1  70 A box, window 35 A: 32 % of the probe outside, as the cut runs (G0d's ARM row: the rings)
+#   row 2  210 A box, window 105 A: 3.4 % outside, as the campaign
+# The same recorded angle as the cut run cannot be kept: a 105 A window at +-200 mrad is 2130 px, and 6561 positions of that are ~120 GB of patterns
+# (zb_submit.sh refuses it). So both rows record +-133 mrad, the campaign's, and step 0.25 A over 16 A (65^2 positions, the most 1420 px holds); the cut run
+# itself, at +-200 mrad and 0.2 A, tells what those two changes did: row 1 against it.
+#   if row 1 rings and row 2 does not   the window made the rings: P5 holds, runs/PLAN.md's correction stands
+#   if both ring                        the window is not the cause: P5 fails, the correction is wrong (it says so)
+#   if neither rings                    the recording or the step made them; the window is not separated: look at row 1 against the cut run
+# The box and the window move together, as they did in every run here (BIN 2): this does not separate the 70 A periodic box from the 35 A solver window.
+# NL 20 is dz 1.0 A, P5's "~1 A", and the cut run's own. NL 28 is dz 0.71 A here, at the edge of the measured slice floor of 0.6-0.7 A (G0d); P5's NL 28 is
+# ~1 A only in the campaign's 27.5 A box. Read NL 20 first.
+#   ALLOW_CUT=1 GROUPING="32;16" bash runs/zb_submit.sh runs/g1w.tsv
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list	side
+Pb	80	arm	-	single	0.25	16	133	0.25	0.2375	0	0	-	20,28
+Pb	80	arm	-	single	0.25	16	133	0.25	0.2375	0	0	-	20,28	210
