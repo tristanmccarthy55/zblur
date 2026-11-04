@@ -63,3 +63,4 @@ name); the pack holds the kernels, their check images and the manifest.
 - 2026-10-27: G0d: the engine has a slice-thickness floor (~0.6-0.7 Å; 0.5 Å gives noise whatever the layer count);
   the ideal-probe lone atom is a clean near-Gaussian base (FWHM 1.25 Å at dz 1.0); the ARM probe makes the ringing.
   G1 built and dry-run.
+- 2026-11-04: **every ARM row ran with the probe cut by a 35 A window** (`runs/PLAN.md`, Correction): its rings are very likely the window. The ideal rows stand. `analysis/predict_groups.py`: a kernel's share of phase beyond half a spacing sorts all 20 fixed-probe crystal runs for Pb, not the mode runs; threshold and predictions fixed in `runs/PREDICTIONS.md` before the runs that test them.

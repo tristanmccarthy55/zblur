@@ -389,3 +389,17 @@ the atoms got (`PB_U_GOT`). What changes (ideal probe; ARM in brackets):
   conditions were warmer than labelled.
 Reruns at the true temperatures: the T rows of g1.tsv / g1b.tsv after a `git pull` of ptychoshelves-clean on Blythe
 (`sim/test_phonon_sigma.py` must PASS first).
+
+## Correction (2026-11-04): every ARM row here ran with the probe cut by the window
+`zb_submit.sh` sets no `REGION_SIDE`, so `build_atom_grid` and `build_single_atom` use a 70 A periodic box, and BIN 2 gives a 35 A solver
+window. 32 % of the ARM 80 mrad probe lies outside 35 A and 9 % outside the 70 A box (43 % / 26 % at 90 mrad, 0.6 % / 0.1 % at
+60; the planner's own figures reproduce to 0.1 %: 14.9 % at 52.5 A, 3.2 % at 105 A). The campaign's crystal failed at 52.5 A (15 % lost:
+Pb 35). The campaign's own Pb kernel, same grid, same 18 slices, 105 A window, is clean: zshare 0.011, against 0.31 for G0a here.
+So, for ARM rows only (G0a, G0c, G0d ARM, G1b, the ARM rows of `deconv_test.py`, the ARM tilt curves of `blobs.py`, `g1v2.tsv` and `g1m.tsv`
+as written):
+- "the ARM probe makes the ringing", "60 mrad smooth, 80 rings, 90 rings more", "every blur leaves the ARM ringing in place", and the 7 deg
+  ARM tilt are very likely the window, not the probe. Not yet separated from the other two differences (0.25 against 0.9 A sim
+  slices, 200 against 133 mrad recorded): P4 and P5 in `runs/PREDICTIONS.md` separate them.
+- Do not run the ARM rows of `g1v2.tsv` or `g1m.tsv` as written. For the ARM probe use the campaign's grid kernels, which come with every run.
+The ideal-probe rows are unaffected (the in-focus probe is about 1 A across).
+Found while comparing lone atoms with crystal kernels (`analysis/predict_groups.py`).
