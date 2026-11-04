@@ -7,7 +7,7 @@ Numpy only, so it runs on the login node before anything is submitted. The probe
 a disc in k-space of semi-angle alpha, the phase of the ptychoshelves-clean tableau (abTEM's polar notation, defocus = -C10), an inverse
 FFT, and the share of |psi|^2 outside a square window centred on the beam axis, which is where the solver's window sits (the same
 definition as campaign/plan_probe.py window_loss). Checked against abTEM's own Probe on the Mac; tests/test_submit_dry.sh checks the
-numbers below (ARM 80 mrad: 35.7 % at 35 A, 14.9 % at 52.5 A, 8.9 % at 70 A, 3.2 % at 105 A; 60 mrad 0.7 %, 90 mrad 40.8 % at 35 A).
+numbers below (ARM 80 mrad: 32 % at 35 A, 15 % at 52.5 A, 9 % at 70 A, 3.4 % at 105 A; 60 mrad 0.6 %, 90 mrad 43 % at 35 A).
 
     python runs/window_loss.py --alpha 80 --defocus -958.6 --aber '{"C30":-406600.0,...}' --window 35.004      # prints the percentage
 """

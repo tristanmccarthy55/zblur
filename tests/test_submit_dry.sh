@@ -9,7 +9,9 @@
 #   BETA_LSQ=0.02 GROUPING=64 RTAG=_x bash tests/test_submit_dry.sh runs/g0c_slices.tsv   # overrides are checked too
 set -euo pipefail
 cd "$(dirname "$0")/.."
-PTS="${1:-runs/g0.tsv}"; PR="${2:-../ptychoshelves-clean}"
+PTS="${1:-runs/g0.tsv}"; PR="${2:-}"
+if [ -z "$PR" ]; then for p in ../ptychoshelves-clean "${SHARE:-/springbrook/share/physics}/phucrh/ptyco_baseline/ptyco_pipeline"; do [ -d "$p" ] && { PR="$p"; break; }; done; fi
+[ -d "$PR" ] || { echo "no ptychoshelves checkout (give it as the second argument)"; exit 1; }
 PYG=""; for p in "${ZB_GUARD_PY:-}" "$HOME/hyperspy-bundle/bin/python" "${SHARE:-/springbrook/share/physics}/phucrh/envs/abtem/bin/python" python3; do
   [ -n "$p" ] && "$p" -c 'import numpy, h5py' 2>/dev/null && { PYG="$p"; break; }; done
 [ -n "$PYG" ] || { echo "no python with numpy and h5py for the guards (set ZB_GUARD_PY)"; exit 1; }
@@ -95,7 +97,7 @@ echo "$out" | grep -q 'job-name=zb_sim_' && { echo "$out" | grep -q 'SLICE_THICK
 PRA="$(cd "$PR" && pwd)"; T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 dry(){ ALLOW_DIRTY=1 DRY_RUN=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share "$@" 2>&1; }
 # -- the window, against abTEM's own Probe on the same tableau (square window as plan_probe.window_loss; 2026-11-04, abTEM 1.0.5, grids 140-420 A).
-# PIPELINE_BIBLE and runs/PLAN.md say 35.7 / 40.8 % at 35 A: neither that square nor a disc gives it; 52.5, 70 and 105 A agree with the planner's records.
+# PIPELINE_BIBLE and runs/PLAN.md said 35.7 / 40.8 % at 35 A until 2026-11-04: neither that square nor a disc gives it; 52.5, 70 and 105 A agree with the planner's records.
 wl(){ local row; row=$(awk -F'\t' -v L="armf_a0$1" '$1==L' "$PR/campaign/ceos_sweep.tsv"); "$PYG" runs/window_loss.py --alpha "$1" --defocus="$(echo "$row" | cut -f5)" --aber "$(echo "$row" | cut -f9)" --window "$2"; }
 e=""; for c in "80 35.004 32.0" "80 52.5 15.0" "80 70 9.0" "80 105 3.35" "60 35.004 0.6" "90 35.004 43.0" "90 140 5.1"; do
   set -- $c; g=$(wl "$1" "$2"); awk -v a="$g" -v b="$3" 'BEGIN{d = a - b; if (d < 0) d = -d; exit !(d <= 0.5)}' || e="${e} ${1}mrad@${2}A=${g} (want ${3})"; done
@@ -109,15 +111,15 @@ for f in runs/g0.tsv runs/g0d.tsv runs/g1b.tsv runs/g1m.tsv; do dry bash runs/zb
 grep -E '^#|ideal' runs/g1v2.tsv >"$T/ideal.tsv"
 o="$(dry bash runs/zb_submit.sh "$T/ideal.tsv")" && rc=0 || rc=$?
 [ "$rc" = 0 ] && [ "$(echo "$o" | grep -c 'job-name=zb_sim_')" = 6 ] && ok "g1v2's six ideal rows pass the guard" || bad "ideal rows refused: $(echo "$o" | grep -m1 'NOT SUB')"
-# -- old files: every line as HEAD's script writes it, but for the check in the kernel job and the count in the pack
-git show HEAD:runs/zb_submit.sh >"$T/zb_ref.sh"
+# -- old files: every line as the script before the guards (88e3ad4) writes it, but for the check in the kernel job and the count in the pack
+git show 88e3ad4:runs/zb_submit.sh >"$T/zb_ref.sh"     # the last script before the guards; HEAD would compare the guards with themselves
 norm(){ grep '^DRY\[' | sed -E "s#--wrap=[^|]*check_outputs\.py' recon '[^']*' \|\| exit 1; #--wrap=#; s#; rc=[$][?]; miss=0; for f in .*##; s/[0-9]{8}_[0-9]{6}/TS/g"; }
 e=""; for f in runs/g0.tsv runs/g0c_det.tsv runs/g0c_slices.tsv runs/g0d.tsv runs/g1.tsv runs/g1b.tsv runs/g1m.tsv runs/g1v2.tsv; do
   a="$(DRY_RUN=1 ALLOW_DIRTY=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share bash "$T/zb_ref.sh" "$f" 2>&1 | norm)"
   b="$(dry env ALLOW_CUT=1 bash runs/zb_submit.sh "$f" | norm)"
   [ -n "$a" ] && [ "$a" = "$b" ] || { e="${e} ${f}"; diff <(echo "$a") <(echo "$b") | head -4 | cut -c1-200 || true; }
 done
-[ -z "$e" ] && ok "all 8 old files: names, exports, times, dependencies as HEAD's script" || bad "lines differ from HEAD's:${e}"
+[ -z "$e" ] && ok "all 8 old files: names, exports, times, dependencies as 88e3ad4's script" || bad "lines differ from 88e3ad4's:${e}"
 # -- g1v2_redo.tsv is g1v2's first five rows, verbatim
 [ "$(grep -v '^#' runs/g1v2_redo.tsv)" = "$(grep -v '^#' runs/g1v2.tsv | head -5)" ] && ok "g1v2_redo.tsv = g1v2 rows 1-5, verbatim" || bad "g1v2_redo.tsv rows"
 # -- a side: named, exported, sized from the row; a row that cannot fit refused
