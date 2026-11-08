@@ -403,3 +403,12 @@ as written):
 - Do not run the ARM rows of `g1v2.tsv` or `g1m.tsv` as written. For the ARM probe use the campaign's grid kernels, which come with every run.
 The ideal-probe rows are unaffected (the in-focus probe is about 1 A across).
 Found while comparing lone atoms with crystal kernels (`analysis/predict_groups.py`).
+
+## The flat experiment (2026-11-08): does opening past the flat region cost depth?
+The user's plot, "the most important experiment to run": one lone Pb atom's depth FWHM against angle. Line A, the perfect probe with an
+aperture of x mrad; line B, an 80 mrad aperture over a corrector flat only to x (`runs/flat_family.py`: the ARM200F-class hardware residuals
+scaled by 0.18, 0.043, 0.0055 for x = 30, 40, 60; C1 and C3 tuned; A1 = B2 = 0; the residuals as measured are flat to 21 mrad). Run like an
+experimentalist: probe update on, from the crystal search's misses (C1 +1.3 A, C3 +49 A, A1 3.6 A). `runs/gflat.tsv`, then after its sims
+`runs/gflat_fixed.tsv` (true probe fixed) and `runs/gflat_noho.tsv` (higher orders not given). Prediction P6 in `runs/PREDICTIONS.md`.
+Budget [estimate, from G1's 4.3 h at NL 20 and 5 h sims]: gflat ~105 GPU-h and ~80 GB, the two follow-ups ~50 GPU-h. Later the coherence
+terms come in as a floor on the same axes (the user's "wall"): g1v2's 20 K / 100 K / 295 K and focal-spread / source points are the start.

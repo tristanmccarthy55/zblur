@@ -19,8 +19,10 @@
 # Points file (tab-separated, '#' comments): el alpha aber c1 geom step win det slice zvac fs src T nl_list [side]
 #   el      Pb | Ti
 #   alpha   convergence semi-angle (mrad)
-#   aber    ideal (no aberrations) | arm (the ARM200F tableau row armf_a<alpha> of campaign/ceos_sweep.tsv)
-#   c1      ideal only: the probe defocus in the simulator's (abTEM) convention, A; - for arm (the tableau's own)
+#   aber    ideal (no aberrations) | arm (the ARM200F tableau row armf_a<alpha> of campaign/ceos_sweep.tsv) | flat<X> (the
+#           probe phase-flat to X mrad under an alpha aperture: row flat_a<alpha>_f<XXX> of runs/flat_tableaux.tsv, made by
+#           runs/flat_family.py)
+#   c1      ideal only: the probe defocus in the simulator's (abTEM) convention, A; - for arm and flat (the tableau's own)
 #   geom    grid (the campaign's S1 kernel: one plane, 3 A spacing) | single (one atom alone in vacuum, as in Lei &
 #           Wang, arXiv 2506.22352 SI Note 5)
 #   step    scan step (A);  win  scan window (A)
@@ -46,6 +48,15 @@
 # run never lands in a fixed-probe run's folder. (The mixed state holds the focal spread and source size, not vibration,
 # as in the campaign's cooled mode legs.)
 #   PROBE_MODES=8 NITER=250 bash runs/zb_submit.sh runs/g1m.tsv
+#
+# PROBE_UPDATE=1 (2026-11-08, the flat experiment; the user: "run it like an experimentalist ... it has to have probe update on to
+# make the claim that it's fitting to aberrations"): one mode, released as the mode legs release it (PROBE_START, PROBE_START2, inside
+# the aperture), from a start probe that is NOT the truth. START_ERR adds an outer search's misses to the row's own C1, C3 and A1;
+# its default is what the crystal's search missed by [measured: mono300 PHASE1, D's search]: C1 1.3 A, C3 49 A, A1 3.6 A (A1 added at
+# 0 rad). START_SCALE multiplies tableau terms in the start probe, e.g. the higher orders not given at all. The job writes the start
+# probe (sim/make_probe.py through PROBE_C1 / PROBE_C3 / PROBE_SET / PROBE_SCALE). RTAG defaults to _pu.
+#   PROBE_UPDATE=1 bash runs/zb_submit.sh runs/gflat.tsv
+#   PROBE_UPDATE=1 START_SCALE="C50=0:C23=0:C34=0:C32=0:C45=0:C41=0:C43=0:C56=0" RTAG=_pu_noho bash runs/zb_submit.sh runs/gflat_noho.tsv
 #
 # THE WINDOW (2026-11-04). A row's solver window is its box / BIN (BIN 2). Column 15, side (optional; absent or - = the 70.008 A box, so
 # old files and their names are unchanged), makes the box a side x side A region and is named _rs<side>: side 210 is the campaign's 105 A
@@ -80,6 +91,7 @@ ZB_ROOT="${ZB_ROOT:-${SHARE:-/springbrook/share/physics}/phucrh/zblur_runs}"
 PACK_DIR="${PACK_DIR:-${SHARE:-/springbrook/share/physics}/phucrh}"
 PYBIN="${CONDA_ENV:-${SHARE:-/springbrook/share/physics}/phucrh/envs/abtem}/bin/python"
 TSV="${PTYCHO_ROOT}/campaign/ceos_sweep.tsv"
+FLAT_TSV="${FLAT_TSV:-${HERE}/flat_tableaux.tsv}"
 DRY_RUN="${DRY_RUN:-0}"
 CHECK="${PTYCHO_ROOT}/campaign/check_outputs.py"
 GUARD_PY="$PYBIN"; [ -x "$GUARD_PY" ] || GUARD_PY="${ZB_GUARD_PY:-python3}"     # the login-node checks; the jobs use PYBIN
@@ -91,6 +103,21 @@ NITER="${NITER:-200}"; BETA_LSQ="${BETA_LSQ:-0.05}"; GROUPING="${GROUPING:-32}";
 PROBE_MODES="${PROBE_MODES:-1}"; PROBE_START="${PROBE_START:-40}"; PROBE_START2="${PROBE_START2:-20}"
 case "$PROBE_MODES" in ''|*[!0-9]*|0) echo "PROBE_MODES must be a whole number >= 1, not '${PROBE_MODES}'" >&2; exit 1;; esac
 [ "$PROBE_MODES" -gt 1 ] && [ -z "$RTAG" ] && RTAG="_m${PROBE_MODES}"
+PROBE_UPDATE="${PROBE_UPDATE:-0}"; START_ERR="${START_ERR-C1=1.3:C3=49:A1=3.6}"; START_SCALE="${START_SCALE:-}"
+case "$PROBE_UPDATE" in 0|1) ;; *) echo "PROBE_UPDATE must be 0 or 1, not '${PROBE_UPDATE}'" >&2; exit 1;; esac
+ERR_C1=0; ERR_C3=0; ERR_A1=0
+if [ "$PROBE_UPDATE" = 1 ]; then
+    [ "$PROBE_MODES" = 1 ] || { echo "PROBE_UPDATE=1 is the one-mode route; PROBE_MODES above 1 releases the probe already" >&2; exit 1; }
+    [ -z "$RTAG" ] && RTAG="_pu"
+    for kv in $(echo "$START_ERR" | tr ':,' '  '); do
+        v="${kv#*=}"
+        awk -v x="$v" 'BEGIN{exit !(x ~ /^-?[0-9]+(\.[0-9]+)?$/)}' || { echo "START_ERR: '${kv}' is not a number in A" >&2; exit 1; }
+        case "$kv" in C1=*) ERR_C1="$v";; C3=*) ERR_C3="$v";; A1=*) ERR_A1="$v";; *) echo "START_ERR takes C1=, C3=, A1= (A), not '${kv}'" >&2; exit 1;; esac
+    done
+    case "$START_SCALE" in *,*) echo "START_SCALE: separate terms with ':' (it rides in --export)" >&2; exit 1;; esac
+elif [ -n "$START_SCALE" ]; then
+    echo "START_SCALE shapes the start probe of PROBE_UPDATE=1 only" >&2; exit 1
+fi
 # Phonon points need the frozen-phonon sigma fix (ptychoshelves-clean a8b9264, 2026-10-30): before it, abTEM 1.0.9 moved
 # every atom sqrt(3) too far. Their sims are named _T<T>v2 so the pre-fix _T<T> folders are never reused, and they are
 # refused unless the checkout contains the fix. Checked before anything is submitted.
@@ -116,6 +143,12 @@ MEX="${PTYCHO_ROOT}/ptycho/+engines/+GPU/+LSQML/private/get_LSQ_step_mex.mexa64"
 MEXSUM="$( [ -f "$MEX" ] && cksum "$MEX" | awk '{print $1}' || echo none)"
 PIN="$(git -C "$PTYCHO_ROOT" rev-parse --short HEAD)"
 num() { echo "$1" | sed 's/\./p/'; }
+tab_row(){ # the tableau row of an arm or flat<X> row (needs a3, aber); empty if there is none
+    case "$aber" in
+        arm)    awk -F'\t' -v L="armf_a${a3}" '$1==L' "$TSV";;
+        flat*)  awk -F'\t' -v L="flat_a${a3}_f$(printf '%03d' "${aber#flat}")" '$1==L' "$FLAT_TSV" 2>/dev/null;;
+    esac
+}
 
 # ---- one row's names and sizes, for the checks and for the submission alike
 row_setup(){
@@ -172,9 +205,10 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
     [ -z "${rest:-}" ] || refuse "too many columns: $el $alpha ..."
     side="${side:--}"
     case "$el" in Pb|Ti) ;; *) refuse "el must be Pb or Ti, not $el";; esac
-    case "$aber" in ideal|arm) ;; *) refuse "aber must be ideal or arm, not $aber";; esac
+    case "$aber" in ideal|arm) ;; flat*) [[ "$aber" =~ ^flat[0-9]+$ ]] || refuse "flat takes a whole angle: flat30, not $aber";;
+        *) refuse "aber must be ideal, arm or flat<X>, not $aber";; esac
     case "$geom" in grid|single) ;; *) refuse "geom must be grid or single, not $geom";; esac
-    [ "$aber" = "arm" ] && [ "$c1" != "-" ] && refuse "arm takes the tableau's own C1: put - in the c1 column"
+    [ "$aber" != "ideal" ] && [ "$c1" != "-" ] && refuse "${aber} takes the tableau's own C1: put - in the c1 column"
     [ "$aber" = "ideal" ] && [ "$c1" = "-" ] && refuse "ideal needs a c1 (0 = in focus)"
     if [ "$side" != "-" ]; then
         case "$side" in *[!0-9.]*|'') refuse "side must be a length in A or -, not '${side}'";; esac
@@ -183,9 +217,9 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
     case "$SEEN" in *" ${name} "*) refuse "duplicate point ${name} in ${PTS}";; esac
     SEEN="${SEEN}${name} "
     # the window, from the row's own values
-    if [ "$aber" = "arm" ]; then
-        trow=$(awk -F'\t' -v L="armf_a${a3}" '$1==L' "$TSV")
-        [ -n "$trow" ] || refuse "no armf_a${a3} row in ${TSV}"
+    if [ "$aber" != "ideal" ]; then
+        trow=$(tab_row)
+        [ -n "$trow" ] || refuse "no tableau row for ${aber} at ${alpha} mrad (armf_a${a3} in ${TSV}, or flat_a${a3}_f<XXX> in ${FLAT_TSV}: runs/flat_family.py)"
         gc1=$(echo "$trow" | cut -f5); gaj=$(echo "$trow" | cut -f9)
     else
         gc1="$c1"; gaj='{"C30":0.0,"C50":0.0}'
@@ -209,7 +243,12 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         gfull=$(echo "$GROUPING" | sed 's/.*[; ]//')
         if [ "$Ndp" -gt 800 ] && [ "$gfull" -gt 16 ]; then refuse "${name}: ${Ndp} px needs a full-engine grouping <= 16 on an L40 (it is ${gfull}): GROUPING=\"32;16\""; fi
     fi
-    # the sim: whole, or refused; never a truncated file taken for a finished sim
+    # the sim: whole, or refused; never a truncated file taken for a finished sim, and never a second sim of a point still being simulated
+    case "
+${QUEUED}
+" in *"
+zb_sim_${name}
+"*) refuse "zb_sim_${name} is still in the queue: submit this after it has finished, and its sim is reused";; esac
     if [ -e "${sdir}/01/data_dp.hdf5" ]; then
         "$GUARD_PY" "$CHECK" sim "$sdir" >/dev/null 2>&1 || refuse "${sdir} is not a whole sim: $("$GUARD_PY" "$CHECK" sim "$sdir" 2>&1 | head -1). Remove it, then submit again: rm -rf '${sdir}'"
     else
@@ -287,14 +326,23 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
     row_setup       # (every row passed the preflight above)
 
     # ---- aberrations
-    if [ "$aber" = "arm" ]; then
-        row=$(awk -F'\t' -v L="armf_a${a3}" '$1==L' "$TSV")
-        [ -n "$row" ] || { echo "no armf_a${a3} row in ${TSV}" >&2; exit 1; }
+    if [ "$aber" != "ideal" ]; then
+        row=$(tab_row)
+        [ -n "$row" ] || { echo "no tableau row for ${aber} at ${alpha} mrad" >&2; exit 1; }
         c5=$(echo "$row" | cut -f3); c3=$(echo "$row" | cut -f4); c1=$(echo "$row" | cut -f5); aj=$(echo "$row" | cut -f9)
     else
         c5=0; c3=0; aj='{"C30":0.0,"C50":0.0}'
     fi
     export ABERRATIONS_JSON="$aj"     # has commas: read from the environment by run_sim.slurm (--export=ALL)
+    # the experimentalist's start probe (PROBE_UPDATE=1): the row's own C1, C3 and A1 plus START_ERR, A1 added as a 2-fold vector
+    pu=""; pstart_pu=""
+    if [ "$PROBE_UPDATE" = 1 ]; then
+        read -r a1m a1p <<<"$("$GUARD_PY" -c 'import json, sys; d = json.loads(sys.argv[1]); print(d.get("C12", 0.0), d.get("phi12", 0.0))' "$aj")"
+        pset=$(awk -v m="$a1m" -v p="$a1p" -v e="$ERR_A1" 'BEGIN{x = m * cos(2 * p) + e; y = m * sin(2 * p); printf "C12=%.4f:phi12=%.6f", sqrt(x * x + y * y), atan2(y, x) / 2}')
+        pc1=$(awk -v a="$c1" -v e="$ERR_C1" 'BEGIN{printf "%.4f", a + e}'); pc3=$(awk -v a="$c3" -v e="$ERR_C3" 'BEGIN{printf "%.4f", a + e}')
+        pu="PROBE_C1=${pc1},PROBE_C3=${pc3},PROBE_SET=${pset}"; [ -n "$START_SCALE" ] && pu="${pu},PROBE_SCALE=${START_SCALE}"
+        pstart_pu="update from C1${ERR_C1:+ +${ERR_C1}} C3 +${ERR_C3} A1 +${ERR_A1}${START_SCALE:+ x ${START_SCALE}}"
+    fi
 
     # ---- physics
     exp="ALL,JOB_DIR=${sdir},SLICE_THICKNESS=${slice},SCAN_STEP=${step},CONVERGENCE=${alpha},PHONON_SIGMA=0.08,PHONON_SEED=1"
@@ -359,10 +407,13 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         if [ "$PROBE_MODES" -gt 1 ]; then
             if [ "$fs" != "0" ] || [ "$src" != "0" ]; then pstart=mixed; else pstart=seeded; fi
         fi
+        [ "$PROBE_UPDATE" = 1 ] && pstart="$pstart_pu"
         if [ "$DRY_RUN" != "1" ] && [ "$state" != whole ]; then
             mkdir -p "${rdir}/01"
             for f in data_dp.hdf5 data_position.hdf5 sim_meta.mat; do ln -sf "${sdir}/01/${f}" "${rdir}/01/${f}"; done
-            if [ "$pstart" = mixed ]; then
+            # the probe writer (sim/make_probe.py) reads the sim's tableau from the recon dir's 01/
+            [ "$PROBE_UPDATE" = 1 ] && ln -sf "${sdir}/01/aberrations.json" "${rdir}/01/aberrations.json"
+            if [ "$pstart" = mixed ] || [ "$PROBE_UPDATE" = 1 ]; then
                 # the job writes probe_initial.mat HERE: it must not be a link, or the writer would write through it and
                 # replace the sim's own true probe. The writer reads the true probe for the record.
                 ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial_true.mat"
@@ -376,6 +427,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             rexp="${rexp},PROBE_START=${PROBE_START},PROBE_START2=${PROBE_START2},PROBE_SUPPORT_FFT=1"
             [ "$pstart" = mixed ] && rexp="${rexp},PROBE_MIXED=${PROBE_MODES}"
         fi
+        [ "$PROBE_UPDATE" = 1 ] && rexp="${rexp},PROBE_START=${PROBE_START},PROBE_START2=${PROBE_START2},PROBE_SUPPORT_FFT=1,${pu}"
         if [ "$nl" -le 20 ]; then rtime=10:00:00; elif [ "$nl" -le 40 ]; then rtime=24:00:00; else rtime=48:00:00; fi
         [ "$PROBE_MODES" -gt 1 ] && rtime=48:00:00         # modes multiply the work: the crystal's 8-mode legs ran ~2.4x
         rmem=96G
@@ -385,6 +437,8 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             rmem=$(awk -v d="$dataGB" 'BEGIN{g = int(1.2 * 4.3 * d + 0.999); if (g < 96) g = 96; if (g > 175) g = 175; printf "%dG", g}')
             rtime=$(awk -v p="$npos" -v n="$Ndp" -v l="$nl" -v i="$NITER" 'BEGIN{h = 1.5 * 1.32 * i * p * n * n * l / 8.56e8 / 3600; if (h < 4) h = 4; if (h > 48) h = 48; printf "%02d:00:00", h + 0.999}')
         fi
+        # a released probe costs more per iteration [assumed: 1.5 x, within the 48 h limit]
+        [ "$PROBE_UPDATE" = 1 ] && rtime=$(echo "$rtime" | awk -F: '{h = $1 * 1.5; if (h > 48) h = 48; printf "%02d:00:00", h}')
         ejdep=()
         if [ "$state" = whole ]; then
             rj=""; echo "  ${pname}: recon whole (checked), kernel only" >&2

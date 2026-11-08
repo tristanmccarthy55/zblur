@@ -1,0 +1,20 @@
+# THE FLAT EXPERIMENT (2026-11-08, the user: "the most important experiment to run. if we get this trace we know we have a paper").
+# One lone Pb atom; y = its depth extent (fwhm_z from analysis/blobs.py), x = angle.
+#   line A: the perfect probe with an aperture of x mrad (ideal, in focus): the expected alpha trace.
+#   line B: an 80 mrad aperture over a corrector flat only to x mrad (flat<x>, runs/flat_family.py: ARM200F-class hardware residuals
+#           scaled, C1 and C3 tuned, A1 = B2 = 0). At x = 80 line B is line A's 80 mrad point.
+# If B sits at A's 80 mrad extent at every x, aberrations past the flat region cost nothing and opening the aperture is worth it.
+# Run like an experimentalist: probe update on, started from the crystal search's misses (zb_submit.sh PROBE_UPDATE=1, START_ERR default).
+#   PROBE_UPDATE=1 GROUPING="32;16" bash runs/zb_submit.sh runs/gflat.tsv
+# Every row: the G1 lone-atom recipe (0.1 A steps over 8 A, recorded to 200 mrad, 0.25 A sim slices), recon slices of 1 A (bz40 at NL 40,
+# bz20 at NL 20). 30 and 40 mrad in a 40 A box, as G0c's 40 mrad atom (3.1 A FWHM; 30 mrad ~5.6 A expected); 60 and 80 in the 20 A box.
+# flat30 needs a 45 A window (side 90): 2.2 % of its probe outside, against 6.4 % at 35 A. Its 914 px need the full engine's grouping 16,
+# so every row runs at "32;16" and the pairs share a recipe. The 40 and 60 mrad ideal sims and the 80 mrad one are reused (G0c, G0d).
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list	side
+Pb	30	ideal	0	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	40	ideal	0	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	60	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	-	20
+Pb	80	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	-	20
+Pb	80	flat30	-	single	0.1	8	200	0.25	10.2375	0	0	-	40	90
+Pb	80	flat40	-	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	80	flat60	-	single	0.1	8	200	0.25	0.2375	0	0	-	20

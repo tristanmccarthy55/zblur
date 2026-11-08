@@ -1,0 +1,5 @@
+# The flat experiment's robustness point (2026-11-08; the user: "does it get to the same place if I don't give it higher orders?"): flat to 30,
+# probe released from the search's misses AND every higher-order term left out of the start probe. Submit AFTER gflat's sims have finished.
+#   PROBE_UPDATE=1 START_SCALE="C50=0:C23=0:C34=0:C32=0:C45=0:C41=0:C43=0:C56=0" RTAG=_pu_noho GROUPING="32;16" bash runs/zb_submit.sh runs/gflat_noho.tsv
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list	side
+Pb	80	flat30	-	single	0.1	8	200	0.25	10.2375	0	0	-	40	90

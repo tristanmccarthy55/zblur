@@ -1,0 +1,9 @@
+# The flat experiment's control (2026-11-08): the same points with the TRUE probe held fixed, so the cost of a released probe on a lone atom
+# is told apart from the cost of the aberrations. Only the points with no fixed-probe recon in this recipe yet (40, 60 and 80 mrad ideal exist
+# from G0c / G0d at grouping 32: context only). Submit AFTER gflat's sims have finished (zb_submit refuses while a sim is queued); sims reused.
+#   GROUPING="32;16" bash runs/zb_submit.sh runs/gflat_fixed.tsv
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list	side
+Pb	30	ideal	0	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	80	flat30	-	single	0.1	8	200	0.25	10.2375	0	0	-	40	90
+Pb	80	flat40	-	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	80	flat60	-	single	0.1	8	200	0.25	0.2375	0	0	-	20

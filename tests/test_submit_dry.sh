@@ -207,4 +207,30 @@ o="$(dry env DISK_CHECK=1 STUB_QUOTA= DISK_PROBE_MB=1 bash runs/zb_submit.sh "$T
 [ "$rc" != 0 ] && echo "$o" | grep -q 'NOT SUBMITTED: could not read' && ok "disk: refused when the quota row cannot be read" || bad "disk row"
 o="$(dry env DISK_CHECK=1 DISK_PROBE_MB=1 DISK_PROBE_DIR=/nonexistent/dir bash runs/zb_submit.sh "$T/ideal.tsv")" && rc=0 || rc=$?
 [ "$rc" != 0 ] && echo "$o" | grep -q 'NOT SUBMITTED: the test write' && ok "disk: refused when the test write fails" || bad "disk write"
+# -- the flat experiment (2026-11-08): flat<X> rows take runs/flat_tableaux.tsv's own C1, C3, C5; PROBE_UPDATE=1 releases one mode
+#    from the search's misses; a point still being simulated is never simulated twice
+o="$(dry env PROBE_UPDATE=1 GROUPING='32;16' bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
+f30=$(awk -F'\t' '$1=="flat_a080_f030"' runs/flat_tableaux.tsv)
+s30=$(echo "$o" | grep 'job-name=zb_sim_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90 ')
+r30=$(echo "$o" | grep 'job-name=zb_rec_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu ')
+pc1=$(awk -v a="$(echo "$f30" | cut -f5)" 'BEGIN{printf "%.4f", a + 1.3}')
+[ "$rc" = 0 ] && [[ "$s30" == *"DEFOCUS=$(echo "$f30" | cut -f5),"* && "$s30" == *"CS=$(echo "$f30" | cut -f4),"* && "$s30" == *"C5=$(echo "$f30" | cut -f3),"* && "$s30" == *"REGION_SIDE=90"* ]] \
+  && ok "flat30: the tableau's own C1, C3, C5 reach the sim, in a 45 A window" || { bad "flat30 sim"; echo "$o" | grep -m3 -E 'NOT SUB|flat30' | cut -c1-200; }
+[[ "$r30" == *"PROBE_START=40,PROBE_START2=20,PROBE_SUPPORT_FFT=1,PROBE_C1=${pc1},"* && "$r30" == *"PROBE_SET=C12=3.6000:phi12=0.000000"* && "$r30" == *"PROBE_MODES=1,"* ]] \
+  && ok "PROBE_UPDATE=1: one mode released from the search's misses (C1 ${pc1} A, A1 3.6 A)" || { bad "probe update exports"; echo "$r30" | cut -c1-300; }
+[ "$(echo "$o" | grep -c 'job-name=zb_rec_.*_pu ')" = 7 ] && [ "$(echo "$o" | grep -c 'job-name=zb_psf_.*_pu ')" = 7 ] && ok "gflat: seven recons and kernels, all _pu" || bad "gflat counts"
+o="$(dry env PROBE_UPDATE=1 START_ERR='C1=0:C3=0:A1=0' START_SCALE='C50=0:C23=0' RTAG=_pu_noho GROUPING='32;16' bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
+echo "$o" | grep 'job-name=zb_rec_Pb_a080_flat40_.*_pu_noho ' | grep -q 'PROBE_SCALE=C50=0:C23=0' && ok "START_SCALE reaches the start probe" || bad "START_SCALE"
+o="$(dry env PROBE_UPDATE=1 PROBE_MODES=8 bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && ! echo "$o" | grep -q '^DRY\[' && ok "PROBE_UPDATE=1 with modes refused" || bad "update + modes"
+o="$(dry env PROBE_UPDATE=1 START_ERR='C5=3' bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'START_ERR takes' && ok "START_ERR: an unknown term refused" || bad "START_ERR"
+o="$(dry env START_SCALE='C50=0' bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && ok "START_SCALE without PROBE_UPDATE refused" || bad "START_SCALE alone"
+printf 'Pb\t80\tflat35\t-\tsingle\t0.1\t8\t200\t0.25\t0.2375\t0\t0\t-\t20\n' >"$T/flat35.tsv"
+o="$(dry bash runs/zb_submit.sh "$T/flat35.tsv")" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'no tableau row for flat35' && ok "a flat angle with no tableau row refused" || bad "missing flat row"
+grep -v '^#' runs/gflat.tsv | head -1 >"$T/a30.tsv"; Z="$T/z7"; mkdir -p "$Z"
+real "$Z" STUB_SQUEUE="zb_sim_Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000" bash runs/zb_submit.sh "$T/a30.tsv" && rc=0 || rc=$?
+[ "$rc" != 0 ] && grep -q 'zb_sim_.* is still in the queue' "$Z/out.txt" && ok "a point whose sim is still in the queue refused (no second sim)" || bad "queued sim"
 [ "$fail" = 0 ] && echo "ALL OK" || { echo "SOME CHECKS FAILED"; echo "$out" | tail -5; exit 1; }

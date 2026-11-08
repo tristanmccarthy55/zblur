@@ -1,0 +1,7 @@
+name	contrast	sigma_xy	sigma_z	fwhm_z	dip	side	opening	cone_below	cone_above	D	S	fit_rms	D_pred	S_pred	fourier_rms	C0	theta10	theta5	kernel
+ideal 80 mrad NL20, 295 K	nan	0.1454	1.1077	2.6084	0.0267	0.4310	0.1141	0.1797	0.3152	nan	nan	nan	nan	nan	nan	0.0213	0.0000	0.0000	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_T295v2_NL20
+ideal 80 mrad NL20, 100 K	nan	0.0908	0.6407	1.5086	0.0219	0.2187	0.1238	0.0719	0.1163	nan	nan	nan	nan	nan	nan	0.0181	0.0000	0.0000	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_T100v2_NL20
+ideal 80 mrad NL20, 20 K	nan	0.0666	0.5345	1.2587	-0.0358	0.0410	0.1272	0.0269	0.0701	nan	nan	nan	nan	nan	nan	0.0206	0.0000	0.0000	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_T20v2_NL20
+ideal 80 mrad NL20, fs 2.5, 20 K	nan	0.0944	1.1672	2.7486	-0.1903	0.3692	0.0921	0.1299	0.1316	nan	nan	nan	nan	nan	nan	0.0758	0.0000	0.0275	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_T20v2_NL20
+ideal 80 mrad NL20, src 0.1, 20 K	nan	0.0827	0.7252	1.7076	-0.0200	0.0985	0.1196	0.0481	0.1210	nan	nan	nan	nan	nan	nan	0.0166	0.0000	0.0000	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_src0p1_T20v2_NL20
+ideal 80 mrad NL20, fs 2.5, src 0.1, 20 K	nan	0.1143	1.3024	3.0669	-0.0268	0.4632	0.1048	0.1525	0.1609	nan	nan	nan	nan	nan	nan	0.0601	0.0000	0.0100	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_src0p1_T20v2_NL20

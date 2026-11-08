@@ -1,0 +1,5 @@
+name	contrast	sigma_xy	sigma_z	fwhm_z	dip	side	opening	cone_below	cone_above	D	S	fit_rms	D_pred	S_pred	fourier_rms	C0	theta10	theta5	kernel
+arm 80 mrad NL20	0.6993	0.0720	0.4796	1.1292	-0.5135	0.3631	0.0606	0.0601	0.1193	-0.5274	0.0543	0.5144	nan	nan	nan	0.1994	0.0450	0.1400	Pb_a080_arm_single_st0p25_w16_s0p25_bz20p000_d133_NL20
+arm 80 mrad NL28	0.9018	0.0559	0.3981	0.9375	-0.7854	0.4297	0.0656	0.0431	0.1064	-0.7356	0.0684	0.6203	nan	nan	nan	0.3653	0.1275	nan	Pb_a080_arm_single_st0p25_w16_s0p25_bz20p000_d133_NL28
+arm 80 mrad NL20	nan	0.0620	0.5432	1.2792	-0.1137	0.0593	0.1078	0.0235	0.0370	nan	nan	nan	nan	nan	nan	0.0349	0.0000	0.0000	Pb_a080_arm_single_st0p25_w16_s0p25_bz20p000_rs210_d133_NL20
+arm 80 mrad NL28	nan	0.0629	0.5299	1.2478	-0.0799	0.0621	0.1161	0.0237	0.0390	nan	nan	nan	nan	nan	nan	0.0329	0.0000	0.0000	Pb_a080_arm_single_st0p25_w16_s0p25_bz20p000_rs210_d133_NL28
