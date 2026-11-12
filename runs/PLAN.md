@@ -412,3 +412,12 @@ experimentalist: probe update on, from the crystal search's misses (C1 +1.3 A, C
 `runs/gflat_fixed.tsv` (true probe fixed) and `runs/gflat_noho.tsv` (higher orders not given). Prediction P6 in `runs/PREDICTIONS.md`.
 Budget [estimate, from G1's 4.3 h at NL 20 and 5 h sims]: gflat ~105 GPU-h and ~80 GB, the two follow-ups ~50 GPU-h. Later the coherence
 terms come in as a floor on the same axes (the user's "wall"): g1v2's 20 K / 100 K / 295 K and focal-spread / source points are the start.
+
+### 2026-11-12: first answers, and the experimentalist version
+With the true probe fixed, opening past the flat region recovers most of the depth (W80: flat to 30 gives 4 A against 9 A for the perfect
+30 mrad probe and 3 A at 80; PREDICTIONS.md Outcomes). The FWHM hides this: it reads the core and misses a low-angle atom's tail, so W80
+and z-share are the metrics from here. The user: the claim needs the experimentalist's probe, fitted, not given. On a lone atom the
+released probe never left its start (overlap 0.40 -> 0.44). `runs/ggrid.tsv` repeats both lines on a plane of atoms, which gives the fit
+something to hold; ~35 GPU-h. `gflat_pu0` (released from the truth) says whether a lone atom can hold a probe at all. `zb_submit.sh` DOSE
+adds a Poisson copy per row (sim/add_poisson_noise.py) for the dose version; the coherence version (focal spread 2.5 A) is running with
+the probe fixed. Both should move to the released probe once P7 says which object fits it.

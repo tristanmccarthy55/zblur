@@ -233,4 +233,14 @@ o="$(dry bash runs/zb_submit.sh "$T/flat35.tsv")" && rc=0 || rc=$?
 grep -v '^#' runs/gflat.tsv | head -1 >"$T/a30.tsv"; Z="$T/z7"; mkdir -p "$Z"
 real "$Z" STUB_SQUEUE="zb_sim_Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000" bash runs/zb_submit.sh "$T/a30.tsv" && rc=0 || rc=$?
 [ "$rc" != 0 ] && grep -q 'zb_sim_.* is still in the queue' "$Z/out.txt" && ok "a point whose sim is still in the queue refused (no second sim)" || bad "queued sim"
+# -- DOSE (2026-11-12): a noise job between sim and recon, names carry _dose<D>, the recon reads the copy's patterns
+o="$(dry env DOSE=1e5 GROUPING='32;16' bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+nz=$(echo "$o" | grep 'job-name=zb_noise_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e5 ')
+rz=$(echo "$o" | grep 'job-name=zb_rec_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e5_NL40 ')
+nid=$(echo "$o" | grep -o 'DRY\[[0-9]*\] .*job-name=zb_noise_Pb_a080_flat30[^ ]* ' | sed -E 's/DRY\[([0-9]+)\].*/dry\1/')
+[ "$rc" = 0 ] && [[ "$nz" == *"add_poisson_noise.py' --in-dir '/zbroot/sim_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90' --out-dir '/zbroot/sim_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e5' --dose 1e5 --seed 0"* ]] \
+  && [[ "$rz" == *"afterok:${nid} "* ]] && [ "$(echo "$o" | grep -c 'job-name=zb_noise_')" = 4 ] && [ "$(echo "$o" | grep -c 'job-name=zb_rec_.*_dose1e5_NL')" = 4 ] \
+  && ok "DOSE=1e5: four noise jobs, each recon waits on its own, names _dose1e5" || { bad "DOSE wiring"; echo "$o" | grep -m3 -E 'NOT SUB|noise' | cut -c1-250; }
+o="$(dry env DOSE=lots bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'DOSE is a fluence' && ok "DOSE: a non-number refused" || bad "DOSE parse"
 [ "$fail" = 0 ] && echo "ALL OK" || { echo "SOME CHECKS FAILED"; echo "$out" | tail -5; exit 1; }

@@ -1,0 +1,8 @@
+name	contrast	sigma_xy	sigma_z	fwhm_z	dip	side	opening	cone_below	cone_above	D	S	fit_rms	D_pred	S_pred	fourier_rms	C0	theta10	theta5	kernel
+ideal 30 mrad NL40	nan	0.0533	1.5713	3.7000	0.1860	0.5756	0.0394	0.1496	0.0546	nan	nan	nan	nan	nan	nan	0.2653	0.0750	nan	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu
+ideal 40 mrad NL40	nan	0.0518	1.0846	2.5541	-0.4877	0.5088	0.0384	0.1038	0.1312	nan	nan	nan	nan	nan	nan	0.0673	0.0000	0.0725	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu
+ideal 60 mrad NL20  [NOT CLEAN]	nan	0.0579	1.0789	2.5406	-0.9522	0.2664	0.0748	0.0802	0.1619	nan	nan	nan	nan	nan	nan	0.0459	0.0000	0.0000	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu
+ideal 80 mrad NL20  [NOT CLEAN]	nan	0.0388	0.5785	1.3622	-1.0357	0.9297	0.0594	0.1485	0.3587	nan	nan	nan	nan	nan	nan	0.7185	0.1150	0.1250	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu
+flat30 80 mrad NL40	nan	0.0518	0.7848	1.8481	-0.6350	0.7885	0.0573	0.1180	0.1632	nan	nan	nan	nan	nan	nan	0.2546	0.1125	0.1225	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu
+flat40 80 mrad NL40	nan	0.0410	0.4688	1.1040	-0.6591	0.2018	0.0294	0.0890	0.2513	nan	nan	nan	nan	nan	nan	0.2182	0.0225	0.0300	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu
+flat60 80 mrad NL20  [NOT CLEAN]	nan	0.0408	0.3705	0.8725	-0.9246	0.5028	0.0420	nan	0.3342	nan	nan	nan	nan	nan	nan	0.1473	0.0175	0.0275	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu

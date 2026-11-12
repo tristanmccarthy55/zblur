@@ -58,6 +58,11 @@
 #   PROBE_UPDATE=1 bash runs/zb_submit.sh runs/gflat.tsv
 #   PROBE_UPDATE=1 START_SCALE="C50=0:C23=0:C34=0:C32=0:C45=0:C41=0:C43=0:C56=0" RTAG=_pu_noho bash runs/zb_submit.sh runs/gflat_noho.tsv
 #
+# DOSE=<e/A^2> (2026-11-12, the flat experiment's dose version): the recons read a Poisson copy of each sim, written by a job
+# (sim/add_poisson_noise.py, DOSE_SEED, default 0) into sim_<name>_dose<D>, after the sim if it is new. Recon and kernel names
+# carry _dose<D>; the clean sim is reused untouched. The copy holds patterns as large as the sim's own (counted in the disk check).
+#   DOSE=1e5 GROUPING="32;16" bash runs/zb_submit.sh runs/gflat_fixed.tsv
+#
 # THE WINDOW (2026-11-04). A row's solver window is its box / BIN (BIN 2). Column 15, side (optional; absent or - = the 70.008 A box, so
 # old files and their names are unchanged), makes the box a side x side A region and is named _rs<side>: side 210 is the campaign's 105 A
 # window. Every ARM row before this date ran with no side: a 35 A window with 32 % of the 80 mrad probe outside it, and their rings
@@ -118,6 +123,11 @@ if [ "$PROBE_UPDATE" = 1 ]; then
 elif [ -n "$START_SCALE" ]; then
     echo "START_SCALE shapes the start probe of PROBE_UPDATE=1 only" >&2; exit 1
 fi
+DOSE="${DOSE:-}"; DOSE_SEED="${DOSE_SEED:-0}"
+if [ -n "$DOSE" ]; then
+    awk -v x="$DOSE" 'BEGIN{exit !(x ~ /^[0-9]+(\.[0-9]+)?(e[0-9]+)?$/ && x + 0 > 0)}' || { echo "DOSE is a fluence in e/A^2 such as 1e6, not '${DOSE}'" >&2; exit 1; }
+    [ "$CLEAN_RAW" = 1 ] && { echo "CLEAN_RAW takes the clean sims; run it without DOSE" >&2; exit 1; }
+fi
 # Phonon points need the frozen-phonon sigma fix (ptychoshelves-clean a8b9264, 2026-10-30): before it, abTEM 1.0.9 moved
 # every atom sqrt(3) too far. Their sims are named _T<T>v2 so the pre-fix _T<T> folders are never reused, and they are
 # refused unless the checkout contains the fix. Checked before anything is submitted.
@@ -164,6 +174,8 @@ row_setup(){
     [ "$det" != "200" ] && name="${name}_d${det}"
     dx=$(awk -v l="$LAM" -v t="$det" 'BEGIN{printf "%.5f", l / (2 * t / 1000)}')    # object pixel = lambda / (2 theta_max)
     sdir="${ZB_ROOT}/sim_${name}"
+    # DOSE: the recons read a Poisson copy of the sim (sim/add_poisson_noise.py), named _dose<D> so no noisy run lands in a noiseless one's folder
+    if [ -n "$DOSE" ]; then dname="${name}_dose${DOSE}"; ndir="${ZB_ROOT}/sim_${dname}"; else dname="$name"; ndir="$sdir"; fi
     box=70.008; [ "$side" != "-" ] && box="$side"
     winA=$(awk -v b="$box" -v n="$BIN" 'BEGIN{printf "%.3f", b / n}')
     # the size of its patterns (the simulator crops the detector to a multiple of 2 BIN); positions as abTEM 1.0.9 counts them, one more per axis
@@ -186,8 +198,8 @@ if [ "$CLEAN_RAW" = "1" ]; then
         side="${side:--}"; row_setup; ok=1
         IFS=',' read -r -a NLS <<<"$nls"
         for nl in "${NLS[@]}"; do
-            [ "$(recon_state "${ZB_ROOT}/recon_${name}_NL${nl}${RTAG}")" = whole ] || { echo "  ${name}: NL${nl}${RTAG} not whole, its sim stays" >&2; ok=0; }
-            [ -s "${ZB_ROOT}/psf/psf_${name}_NL${nl}${RTAG}_vol.npy" ] || { echo "  ${name}: no kernel for NL${nl}${RTAG}, its sim stays" >&2; ok=0; }
+            [ "$(recon_state "${ZB_ROOT}/recon_${dname}_NL${nl}${RTAG}")" = whole ] || { echo "  ${name}: NL${nl}${RTAG} not whole, its sim stays" >&2; ok=0; }
+            [ -s "${ZB_ROOT}/psf/psf_${dname}_NL${nl}${RTAG}_vol.npy" ] || { echo "  ${name}: no kernel for NL${nl}${RTAG}, its sim stays" >&2; ok=0; }
         done
         if [ "$ok" = 1 ] && [ -e "${sdir}/01/data_dp.hdf5" ]; then
             echo "  ${name}: removing $(du -sh "${sdir}/01/data_dp.hdf5" | cut -f1) of patterns (probes and sim_meta stay)" >&2
@@ -254,15 +266,29 @@ zb_sim_${name}
     else
         NEED=$(awk -v n="$NEED" -v d="$dataGB" 'BEGIN{printf "%.0f", n + d + 0.5}')
     fi
-    # the recons: no rerun lands on a failed attempt's leftovers
-    IFS=',' read -r -a NLS <<<"$nls"
-    for nl in "${NLS[@]}"; do
-        rdir="${ZB_ROOT}/recon_${name}_NL${nl}${RTAG}"
+    # the noisy copy (DOSE): never one still being written, never a truncated one reused
+    if [ -n "$DOSE" ]; then
         case "
 ${QUEUED}
 " in *"
-zb_rec_${name}_NL${nl}${RTAG}
-"*) refuse "zb_rec_${name}_NL${nl}${RTAG} is still in the queue";; esac
+zb_noise_${dname}
+"*) refuse "zb_noise_${dname} is still in the queue";; esac
+        if [ -e "${ndir}/01/data_dp.hdf5" ]; then
+            "$GUARD_PY" -c 'import h5py, sys; h5py.File(sys.argv[1], "r")["dp"].shape' "${ndir}/01/data_dp.hdf5" >/dev/null 2>&1 \
+                || refuse "${ndir} holds patterns that do not open. Remove it, then submit again: rm -rf '${ndir}'"
+        else
+            NEED=$(awk -v n="$NEED" -v d="$dataGB" 'BEGIN{printf "%.0f", n + d + 0.5}')
+        fi
+    fi
+    # the recons: no rerun lands on a failed attempt's leftovers
+    IFS=',' read -r -a NLS <<<"$nls"
+    for nl in "${NLS[@]}"; do
+        rdir="${ZB_ROOT}/recon_${dname}_NL${nl}${RTAG}"
+        case "
+${QUEUED}
+" in *"
+zb_rec_${dname}_NL${nl}${RTAG}
+"*) refuse "zb_rec_${dname}_NL${nl}${RTAG} is still in the queue";; esac
         st=$(recon_state "$rdir")
         case "$st:$REDO" in
             leftover:1|whole:1|none:*) ;;
@@ -377,6 +403,17 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
              --export="$exp" "${PTYCHO_ROOT}/sim/run_sim.slurm")
     fi
     dep=(); [ -n "$sj" ] && dep=(--dependency="afterok:${sj}")
+    if [ -n "$DOSE" ]; then
+        if [ -e "${ndir}/01/data_dp.hdf5" ]; then
+            echo "  ${dname}: noisy copy opens, reused" >&2
+        else
+            # dose x step^2 electrons per pattern, Poisson-sampled; positions, probe and meta linked (sim/add_poisson_noise.py)
+            nj=$(submit --job-name="zb_noise_${dname}" --time=02:00:00 --mem=48G --cpus-per-task=2 ${dep[@]+"${dep[@]}"} \
+                 --output="${ZB_ROOT}/logs/zb_noise_%j.out" --error="${ZB_ROOT}/logs/zb_noise_%j.err" \
+                 --wrap="'${PYBIN}' '${PTYCHO_ROOT}/sim/add_poisson_noise.py' --in-dir '${sdir}' --out-dir '${ndir}' --dose ${DOSE} --seed ${DOSE_SEED}")
+            dep=(--dependency="afterok:${nj}")
+        fi
+    fi
 
     # ---- one reconstruction per slice count, each followed by its kernel extraction
     IFS=',' read -r -a NLS <<<"$nls"
@@ -392,8 +429,8 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             zdrop=$(awk -v d="$dz" 'BEGIN{printf "%d", 2/d + 0.5}')
             xargs="--single --half-xy $(awk -v d="$dx" 'BEGIN{printf "%d", 3.937/d + 0.5}') --dx ${dx}"
         fi
-        rdir="${ZB_ROOT}/recon_${name}_NL${nl}${RTAG}"
-        pname="${name}_NL${nl}${RTAG}"
+        rdir="${ZB_ROOT}/recon_${dname}_NL${nl}${RTAG}"
+        pname="${dname}_NL${nl}${RTAG}"
         state=$(recon_state "$rdir")
         if [ "$state" = leftover ] && [ "$DRY_RUN" != "1" ]; then    # REDO=1 (the preflight refused it otherwise): nothing of a failed attempt stays to fool a rerun
             echo "  ${pname}: clearing an earlier attempt: analysis/, $(find "${rdir}/01" -name 'Niter*.mat' 2>/dev/null | wc -l | tr -d ' ') checkpoint(s), any kernel; slurm logs kept" >&2
@@ -410,7 +447,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         [ "$PROBE_UPDATE" = 1 ] && pstart="$pstart_pu"
         if [ "$DRY_RUN" != "1" ] && [ "$state" != whole ]; then
             mkdir -p "${rdir}/01"
-            for f in data_dp.hdf5 data_position.hdf5 sim_meta.mat; do ln -sf "${sdir}/01/${f}" "${rdir}/01/${f}"; done
+            for f in data_dp.hdf5 data_position.hdf5; do ln -sf "${ndir}/01/${f}" "${rdir}/01/${f}"; done; ln -sf "${sdir}/01/sim_meta.mat" "${rdir}/01/sim_meta.mat"
             # the probe writer (sim/make_probe.py) reads the sim's tableau from the recon dir's 01/
             [ "$PROBE_UPDATE" = 1 ] && ln -sf "${sdir}/01/aberrations.json" "${rdir}/01/aberrations.json"
             if [ "$pstart" = mixed ] || [ "$PROBE_UPDATE" = 1 ]; then
@@ -443,7 +480,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         if [ "$state" = whole ]; then
             rj=""; echo "  ${pname}: recon whole (checked), kernel only" >&2
         else
-            rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="zb_rec_${name}_NL${nl}${RTAG}" --time="$rtime" --mem="$rmem" \
+            rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="zb_rec_${dname}_NL${nl}${RTAG}" --time="$rtime" --mem="$rmem" \
                  ${dep[@]+"${dep[@]}"} --output="${rdir}/slurm_%j.out" --error="${rdir}/slurm_%j.err" \
                  --export="$rexp" "${PTYCHO_ROOT}/run_recon_synthetic_ML.slurm")
             ejdep=(--dependency="afterok:${rj}")
@@ -454,7 +491,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
              --wrap="'${PYBIN}' '${CHECK}' recon '${rdir}' || exit 1; git -C '${PTYCHO_ROOT}' rev-parse --short HEAD > '${ZB_ROOT}/psf/psf_${pname}_pin.txt'; '${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} ${xargs} --out '${ZB_ROOT}/psf'")
         EXTRACT_JOBS+=("$ej"); PSF_NAMES+=("$pname")
         [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
-            "$name" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$det" "$dx" "$slice" \
+            "$dname" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$det" "$dx" "$slice" \
             "$fs" "$src" "$T" "$BETA_LSQ" "$GROUPING" "$NITER" "${RTAG:--}" "$pname" "${sj:-reused}" "${rj:-reused}" "$ej" "$PIN" "$MEXSUM" \
             "$PROBE_MODES" "$pstart" "$side" "$winA" "$(printf '%s\n' "$LOSSES" | awk -F'=' -v k="${alpha}|${c1}|${winA}" '$1 == k {print $2; exit}')" >>"$MAN"
         echo "  ${pname}: dz ${dz} A, zdrop ${zdrop} (${geom}, zvac ${zvac}), dx ${dx} A; probe ${pstart}, ${PROBE_MODES} mode(s); sim ${sj:-reused}, recon ${rj:-reused}, kernel ${ej}" >&2

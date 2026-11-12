@@ -1,0 +1,16 @@
+# THE FLAT EXPERIMENT, EXPERIMENTALIST VERSION (2026-11-12; the user: "it means nothing if we gave ptyco an exact probe ... what's interesting is
+# that we gave it a realistic set of parameters and it FIT TO THE PHASE"). gflat's lone atom could not fit a released probe: from the crystal
+# search's misses the probe overlap went 0.40 -> 0.44 and every kernel broke, the perfect 80 mrad probe's too. A lone atom in vacuum gives the
+# solver almost nothing to fit a probe against; an experimentalist fits on a specimen. So the same lines on the campaign's kernel geometry:
+# a grid of Pb atoms on one plane, 3 A apart, 20 A scan at 0.5 A, the kernel averaged over its atoms.
+#   PROBE_UPDATE=1 GROUPING="32;16" bash runs/zb_submit.sh runs/ggrid.tsv          (from the search's misses; RTAG _pu)
+#   GROUPING="32;16" bash runs/zb_submit.sh runs/ggrid.tsv                         (the reference, true probe fixed; after the sims)
+# 30 and 40 mrad in a 40 A box at 1 A slices (NL 40), 60 and 80 in the campaign's 27.5 A grid box (NL 28, 0.98 A). flat30 in a 45 A window.
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list	side
+Pb	30	ideal	0	grid	0.5	20	200	0.25	10.2375	0	0	-	40
+Pb	40	ideal	0	grid	0.5	20	200	0.25	10.2375	0	0	-	40
+Pb	60	ideal	0	grid	0.5	20	200	0.25	4	0	0	-	28
+Pb	80	ideal	0	grid	0.5	20	200	0.25	4	0	0	-	28
+Pb	80	flat30	-	grid	0.5	20	200	0.25	10.2375	0	0	-	40	90
+Pb	80	flat40	-	grid	0.5	20	200	0.25	10.2375	0	0	-	40
+Pb	80	flat60	-	grid	0.5	20	200	0.25	4	0	0	-	28
