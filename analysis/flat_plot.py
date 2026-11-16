@@ -38,7 +38,12 @@ LAM = 0.0196877
 RECIPE = {"single": dict(step_A="0.1", win_A="8", det_mrad="200", slice_A="0.25"),
           "grid": dict(step_A="0.5", win_A="20", det_mrad="200", slice_A="0.25")}
 BOX_HIGH = {"single": 20.0, "grid": 27.525}     # the box above 40 mrad; 30 and 40 mrad sit in a 40 A box in both
-TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses", "_pu0": "released from the truth",
+TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses", "_pu050": "released from half the misses",
+             "_pu025": "released from a quarter of the misses", "_pu0": "released from the truth", "_pu8": "released from the misses, groups of 8",
+             "_pu_late": "released late (full engine only), misses", "_pu_noa1": "released, misses without A1",
+             "_pu_a1": "released, the A1 miss only",
+             "_pu_a1x0p25": "released, C1 C3 misses + A1 0.25 A", "_pu_a1x0p5": "released, C1 C3 misses + A1 0.5 A",
+             "_pu_a1x1p0": "released, C1 C3 misses + A1 1.0 A",
              "_pu_noho": "released, misses, higher orders not given"}
 EARLY = ("g0d", "g1")
 
@@ -46,6 +51,12 @@ EARLY = ("g0d", "g1")
 def rtag(kernel):
     m = re.search(r"_NL\d+(_\w+)?$", kernel)
     return (m.group(1) or "") if m else ""
+
+
+def dose_of(kernel):
+    """e/A^2 of a run on a Poisson copy (zb_submit.sh DOSE: _dose<D> before _NL); None for the noiseless sim"""
+    m = re.search(r"_dose([0-9.]+e[0-9]+|[0-9.]+)_NL\d+", kernel)
+    return float(m.group(1)) if m else None
 
 
 def load(packs):
@@ -83,6 +94,7 @@ def rows(packs):
         early = os.path.basename(os.path.dirname(os.path.dirname(r["file"]))) in EARLY
         col = pg.core_column(r["K"], r["dx"])
         out.append(dict(kernel=r["kernel"], geom=r["geom"], line="A" if aber == "ideal" else "B", x=x, fs=r["fs"], tag=rtag(r["kernel"]),
+                        dose=dose_of(r["kernel"]),
                         fwhm=c["fwhm_z"], dip=c["dip"], side=c["side"], peak=c["peak"], w80=width(col, r["dz"], 0.8),
                         zshare=pg.zshare_of(col, r["dz"]), clean=bool(np.isfinite(c["fwhm_z"]) and c["dip"] > -0.9), early=early))
     return out
@@ -139,12 +151,15 @@ def main(*packs):
     os.makedirs(os.path.join(HERE, "results"), exist_ok=True); os.makedirs(os.path.join(HERE, "figs"), exist_ok=True)
     with open(os.path.join(HERE, "results", "flat_plot.tsv"), "w") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["geom", "line", "x_mrad", "fs_A", "treatment", "w80_A", "fwhm_z_A", "zshare", "dip", "side", "peak_rad", "clean", "earlier_run", "kernel"])
-        for r in sorted(rs, key=lambda r: (r["geom"], r["fs"], r["tag"], r["line"], r["x"])):
+        w.writerow(["geom", "line", "x_mrad", "fs_A", "treatment", "w80_A", "fwhm_z_A", "zshare", "dip", "side", "peak_rad", "clean", "earlier_run", "kernel",
+                    "dose_e_per_A2"])
+        for r in sorted(rs, key=lambda r: (r["geom"], r["fs"], r["dose"] or 0, r["tag"], r["line"], r["x"])):
             w.writerow([r["geom"], r["line"], f"{r['x']:g}", f"{r['fs']:g}", TREATMENT.get(r["tag"], r["tag"]), f"{r['w80']:.1f}", f"{r['fwhm']:.2f}",
-                        f"{r['zshare']:.3f}", f"{r['dip']:.2f}", f"{r['side']:.2f}", f"{r['peak']:.3f}", int(r["clean"]), int(r["early"]), r["kernel"]])
-    for geom, fs in sorted({(r["geom"], r["fs"]) for r in rs}):
-        sub = [r for r in rs if r["fs"] == fs and r["geom"] == geom]
+                        f"{r['zshare']:.3f}", f"{r['dip']:.2f}", f"{r['side']:.2f}", f"{r['peak']:.3f}", int(r["clean"]), int(r["early"]), r["kernel"],
+                        "-" if r["dose"] is None else f"{r['dose']:g}"])
+    # the per-treatment panels: noiseless runs only (the dose runs get their own figure)
+    for geom, fs in sorted({(r["geom"], r["fs"]) for r in rs if r["dose"] is None}):
+        sub = [r for r in rs if r["fs"] == fs and r["geom"] == geom and r["dose"] is None]
         tags = [t for t in TREATMENT if any(r["tag"] == t for r in sub)]
         fig, axes = plt.subplots(len(tags), len(METRIC), figsize=(5.2 * len(METRIC), 4.3 * len(tags)), squeeze=False)
         for row, t in zip(axes, tags):

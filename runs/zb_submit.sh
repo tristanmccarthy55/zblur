@@ -60,7 +60,9 @@
 #
 # DOSE=<e/A^2> (2026-11-12, the flat experiment's dose version): the recons read a Poisson copy of each sim, written by a job
 # (sim/add_poisson_noise.py, DOSE_SEED, default 0) into sim_<name>_dose<D>, after the sim if it is new. Recon and kernel names
-# carry _dose<D>; the clean sim is reused untouched. The copy holds patterns as large as the sim's own (counted in the disk check).
+# carry _dose<D>; the clean sim is reused untouched. The copy is written gzip-compressed (add_poisson_noise.py --compress, 2026-11-16,
+# the user: "its just poisson noise on the existing sim data"): the same counts, mostly zeros, so far smaller than the sim; the disk check
+# counts it at a quarter of the sim. Copies written before that date are full size, and are reused as they are.
 #   DOSE=1e5 GROUPING="32;16" bash runs/zb_submit.sh runs/gflat_fixed.tsv
 #
 # THE WINDOW (2026-11-04). A row's solver window is its box / BIN (BIN 2). Column 15, side (optional; absent or - = the 70.008 A box, so
@@ -277,7 +279,9 @@ zb_noise_${dname}
             "$GUARD_PY" -c 'import h5py, sys; h5py.File(sys.argv[1], "r")["dp"].shape' "${ndir}/01/data_dp.hdf5" >/dev/null 2>&1 \
                 || refuse "${ndir} holds patterns that do not open. Remove it, then submit again: rm -rf '${ndir}'"
         else
-            NEED=$(awk -v n="$NEED" -v d="$dataGB" 'BEGIN{printf "%.0f", n + d + 0.5}')
+            # the copy is written compressed (--compress): counted at a quarter of the sim's patterns, against 17x-81x smaller
+            # for a stand-in lone-atom pattern at 1e8-1e6 [measured 2026-11-16, synthetic]; a real copy's size should replace this
+            NEED=$(awk -v n="$NEED" -v d="$dataGB" 'BEGIN{printf "%.0f", n + d / 4 + 0.5}')
         fi
     fi
     # the recons: no rerun lands on a failed attempt's leftovers
@@ -410,7 +414,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             # dose x step^2 electrons per pattern, Poisson-sampled; positions, probe and meta linked (sim/add_poisson_noise.py)
             nj=$(submit --job-name="zb_noise_${dname}" --time=02:00:00 --mem=48G --cpus-per-task=2 ${dep[@]+"${dep[@]}"} \
                  --output="${ZB_ROOT}/logs/zb_noise_%j.out" --error="${ZB_ROOT}/logs/zb_noise_%j.err" \
-                 --wrap="'${PYBIN}' '${PTYCHO_ROOT}/sim/add_poisson_noise.py' --in-dir '${sdir}' --out-dir '${ndir}' --dose ${DOSE} --seed ${DOSE_SEED}")
+                 --wrap="'${PYBIN}' '${PTYCHO_ROOT}/sim/add_poisson_noise.py' --in-dir '${sdir}' --out-dir '${ndir}' --dose ${DOSE} --seed ${DOSE_SEED} --compress")
             dep=(--dependency="afterok:${nj}")
         fi
     fi

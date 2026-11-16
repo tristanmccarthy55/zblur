@@ -238,7 +238,7 @@ o="$(dry env DOSE=1e5 GROUPING='32;16' bash runs/zb_submit.sh runs/gflat_fixed.t
 nz=$(echo "$o" | grep 'job-name=zb_noise_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e5 ')
 rz=$(echo "$o" | grep 'job-name=zb_rec_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e5_NL40 ')
 nid=$(echo "$o" | grep -o 'DRY\[[0-9]*\] .*job-name=zb_noise_Pb_a080_flat30[^ ]* ' | sed -E 's/DRY\[([0-9]+)\].*/dry\1/')
-[ "$rc" = 0 ] && [[ "$nz" == *"add_poisson_noise.py' --in-dir '/zbroot/sim_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90' --out-dir '/zbroot/sim_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e5' --dose 1e5 --seed 0"* ]] \
+[ "$rc" = 0 ] && [[ "$nz" == *"add_poisson_noise.py' --in-dir '/zbroot/sim_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90' --out-dir '/zbroot/sim_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e5' --dose 1e5 --seed 0 --compress"* ]] \
   && [[ "$rz" == *"afterok:${nid} "* ]] && [ "$(echo "$o" | grep -c 'job-name=zb_noise_')" = 4 ] && [ "$(echo "$o" | grep -c 'job-name=zb_rec_.*_dose1e5_NL')" = 4 ] \
   && ok "DOSE=1e5: four noise jobs, each recon waits on its own, names _dose1e5" || { bad "DOSE wiring"; echo "$o" | grep -m3 -E 'NOT SUB|noise' | cut -c1-250; }
 o="$(dry env DOSE=lots bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
