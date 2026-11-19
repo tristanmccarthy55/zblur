@@ -44,6 +44,13 @@ TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses"
              "_pu_a1": "released, the A1 miss only",
              "_pu_a1x0p25": "released, C1 C3 misses + A1 0.25 A", "_pu_a1x0p5": "released, C1 C3 misses + A1 0.5 A",
              "_pu_a1x1p0": "released, C1 C3 misses + A1 1.0 A",
+             "_pu_e5": "released early (it 5), misses", "_pu_e5_a1x1p0": "released early (it 5), C1 C3 misses + A1 1.0 A",
+             "_pb01": "gentle probe (beta 0.1), misses", "_pb01_a1x1p0": "gentle probe (beta 0.1), C1 C3 misses + A1 1.0 A",
+             "_af": "C1+A1 fit in the presolve, then released, misses", "_af_a1x1p0": "C1+A1 fit in the presolve, then released, + A1 1.0 A",
+             "_afb": "C1+A1 fit only, both engines, misses", "_afb_a1x1p0": "C1+A1 fit only, both engines, + A1 1.0 A",
+             "_smoke_af": "smoke test: C1+A1 fit, 30 it",
+             "_sg10": "gain smoke: C1+A1 fit, gain 10", "_sg30": "gain smoke: C1+A1 fit, gain 30", "_sg100": "gain smoke: C1+A1 fit, gain 100",
+             "_poisson": "true probe, fixed, Poisson likelihood",
              "_pu_noho": "released, misses, higher orders not given"}
 EARLY = ("g0d", "g1")
 
@@ -54,9 +61,15 @@ def rtag(kernel):
 
 
 def dose_of(kernel):
-    """e/A^2 of a run on a Poisson copy (zb_submit.sh DOSE: _dose<D> before _NL); None for the noiseless sim"""
-    m = re.search(r"_dose([0-9.]+e[0-9]+|[0-9.]+)_NL\d+", kernel)
+    """e/A^2 of a run on a Poisson copy (zb_submit.sh DOSE: _dose<D>, before _NL or a camera tag); None for the noiseless sim"""
+    m = re.search(r"_dose([0-9.]+e[0-9]+|[0-9.]+)(?=_detb\d+_NL|_NL)", kernel)
     return float(m.group(1)) if m else None
+
+
+def camera_of(kernel):
+    """the camera's B x B pixel sum (zb_submit.sh CAMERA_BIN: _detb<B> before _NL); 1 for the sim's own 712 / 914 px patterns"""
+    m = re.search(r"_detb(\d+)_NL\d+", kernel)
+    return int(m.group(1)) if m else 1
 
 
 def load(packs):
@@ -94,7 +107,7 @@ def rows(packs):
         early = os.path.basename(os.path.dirname(os.path.dirname(r["file"]))) in EARLY
         col = pg.core_column(r["K"], r["dx"])
         out.append(dict(kernel=r["kernel"], geom=r["geom"], line="A" if aber == "ideal" else "B", x=x, fs=r["fs"], tag=rtag(r["kernel"]),
-                        dose=dose_of(r["kernel"]),
+                        dose=dose_of(r["kernel"]), camera=camera_of(r["kernel"]),
                         fwhm=c["fwhm_z"], dip=c["dip"], side=c["side"], peak=c["peak"], w80=width(col, r["dz"], 0.8),
                         zshare=pg.zshare_of(col, r["dz"]), clean=bool(np.isfinite(c["fwhm_z"]) and c["dip"] > -0.9), early=early))
     return out
@@ -152,14 +165,14 @@ def main(*packs):
     with open(os.path.join(HERE, "results", "flat_plot.tsv"), "w") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["geom", "line", "x_mrad", "fs_A", "treatment", "w80_A", "fwhm_z_A", "zshare", "dip", "side", "peak_rad", "clean", "earlier_run", "kernel",
-                    "dose_e_per_A2"])
+                    "dose_e_per_A2", "camera_bin"])
         for r in sorted(rs, key=lambda r: (r["geom"], r["fs"], r["dose"] or 0, r["tag"], r["line"], r["x"])):
             w.writerow([r["geom"], r["line"], f"{r['x']:g}", f"{r['fs']:g}", TREATMENT.get(r["tag"], r["tag"]), f"{r['w80']:.1f}", f"{r['fwhm']:.2f}",
                         f"{r['zshare']:.3f}", f"{r['dip']:.2f}", f"{r['side']:.2f}", f"{r['peak']:.3f}", int(r["clean"]), int(r["early"]), r["kernel"],
-                        "-" if r["dose"] is None else f"{r['dose']:g}"])
+                        "-" if r["dose"] is None else f"{r['dose']:g}", r["camera"]])
     # the per-treatment panels: noiseless runs only (the dose runs get their own figure)
-    for geom, fs in sorted({(r["geom"], r["fs"]) for r in rs if r["dose"] is None}):
-        sub = [r for r in rs if r["fs"] == fs and r["geom"] == geom and r["dose"] is None]
+    for geom, fs in sorted({(r["geom"], r["fs"]) for r in rs if r["dose"] is None and r["camera"] == 1}):
+        sub = [r for r in rs if r["fs"] == fs and r["geom"] == geom and r["dose"] is None and r["camera"] == 1]
         tags = [t for t in TREATMENT if any(r["tag"] == t for r in sub)]
         fig, axes = plt.subplots(len(tags), len(METRIC), figsize=(5.2 * len(METRIC), 4.3 * len(tags)), squeeze=False)
         for row, t in zip(axes, tags):

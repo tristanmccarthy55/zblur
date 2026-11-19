@@ -34,7 +34,7 @@ plt.rcParams.update({"font.size": 8, "axes.titlesize": 8, "axes.labelsize": 8, "
 
 def pick(rs, tag, fs):
     """the line-A and line-B points of one treatment; the earlier runs fill line A where this treatment has none."""
-    pts = [r for r in rs if r["geom"] == "single" and r["tag"] == tag and r["fs"] == fs and r["dose"] is None]
+    pts = [r for r in rs if r["geom"] == "single" and r["tag"] == tag and r["fs"] == fs and r["dose"] is None and r["camera"] == 1]
     have = {(r["line"], r["x"]) for r in pts if not r["early"]}
     pts = [r for r in pts if not r["early"] or (r["line"], r["x"]) not in have]
     a = sorted([r for r in pts if r["line"] == "A" and r["x"] <= 80], key=lambda r: r["x"])
@@ -85,6 +85,98 @@ def profile(ax, z, col, dz, **kw):
     ax.plot(np.repeat(col, 2), zs, **kw)
 
 
+def sections(fig, slot, files, label="b"):
+    """x-z sections of three atoms, then their depth profiles on one axis in rad, so strength and length compare directly
+    (each section is scaled to its own peak). files: title -> (pack, kernel file, colour, line style)."""
+    sub = GridSpecFromSubplotSpec(1, 4, subplot_spec=slot, wspace=0.15, width_ratios=[1, 1, 1, 1.35])
+    axp = fig.add_subplot(sub[0, 3])
+    for i, (title, (pack, f, col_, ls)) in enumerate(files.items()):
+        axs = fig.add_subplot(sub[0, i])
+        z, col = section(axs, os.path.expanduser(f"~/Desktop/zblur/{pack}/psf/{f}"), title, dz=1.0, dx=0.04922)
+        profile(axp, z, col, 1.0, color=col_, ls=ls, lw=1.2, label=title)
+        if i == 0:
+            axs.set_ylabel("z along the beam (Å)")
+            axs.text(-0.55, 1.22, label, transform=axs.transAxes, fontweight="bold", fontsize=8)
+        else:
+            axs.set_yticklabels([])
+    axp.axvline(0, color="0.7", lw=0.6)
+    axp.set_ylim(6, -6); axp.set_yticklabels([])
+    axp.set_xlim(-0.05, 0.62); axp.set_xticks([0, 0.25, 0.5])
+    axp.set_xlabel("phase (rad)")
+    axp.set_title("along the beam\n(core, 0.15 Å)", fontsize=7)
+    axp.legend(loc="upper right", frameon=False, fontsize=6, handlelength=1.6)
+
+
+LAM, EDGE = 0.0196877, 0.080                     # 300 kV wavelength (A); the 80 mrad aperture edge
+A1_LADDER = {"_pu_noa1": 0.0, "_pu_a1x0p25": 0.25, "_pu_a1x0p5": 0.5, "_pu_a1x1p0": 1.0, "_pu": 3.6}   # A1 error (A), C1 +1.3 A, C3 +49 A
+
+
+def waves(a1):
+    """twofold astigmatism's phase amplitude at the 80 mrad edge, in waves: A1 theta^2 / (2 lambda)"""
+    return np.asarray(a1) * EDGE ** 2 / (2 * LAM)
+
+
+def released(out_dir):
+    """Figure 1 as an experimentalist runs it: the probe released from the crystal search's C1 and C3 errors with A1 known (a, b),
+    and how well A1 must be known (c, d: the same start with A1 errors added, up to the search's own 3.6 A miss)."""
+    rs = fp.rows([p for p in PACKS if os.path.isdir(p)])
+    fig = plt.figure(figsize=(7.2, 6.0))
+    gs = GridSpec(2, 2, figure=fig, width_ratios=[1, 1.25], hspace=0.85, wspace=0.28)
+
+    ax = fig.add_subplot(gs[0, 0])
+    a0, b0 = pick(rs, "", 0.0)
+    lines(ax, a0, b0, "w80", faint=True)
+    a, b = pick(rs, "_pu_noa1", 0.0)
+    lines(ax, a, b, "w80")
+    ax.plot([], [], ":", color="0.4", lw=1.2, label="probe known (fixed)")
+    ax.axhspan(2.6, 3.4, color="0.88", zorder=0)
+    ax.set_xlim(25, 85); ax.set_ylim(0, 14.5); ax.set_yticks(range(0, 13, 2))
+    ax.set_xlabel("$x$ (mrad)"); ax.set_ylabel("$W_{80}$ (Å)")
+    ax.set_title("a   probe released", loc="left", fontweight="bold")
+    ax.legend(loc="upper right", frameon=False)
+
+    sections(fig, gs[0, 1], {"perfect 30": ("gflat", "psf_Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu_noa1_vol.npy", BLUE, "--"),
+                             "flat 30, 80": ("gflat", "psf_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_noa1_vol.npy", ORANGE, "-"),
+                             "perfect 80": ("gflat", "psf_Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_noa1_vol.npy", BLUE, "-")})
+
+    # (c, d) the A1 ladder: perfect 80 and the 80 mrad aperture flat to 30, the known-probe value dotted
+    for k, (key, ylab) in enumerate((("w80", "$W_{80}$ (Å)"), ("zshare", "z-share: phase beyond half a cell"))):
+        ax = fig.add_subplot(gs[1, k])
+        for line, x, col, lab in (("A", 80, BLUE, "perfect 80"), ("B", 30, ORANGE, "flat 30, 80")):
+            pts = sorted([(A1_LADDER[r["tag"]], r[key], r["clean"]) for r in rs if r["geom"] == "single" and r["fs"] == 0 and r["dose"] is None and r["camera"] == 1
+                          and r["tag"] in A1_LADDER and r["line"] == line and r["x"] == x])
+            if not pts:
+                continue
+            w = waves([p[0] for p in pts])
+            ax.plot(w, [p[1] for p in pts], "-", color=col, lw=1.4, label=lab)
+            for wi, (_, y, clean) in zip(w, pts):
+                ax.plot(wi, y, "o", ms=4, color=col, mfc=col if clean else "white")
+            fixed = [r for r in rs if r["geom"] == "single" and r["fs"] == 0 and r["dose"] is None and r["camera"] == 1 and r["tag"] == ""
+                     and r["line"] == line and r["x"] == x]
+            if fixed:
+                ax.axhline(fixed[0][key], color=col, ls=":", lw=1.0)
+        ax.axvline(0.125, color="0.45", ls="--", lw=0.9)
+        ax.text(0.132, 0.97, "A$_1$ alone reaches\n$\\pi/4$ at the edge", transform=ax.get_xaxis_transform(), fontsize=6, va="top", color="0.35")
+        ax.set_xlim(-0.02, 0.62)
+        ax.set_xlabel("A$_1$ error: waves at the 80 mrad edge")
+        top = ax.secondary_xaxis("top", functions=(lambda w_: w_ * 2 * LAM / EDGE ** 2, lambda a_: a_ * EDGE ** 2 / (2 * LAM)))
+        top.set_xticks([0, 0.5, 1, 2, 3, 3.6]); top.set_xticklabels(["0", "0.5", "1", "2", "3", "3.6"]); top.set_xlabel("A$_1$ error (Å)", fontsize=7)
+        top.tick_params(labelsize=6)
+        if key == "zshare":
+            ax.set_yscale("log"); ax.set_ylim(0.007, 1.2)
+        else:
+            ax.set_ylim(0, 15)
+        ax.set_ylabel(ylab)
+        ax.set_title("c   how well A$_1$ must be known" if k == 0 else "d   the same, by the tail", loc="left", fontweight="bold", pad=24)
+        if k == 0:
+            ax.legend(loc="center right", bbox_to_anchor=(1.0, 0.42), frameon=False)
+
+    os.makedirs(out_dir, exist_ok=True)
+    for ext in ("pdf", "png"):
+        fig.savefig(os.path.join(out_dir, f"fig_flat_released.{ext}"), dpi=300, bbox_inches="tight")
+    print(f"wrote {os.path.join(out_dir, 'fig_flat_released')}.pdf and .png")
+
+
 def main(*args):
     """a and b by default: what is solid. --found adds the probe released from a quarter of the misses to a (dashed); --extra adds
     c (focal spread) and d (the start ladder), held back from the write-up until those runs are complete."""
@@ -92,6 +184,8 @@ def main(*args):
     paths = [a for a in args if not a.startswith("--")]
     out_dir = paths[0] if paths else os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                                   "ptychoshelves-clean", "report", "aberrations_paper", "figs")
+    if "--released" in args:
+        return released(out_dir)
     rs = fp.rows([p for p in PACKS if os.path.isdir(p)])
     fig = plt.figure(figsize=(7.2, 5.4 if extra else 2.9))
     gs = GridSpec(2 if extra else 1, 2, figure=fig, width_ratios=[1, 1.25], hspace=0.55, wspace=0.28)
@@ -110,27 +204,9 @@ def main(*args):
     ax.legend(loc="upper right", frameon=False)
 
     # (b) x-z sections: the perfect 30 mrad probe, 80 mrad flat only to 30, the perfect 80 mrad probe; then their depth profiles
-    # on one axis in rad, so strength and length compare directly (each section is scaled to its own peak)
-    sub = GridSpecFromSubplotSpec(1, 4, subplot_spec=gs[0, 1], wspace=0.15, width_ratios=[1, 1, 1, 1.35])
-    files = {"perfect 30": ("gflat", "psf_Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_vol.npy", BLUE, "--"),
-             "flat 30, 80": ("gflat", "psf_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_vol.npy", ORANGE, "-"),
-             "perfect 80": ("g0d", "psf_Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_vol.npy", BLUE, "-")}
-    axp = fig.add_subplot(sub[0, 3])
-    for i, (title, (pack, f, col_, ls)) in enumerate(files.items()):
-        axs = fig.add_subplot(sub[0, i])
-        z, col = section(axs, os.path.expanduser(f"~/Desktop/zblur/{pack}/psf/{f}"), title, dz=1.0, dx=0.04922)
-        profile(axp, z, col, 1.0, color=col_, ls=ls, lw=1.2, label=title)
-        if i == 0:
-            axs.set_ylabel("z along the beam (Å)")
-            axs.text(-0.55, 1.22, "b", transform=axs.transAxes, fontweight="bold", fontsize=8)
-        else:
-            axs.set_yticklabels([])
-    axp.axvline(0, color="0.7", lw=0.6)
-    axp.set_ylim(6, -6); axp.set_yticklabels([])
-    axp.set_xlim(-0.05, 0.62); axp.set_xticks([0, 0.25, 0.5])
-    axp.set_xlabel("phase (rad)")
-    axp.set_title("along the beam\n(core, 0.15 Å)", fontsize=7)
-    axp.legend(loc="upper right", frameon=False, fontsize=6, handlelength=1.6)
+    sections(fig, gs[0, 1], {"perfect 30": ("gflat", "psf_Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_vol.npy", BLUE, "--"),
+                             "flat 30, 80": ("gflat", "psf_Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_vol.npy", ORANGE, "-"),
+                             "perfect 80": ("g0d", "psf_Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_vol.npy", BLUE, "-")})
 
     if extra:
         # (c) focal spread 2.5 A, probe known (the line without it faint)

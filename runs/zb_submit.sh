@@ -65,6 +65,15 @@
 # counts it at a quarter of the sim. Copies written before that date are full size, and are reused as they are.
 #   DOSE=1e5 GROUPING="32;16" bash runs/zb_submit.sh runs/gflat_fixed.tsv
 #
+# CAMERA_BIN=<B> (2026-11-19, the dose audit: 712 px patterns leave the dark field at ~0.07 counts per pixel at 1e8 e/A^2, where
+# the engine's amplitude likelihood misreads it; real cameras have 128-256 px): the recons read the patterns as a camera that sums
+# B x B pixels records them (sim/rebin_detector.py --bin B, no crop, so the recorded angle stays), written by a job into
+# <the sim or its noisy copy>_detb<B>, and model the fine grid by upsampling (UPSAMPLING=log2 B): the object pixel, the window and
+# the kernel crop are unchanged. B = 4 makes the lone atom's 712 px a 178 px camera (914 px at side 90: 228 px). With DOSE the
+# camera sums the noisy copy (a sum of Poisson counts is Poisson), so each camera run sees the same noise as its 712 px partner.
+# Names carry _detb<B>. Fixed probe only for now: a released start probe would be built on the camera's grid, not the fine one.
+#   CAMERA_BIN=4 DOSE=1e8 GROUPING="32;16" bash runs/zb_submit.sh runs/gflat_fixed.tsv
+#
 # THE WINDOW (2026-11-04). A row's solver window is its box / BIN (BIN 2). Column 15, side (optional; absent or - = the 70.008 A box, so
 # old files and their names are unchanged), makes the box a side x side A region and is named _rs<side>: side 210 is the campaign's 105 A
 # window. Every ARM row before this date ran with no side: a 35 A window with 32 % of the 80 mrad probe outside it, and their rings
@@ -130,6 +139,13 @@ if [ -n "$DOSE" ]; then
     awk -v x="$DOSE" 'BEGIN{exit !(x ~ /^[0-9]+(\.[0-9]+)?(e[0-9]+)?$/ && x + 0 > 0)}' || { echo "DOSE is a fluence in e/A^2 such as 1e6, not '${DOSE}'" >&2; exit 1; }
     [ "$CLEAN_RAW" = 1 ] && { echo "CLEAN_RAW takes the clean sims; run it without DOSE" >&2; exit 1; }
 fi
+CAMERA_BIN="${CAMERA_BIN:-1}"; UPS=0; CAMTAG=""
+case "$CAMERA_BIN" in 1|2|4|8) ;; *) echo "CAMERA_BIN sums B x B pixels: 1, 2, 4 or 8, not '${CAMERA_BIN}'" >&2; exit 1;; esac
+if [ "$CAMERA_BIN" != 1 ]; then
+    UPS=$(awk -v b="$CAMERA_BIN" 'BEGIN{print int(log(b) / log(2) + 0.5)}'); CAMTAG="_detb${CAMERA_BIN}"
+    [ "$PROBE_UPDATE" = 1 ] || [ "$PROBE_MODES" -gt 1 ] && { echo "CAMERA_BIN: fixed-probe runs only for now (a released start probe would be built on the camera's coarse grid, not the fine grid the upsampled recon models)" >&2; exit 1; }
+    [ "$CLEAN_RAW" = 1 ] && { echo "CLEAN_RAW takes the clean sims; run it without CAMERA_BIN" >&2; exit 1; }
+fi
 # Phonon points need the frozen-phonon sigma fix (ptychoshelves-clean a8b9264, 2026-10-30): before it, abTEM 1.0.9 moved
 # every atom sqrt(3) too far. Their sims are named _T<T>v2 so the pre-fix _T<T> folders are never reused, and they are
 # refused unless the checkout contains the fix. Checked before anything is submitted.
@@ -178,6 +194,8 @@ row_setup(){
     sdir="${ZB_ROOT}/sim_${name}"
     # DOSE: the recons read a Poisson copy of the sim (sim/add_poisson_noise.py), named _dose<D> so no noisy run lands in a noiseless one's folder
     if [ -n "$DOSE" ]; then dname="${name}_dose${DOSE}"; ndir="${ZB_ROOT}/sim_${dname}"; else dname="$name"; ndir="$sdir"; fi
+    # CAMERA_BIN: the recons read <ndir>_detb<B>; the noisy copy and its job keep the name nkey
+    nkey="$dname"; cdir="$ndir"; [ "$CAMERA_BIN" != 1 ] && { dname="${dname}${CAMTAG}"; cdir="${ndir}${CAMTAG}"; }
     box=70.008; [ "$side" != "-" ] && box="$side"
     winA=$(awk -v b="$box" -v n="$BIN" 'BEGIN{printf "%.3f", b / n}')
     # the size of its patterns (the simulator crops the detector to a multiple of 2 BIN); positions as abTEM 1.0.9 counts them, one more per axis
@@ -273,8 +291,8 @@ zb_sim_${name}
         case "
 ${QUEUED}
 " in *"
-zb_noise_${dname}
-"*) refuse "zb_noise_${dname} is still in the queue";; esac
+zb_noise_${nkey}
+"*) refuse "zb_noise_${nkey} is still in the queue";; esac
         if [ -e "${ndir}/01/data_dp.hdf5" ]; then
             "$GUARD_PY" -c 'import h5py, sys; h5py.File(sys.argv[1], "r")["dp"].shape' "${ndir}/01/data_dp.hdf5" >/dev/null 2>&1 \
                 || refuse "${ndir} holds patterns that do not open. Remove it, then submit again: rm -rf '${ndir}'"
@@ -282,6 +300,22 @@ zb_noise_${dname}
             # the copy is written compressed (--compress): counted at a quarter of the sim's patterns, against 17x-81x smaller
             # for a stand-in lone-atom pattern at 1e8-1e6 [measured 2026-11-16, synthetic]; a real copy's size should replace this
             NEED=$(awk -v n="$NEED" -v d="$dataGB" 'BEGIN{printf "%.0f", n + d / 4 + 0.5}')
+        fi
+    fi
+    # the camera copy (CAMERA_BIN): never one still being written, never a truncated one reused; B^2 times smaller than the sim
+    if [ "$CAMERA_BIN" != 1 ]; then
+        case "
+${QUEUED}
+" in *"
+zb_cam_${dname}
+"*) refuse "zb_cam_${dname} is still in the queue";; esac
+        if [ -e "${cdir}/01/data_dp.hdf5" ]; then
+            "$GUARD_PY" -c 'import h5py, sys; h5py.File(sys.argv[1], "r")["dp"].shape' "${cdir}/01/data_dp.hdf5" >/dev/null 2>&1 \
+                || refuse "${cdir} holds patterns that do not open. Remove it, then submit again: rm -rf '${cdir}'"
+            [ -e "${cdir}/01/probe_initial_true.mat" ] && [ -e "${cdir}/01/sim_meta.mat" ] \
+                || refuse "${cdir} lacks its probe or sim_meta.mat (sim/rebin_detector.py writes both). Remove it, then submit again: rm -rf '${cdir}'"
+        else
+            NEED=$(awk -v n="$NEED" -v d="$dataGB" -v b="$CAMERA_BIN" 'BEGIN{printf "%.0f", n + d / (b * b) + 0.5}')
         fi
     fi
     # the recons: no rerun lands on a failed attempt's leftovers
@@ -409,13 +443,24 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
     dep=(); [ -n "$sj" ] && dep=(--dependency="afterok:${sj}")
     if [ -n "$DOSE" ]; then
         if [ -e "${ndir}/01/data_dp.hdf5" ]; then
-            echo "  ${dname}: noisy copy opens, reused" >&2
+            echo "  ${nkey}: noisy copy opens, reused" >&2
         else
             # dose x step^2 electrons per pattern, Poisson-sampled; positions, probe and meta linked (sim/add_poisson_noise.py)
-            nj=$(submit --job-name="zb_noise_${dname}" --time=02:00:00 --mem=48G --cpus-per-task=2 ${dep[@]+"${dep[@]}"} \
+            nj=$(submit --job-name="zb_noise_${nkey}" --time=02:00:00 --mem=48G --cpus-per-task=2 ${dep[@]+"${dep[@]}"} \
                  --output="${ZB_ROOT}/logs/zb_noise_%j.out" --error="${ZB_ROOT}/logs/zb_noise_%j.err" \
                  --wrap="'${PYBIN}' '${PTYCHO_ROOT}/sim/add_poisson_noise.py' --in-dir '${sdir}' --out-dir '${ndir}' --dose ${DOSE} --seed ${DOSE_SEED} --compress")
             dep=(--dependency="afterok:${nj}")
+        fi
+    fi
+    if [ "$CAMERA_BIN" != 1 ]; then
+        if [ -e "${cdir}/01/data_dp.hdf5" ]; then
+            echo "  ${dname}: camera copy opens, reused" >&2
+        else
+            # B x B sums of the (noisy) patterns, the true probe on the fine grid, sim_meta for the camera (sim/rebin_detector.py)
+            cj=$(submit --job-name="zb_cam_${dname}" --time=01:00:00 --mem=32G --cpus-per-task=2 ${dep[@]+"${dep[@]}"} \
+                 --output="${ZB_ROOT}/logs/zb_cam_%j.out" --error="${ZB_ROOT}/logs/zb_cam_%j.err" \
+                 --wrap="'${PYBIN}' '${PTYCHO_ROOT}/sim/rebin_detector.py' --in-dir '${ndir}' --bin ${CAMERA_BIN} --out-dir '${cdir}'")
+            dep=(--dependency="afterok:${cj}")
         fi
     fi
 
@@ -451,7 +496,8 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         [ "$PROBE_UPDATE" = 1 ] && pstart="$pstart_pu"
         if [ "$DRY_RUN" != "1" ] && [ "$state" != whole ]; then
             mkdir -p "${rdir}/01"
-            for f in data_dp.hdf5 data_position.hdf5; do ln -sf "${ndir}/01/${f}" "${rdir}/01/${f}"; done; ln -sf "${sdir}/01/sim_meta.mat" "${rdir}/01/sim_meta.mat"
+            mdir="$sdir"; [ "$CAMERA_BIN" != 1 ] && mdir="$cdir"      # sim_meta and the true probe: the camera's when there is one
+            for f in data_dp.hdf5 data_position.hdf5; do ln -sf "${cdir}/01/${f}" "${rdir}/01/${f}"; done; ln -sf "${mdir}/01/sim_meta.mat" "${rdir}/01/sim_meta.mat"
             # the probe writer (sim/make_probe.py) reads the sim's tableau from the recon dir's 01/
             [ "$PROBE_UPDATE" = 1 ] && ln -sf "${sdir}/01/aberrations.json" "${rdir}/01/aberrations.json"
             if [ "$pstart" = mixed ] || [ "$PROBE_UPDATE" = 1 ]; then
@@ -460,7 +506,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
                 ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial_true.mat"
                 rm -f "${rdir:?}/01/probe_initial.mat" "${rdir:?}/01/probe_initial.json"
             else
-                ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial.mat"    # the true probe (held fixed when 1 mode)
+                ln -sf "${mdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial.mat"    # the true probe (held fixed when 1 mode)
             fi
         fi
         rexp="ALL,NLAYERS=${nl},SIM_BASE=${rdir}/,REGLAYER=0,PROBE_MODES=${PROBE_MODES},NITER=${NITER},SAVE_EVERY=${NITER},GROUPING=${GROUPING},BETA_LSQ=${BETA_LSQ}"
@@ -469,6 +515,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             [ "$pstart" = mixed ] && rexp="${rexp},PROBE_MIXED=${PROBE_MODES}"
         fi
         [ "$PROBE_UPDATE" = 1 ] && rexp="${rexp},PROBE_START=${PROBE_START},PROBE_START2=${PROBE_START2},PROBE_SUPPORT_FFT=1,${pu}"
+        [ "$CAMERA_BIN" != 1 ] && rexp="${rexp},UPSAMPLING=${UPS}"
         if [ "$nl" -le 20 ]; then rtime=10:00:00; elif [ "$nl" -le 40 ]; then rtime=24:00:00; else rtime=48:00:00; fi
         [ "$PROBE_MODES" -gt 1 ] && rtime=48:00:00         # modes multiply the work: the crystal's 8-mode legs ran ~2.4x
         rmem=96G

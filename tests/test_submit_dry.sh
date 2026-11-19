@@ -243,4 +243,23 @@ nid=$(echo "$o" | grep -o 'DRY\[[0-9]*\] .*job-name=zb_noise_Pb_a080_flat30[^ ]*
   && ok "DOSE=1e5: four noise jobs, each recon waits on its own, names _dose1e5" || { bad "DOSE wiring"; echo "$o" | grep -m3 -E 'NOT SUB|noise' | cut -c1-250; }
 o="$(dry env DOSE=lots bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
 [ "$rc" != 0 ] && echo "$o" | grep -q 'DOSE is a fluence' && ok "DOSE: a non-number refused" || bad "DOSE parse"
+# -- CAMERA_BIN (2026-11-19): a camera job between the noise job and the recon, the recon on the camera copy with UPSAMPLING
+o="$(dry env CAMERA_BIN=4 DOSE=1e5 GROUPING='32;16' bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+F=Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90
+cz=$(echo "$o" | grep "job-name=zb_cam_${F}_dose1e5_detb4 "); rz=$(echo "$o" | grep "job-name=zb_rec_${F}_dose1e5_detb4_NL40 ")
+nid=$(echo "$o" | grep -o "DRY\[[0-9]*\] .*job-name=zb_noise_${F}_dose1e5 " | sed -E 's/DRY\[([0-9]+)\].*/dry\1/')
+cid=$(echo "$o" | grep -o "DRY\[[0-9]*\] .*job-name=zb_cam_${F}_dose1e5_detb4 " | sed -E 's/DRY\[([0-9]+)\].*/dry\1/')
+[ "$rc" = 0 ] && [ "$(echo "$o" | grep -c 'job-name=zb_noise_.*_dose1e5 ')" = 4 ] && [ "$(echo "$o" | grep -c 'job-name=zb_cam_.*_dose1e5_detb4 ')" = 4 ] \
+  && [ "$(echo "$o" | grep 'job-name=zb_rec_.*_dose1e5_detb4_NL' | grep -c 'UPSAMPLING=2')" = 4 ] \
+  && [[ "$cz" == *"afterok:${nid} "* ]] && [[ "$rz" == *"afterok:${cid} "* ]] \
+  && [[ "$cz" == *"rebin_detector.py' --in-dir '/zbroot/sim_${F}_dose1e5' --bin 4 --out-dir '/zbroot/sim_${F}_dose1e5_detb4'"* ]] \
+  && ok "CAMERA_BIN=4: noise -> camera -> recon, names _detb4, UPSAMPLING=2, the noise jobs keep their names" \
+  || { bad "CAMERA_BIN wiring"; echo "$o" | grep -m3 -E 'NOT SUB|zb_cam' | cut -c1-250; }
+o="$(dry env CAMERA_BIN=4 GROUPING='32;16' bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+[ "$rc" = 0 ] && echo "$o" | grep -q "rebin_detector.py' --in-dir '/zbroot/sim_${F}' --bin 4 --out-dir '/zbroot/sim_${F}_detb4'" \
+  && ! echo "$o" | grep -q 'job-name=zb_noise_' && ok "CAMERA_BIN=4 without DOSE: the clean sim is binned, no noise job" || bad "CAMERA_BIN noiseless"
+o="$(dry env CAMERA_BIN=4 PROBE_UPDATE=1 bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'fixed-probe runs only' && ok "CAMERA_BIN: a released probe refused" || bad "CAMERA_BIN with PROBE_UPDATE"
+o="$(dry env CAMERA_BIN=3 bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'CAMERA_BIN sums' && ok "CAMERA_BIN: not a power of 2 refused" || bad "CAMERA_BIN parse"
 [ "$fail" = 0 ] && echo "ALL OK" || { echo "SOME CHECKS FAILED"; echo "$out" | tail -5; exit 1; }

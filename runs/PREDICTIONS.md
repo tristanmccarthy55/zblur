@@ -83,6 +83,61 @@ orders given; 1 A recon slices; W80 and z-share as in `analysis/flat_plot.py`. "
   per position even at 1e6). The user's expectation, the flat-to-x points rising toward the perfect-x points as dose falls, would then
   need doses under 1e6 to show. Nothing measured yet.
 
+## P14. Does an earlier release widen the A1 basin? (added 2026-11-18, before any of these runs)
+Perfect 80 and flat to 30 at 80, from C1 +1.3 A, C3 +49 A with A1 1.0 A (0.16 waves at the edge, just outside the basin) and 3.6 A (the
+crystal search's miss), the probe released at iteration 5 of the presolve instead of 40 (PROBE_START=5; full engine unchanged, 20).
+Basis: P9's late release (probe fixed through the presolve) was worse than the default, so the trend points this way; nothing else.
+- If it helps: 1.0 A comes back within one slice and 0.02 z-share of the known probe (perfect 80 3 A / 0.012, flat to 30 4 A / 0.049).
+- My expectation: at 1.0 A it moves toward the known probe; at 3.6 A it still fails (W80 at flat to 30 above 6 A), because the start,
+  not the schedule, is the limit there. A guess, written to be checked.
+
+## P15. A gentler probe, and fitting C1 and A1 only (added 2026-11-18, before any of these runs)
+Same two atoms and starts as P14 (C1 +1.3 A, C3 +49 A, with A1 1.0 A or the search's 3.6 A), ptyco_pipeline branch `aberfit` (a3a762e,
+run from a separate checkout so queued jobs keep main): `_pb01` the probe's step 0.1 x the object's (PROBE_BETA=0.1, release as
+default); `_af` only C1 and A1 move in the presolve (PROBE_ABER_FIT=C1,A1, from iteration 5; applied as an exact phase), then the
+full probe from iteration 20 of the full engine; `_afb` only C1 and A1, in both engines (the higher orders given and never touched:
+the user's "fit to the fast moving C1 A1, give it the higher orders"). "Matches" as in P10.
+- `_afb` matches at 1.0 A and at 3.6 A: with three free numbers the probe cannot take up the atom, and the error surface in A1 alone
+  should have one minimum this close. Basis: the numpy check of the projection and the crystal search finding A1 from 40 A away on
+  a fixed-probe error; nothing run.
+- `_af` matches at 1.0 A; at 3.6 A it matches if the presolve's fit gets A1 inside the basin before the full release.
+- `_pb01`: at 1.0 A closer to the known probe than the default; at 3.6 A it still fails (the start, not the step, is the limit). My
+  weakest guess.
+The smoke test (`_smoke_af`, perfect 80, 30 + 30 iterations) only shows the code runs and A1 moves; it decides nothing.
+- **Revised 2026-11-19, before any P15 run.** The smoke test ran cleanly (both settings parsed, only A1a moved, A1b stayed 0, error
+  fell 11.2 -> 10.1) but A1 moved 0.015 A in 30 iterations: at beta_LSQ 0.05 x PROBE_BETA 0.5 a 3.6 A miss needs ~7000 iterations, so
+  `_af` and `_afb` as written would only measure slowness. Branch `aberfit` 4112cff adds PROBE_ABER_GAIN (and PROBE_ABER_MAX_STEP).
+  First a gain bracket on perfect 80 from the full misses, 60 + 60 iterations, the fit in both engines (`_sg10`, `_sg30`, `_sg100`):
+  my expectation, gain 30 takes |A1a| past 2.5 A without oscillating and the error below the smoke's; gain 100 may overshoot. Then
+  `_af` / `_afb` at the chosen gain. `_pb01` (gentler probe) is dropped: the smoke says the probe moves too little already. In its
+  place, larger steps for everything (BETA_LSQ 0.3, the default release), with the known probe at 0.3 as its own reference.
+
+## P17. Is the dose cost the noise model? (added 2026-11-19, before any of these runs)
+Dose audit (the user: "id expect 1e8/AA to be much better than this"): no fault found in the chain. add_poisson_noise.py takes the
+step from positions in A (0.1), so 1e8 gives 1e6 e/pattern; Poisson-samples clean x scale; compression lossless and read by MATLAB
+(the fixed 1e6 control read one); the engine rescales the probe to the data at iteration 0, fixed or released (LSQML); sim_meta gives
+geometry only; links as intended. A model mismatch instead: 1e6 e/pattern on 712 px leaves the dark field at ~0.07 e/px (if ~3 % of
+the beam leaves the 80 mrad disc, my guess for a lone Pb atom), where the engine's amplitude (L1) likelihood targets E[sqrt n] ~ 25 %
+of sqrt(lambda) (8 % at 1e7, 3 % at 1e6): it reads the high-angle signal as nearly absent. A 256 px camera would hold ~0.5 e/px.
+Test: `gflat_lk`, perfect 80 and flat to 30 at 1e8 and 1e7, true probe fixed, LIKELIHOOD=poisson (aberfit a25ddde), the same noisy
+copies, against P16's L1 runs.
+- If the noise model is the cause: at 1e8 perfect 80 within one slice of noiseless (3 A) and clearly better than L1's fixed 1e8;
+  at 1e7 clearly better than L1's too.
+- If Poisson matches L1, the mechanism is wrong (or the lone atom really is dose-limited): next a realistic camera (712 px summed
+  4 x 4, UPSAMPLING=2, sim/rebin_detector.py), which raises the counts per pixel 16 x.
+
+## P18. A real camera's pixels (added 2026-11-19, before any of these runs)
+The user: "trying with a 256*256 camera to see if it improves is doable. we need a nice small step tho". zb_submit.sh CAMERA_BIN=4:
+the 712 px patterns (914 at side 90) summed 4 x 4 into a 178 px (228 px) camera at the same +-200 mrad, the recon modelling the
+fine grid (UPSAMPLING=2), the 0.1 A scan, window and object pixel unchanged. An exact 256 would need a crop to +-144 mrad (+-112 at
+side 90), which also cuts the recorded angle, differently for the two atoms, so not this test. With DOSE the camera sums the same
+noisy copies, so each pair sees the same noise. `gflat_cam`: perfect 80 and flat to 30, true probe fixed, L1, noiseless and 1e8 and
+1e7, against P16 (the same runs at 712 px).
+- Noiseless: within one slice and 0.02 z-share of the 712 px runs (3 A / 0.012, 4 A / 0.049): summing pixels loses little for one
+  atom at +-200 mrad. Basis: detector256, where a 256 px camera with the pixels modelled kept the crystal's scores.
+- At 1e8 and 1e7: if L1 misreading sub-1-count pixels is the cost (P17's mechanism), the camera beats the 712 px run at the same
+  dose, most at 1e7; perfect 80 at 1e8 within one slice of noiseless. If it matches the 712 px run, counts per pixel are not it.
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 
@@ -142,3 +197,36 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
   as the full misses (13 A, 0.55). The late release (`_pu_late`, probe fixed through the presolve) is worse, not better: 15 A, 0.95 and
   12 A, 0.72, both NOT CLEAN; the object forms around the wrong probe first. So the probe update fits the search's C1 and C3 errors on a
   lone atom and not its A1. Next: P10-P13 from the A1-right start, and P11 for how well A1 must be known.
+- **2026-11-18, P10** (`gflat_noa1` + P9's two points; probe released from C1 +1.3 A, C3 +49 A, A1 right): W80 within one slice of the
+  fixed probe at all seven (perfect 30 / 40 / 60 / 80: 10 / 8 / 4 / 3 A against 9 / 8 / 4 / 3; flat to 30 / 40 / 60 at 80: 4 / 3 / 3 against
+  4 / 3 / 3). z-share within 0.02 at five of seven; outside at the two weak low-angle atoms, where it is 0.3-0.5 to begin with (perfect 30
+  0.385 against 0.507, less tail; perfect 40 0.328 against 0.297). So on W80 the experimentalist's line is the known-probe line: opening a
+  probe flat to 30 mrad to 80 gives 4 A against 10 A at a 30 mrad aperture. Figure: `analysis/fig_flat.py --released`.
+- **2026-11-18, P11** (`gflat_a1`: the same start with A1 errors at 0 rad): holds. A1 0.25 A and 0.5 A (0.04, 0.08 waves at the 80 mrad
+  edge) match: perfect 80 3 A / 0.015 and 3 A / 0.018 (fixed 3 A, 0.012), flat to 30 4 A / 0.050 and 4 A / 0.056 (fixed 4 A, 0.049).
+  1.0 A (0.16 waves) does not: perfect 80 4 A / 0.061, flat to 30 6 A / 0.131, the in-plane cross starting (check image). So A1 must be
+  known to between 0.5 and 1.0 A at 80 mrad. A1 alone reaches pi/4 at the 80 mrad edge at 0.77 A, inside that bracket: consistent with the
+  flatness rule, a derivation tested by two points either side, not a measured threshold. The crystal search missed A1 by 3.6 A.
+- **2026-11-18, P13 at 1e6** (`gflat_dose`): undecided, the reconstructions FAILED at all seven. Check images: noise over the whole field,
+  half the field dark, the strongest phase (+3.1 rad) in the box's last slice, not at the atom; W80 12-28 A, three NOT CLEAN, the rest
+  passed extract_psf's checks while showing no atom. So these numbers measure nothing. 1e6 at 0.1 A steps is 1e4 e per pattern, 0.02 e
+  per pixel on the 711 px frame; the crystal noise runs that worked had ~100x more per pixel. Two candidate causes, both untested: the
+  engine's amplitude likelihood (L1, the default; Poisson exists) at those counts, and the probe released at low counts. The perfect 80
+  mrad point at 1e6 with the probe fixed (one ~4 h run) separates them.
+- **2026-11-19, P13 at 1e7 and 1e8, and the fixed-probe control at 1e6** (`gflat_dose` 224826 / 224841, compressed copies;
+  `gflat_d1e6fix`): P13 FAILS, the released probe does not hold its noiseless values even at 1e8. W80 released, 1e8 / 1e7 (noiseless):
+  perfect 30 / 40 / 60 / 80: 23 / 18 / 8 / 6 and 22 / 17 / 8 / 7 A (10 / 8 / 4 / 3); flat to 30 / 40 / 60 at 80: 7 / 7 / 6 and 12 / 8 / 7
+  (4 / 3 / 3). Check images: at 1e8 perfect 80 and flat to 30 are atoms with a second lobe 3-6 A along the beam (flat to 30 also a
+  diagonal streak in plane); perfect 30 is no atom, two broad lobes over the box. The fixed probe at 1e6 (perfect 80, a compressed
+  copy regenerated with the same seed): one clean atom, W80 7 A, z-share 0.18, peak 0.77 rad, against the released probe's failure at
+  the same dose. So these runs measure the pixel-wise probe update failing under noise as much as the dose cost; the dose figure needs
+  the fixed-probe references. As a hint only (confounded): at 1e7 flat to 30 rises to 12 A while perfect 80 stays at 7, the user's
+  "dose curves the aberrated line up".
+
+## P16. The dose cost with the probe known (added 2026-11-19, before any of these runs)
+`gflat_dosefix`: all seven points at 1e8 and 1e7, true probe fixed, the same noisy copies (DOSE_SEED 0). Basis: the fixed 1e6 control
+(perfect 80: 7 A, one clean atom) and the noiseless line.
+- At 1e8 the strong atoms (perfect 60 / 80, flat to 30 / 40 / 60; peaks above 1 rad) come within one slice of noiseless; the weak
+  perfect 30 and 40 (peaks ~0.5 rad) lose more but stay single atoms.
+- At 1e7, perfect 80 between its noiseless 3 A and the 1e6 control's 7 A; flat to 30 above perfect 80, because its atom is weaker
+  (1.15 against 1.86 rad noiseless). My estimate.
