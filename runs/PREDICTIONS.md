@@ -230,3 +230,49 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
   perfect 30 and 40 (peaks ~0.5 rad) lose more but stay single atoms.
 - At 1e7, perfect 80 between its noiseless 3 A and the 1e6 control's 7 A; flat to 30 above perfect 80, because its atom is weaker
   (1.15 against 1.86 rad noiseless). My estimate.
+- **2026-11-19, CORRECTION to the P9, P10 and P11 outcomes (and P8's).** analysis/probe_pack.py on Blythe: in every released run the
+  fitted probe is barely different from its start. Overlap with the true probe (shift and phase removed), start -> fitted: C1 / C3
+  errors with A1 right 0.944 -> 0.944 (flat 30 / 40 / 60 and perfect 80), 0.98-0.999 -> the same (perfect 30 / 40 / 60); the A1
+  ladder 0.939 -> 0.940-0.942, 0.924 -> 0.927-0.934, 0.867 -> 0.878-0.898; the full search errors 0.40 -> 0.42-0.44; from the truth
+  1.000 -> 1.000. Phase maps (fig_probe.py): the fitted-minus-true phase is the start's own error, kept (the C1 bowl, 0.34 rad rms;
+  the A1 pattern). So these runs did NOT fit C1 and C3: the reconstruction tolerated a start probe that hardly moved, the C1 error
+  taken up by moving the atom 1.1 A along the beam and the C3 error (0.025 waves) too small to matter. What P10 and P11 measured
+  is the reconstruction's tolerance to a wrong, nearly fixed probe: C1 1.3 A and C3 49 A cost nothing; A1 up to 0.5 A costs nothing,
+  1.0 A does. "The probe update fits the search's C1 and C3" (P9's outcome above) is withdrawn. Why the update barely moves: the step
+  (beta_LSQ 0.05, as the smoke test showed for the parametric fit) and the lone atom itself (a pattern in vacuum is the aperture disc
+  whatever the aberrations, so only positions near the atom inform the probe's phase). A fit that moves is still to be shown: the
+  gain bracket, P15, a larger step.
+- **2026-11-19, why the released probe fails under noise** (probe_pack on the 21 released dose runs, `_pu_noa1`). Overlap with the
+  true probe, start 0.944 (flat to x, perfect 80) / 0.98-0.999 (perfect 30-60) -> fitted at 1e8 / 1e7 / 1e6: perfect 80 0.935 /
+  0.835 / 0.582; flat to 30 0.923 / 0.858 / 0.342; flat to 40 0.927 / 0.832 / 0.401; flat to 60 0.936 / 0.837 / 0.588; perfect 60
+  0.977 / 0.922 / 0.780; perfect 40 0.995 / 0.977 / 0.863; perfect 30 0.998 / 0.993 / 0.920. Clean data leave the probe where it
+  started; noisy data move it AWAY from the truth. Perfect 80, fitted minus true across the aperture: the mean jump in phase between
+  neighbouring pixels 0.007 rad without noise, 0.17 at 1e8, 0.54 at 1e7, 1.0 at 1e6 (random); its amplitude flat to 1e7, at 1e6
+  18 % up in the centre and 9 % down at the edge. So the pixel-by-pixel probe (~63 000 free complex values inside 80 mrad at
+  712 px) fits the shot noise into its phase. A probe with few free numbers (the C1 + A1 fit, P15) cannot, which makes it the
+  candidate for the released line under noise; fewer, fuller pixels (P18) and the Poisson model (P17) attack the same misfit.
+- **2026-11-20, the gain bracket** (`_sg10/30/100`, perfect 80 from the full search errors, the C1 + A1 fit in both engines, 60 +
+  60 iterations): A1a moved -0.61 - 0.75 = -1.36 A (gain 10, steady), -1.77 - 1.67 = -3.44 A (gain 30, slowing), -3.56 - 0.04 =
+  -3.60 A (gain 100: the whole 3.6 A error in ~50 presolve iterations, then still; no swing); A1b ~0 throughout (the error was
+  pure A1a); C1 drifted +0.34 A (gain 100). Final error 4.69 / 4.33 / 4.25 against the smoke test's 4.90; W80 6 / 5 / 4 A, peak 0.39
+  / 0.67 / 1.07 rad (60 + 60 iterations only). The first run in which the probe is fitted from the data. Gain 100 chosen.
+- **2026-11-20, P14 (early release)**: mixed, no clear gain. From A1 1.0 A: perfect 80 W80 3 A / z-share 0.040 (default release 4 /
+  0.061), flat to 30 7 / 0.198 (6 / 0.131). From the full errors: perfect 80 3 / 0.420 (4 / 0.376), flat to 30 19 / 0.784 (13 /
+  0.549). With the pixel probe barely moving (the correction above), when it is released matters little.
+- **2026-11-20, P16 at 1e8** (true probe fixed): FAILS. W80 perfect 30 / 40 / 60 / 80: 23 / 17 / 8 / 6 A; flat to 30 / 40 / 60: 6 / 7 /
+  6 A: the same as the released runs at 1e8 (23 / 18 / 8 / 6; 7 / 7 / 6). So at 1e8 the loss is the data (712 px, L1), not the
+  probe: P17 and P18 decide it. The 1e7 references for flat to 30 / 40 / 60 and all six P18 camera recons were node-OOM-killed
+  (exit 9:0, 1.5-3.3 min); camera recons now ask 175G (zb_submit.sh), all nine rerun.
+- **2026-11-20, first look at focal spread** (`gflat_coh`, one released mode from the C1 / C3 start, which barely moves): W80 perfect
+  30 / 40 / 60 / 80 and flat to 30 / 40 / 60 at 80: fs 2.5 A 8 / 7 / 5 / 4 and 7 / 8 / 4; fs 5 A 9 / 7 / 4 / 4 and 14 / 13 / 4; fs 7.29 A
+  10 / 9 / 7 / 8 and 18 / 20 / 8. At 7.29 the 80 mrad point is no better than 60 (P12's wall, held). But P12's "every flat-to-x point
+  sits with the perfect 80 point" FAILS from 5 A: opening a probe flat only to 30 or 40 to 80 mrad is then WORSE than stopping at 30
+  or 40 (14 / 13 against 9 / 7 at 5 A; 18 / 20 against 10 / 9 at 7.29 A); flat to 60 keeps up. Aberrations past the flat region cost
+  nothing only while the beam is coherent enough. One mode, no mixed state: modes may change it.
+
+## P15 at gain 100 (added 2026-11-20, before these runs)
+`_afb`: all seven points from the FULL search errors (C1 +1.3, C3 +49, A1 3.6 A), the C1 + A1 fit in both engines, gain 100, cap
+0.01 A per step, 200 + 200 iterations (aberfit a25ddde). The experimentalist's angle line, the probe fitted.
+- At every point W80 within one slice of the known-probe line and z-share within 0.03; the fitted probe's overlap with the truth
+  at least the A1-right start's (0.944 at flat to x, 0.98-0.999 perfect 30-60), C1 left mostly to the atom's shift. Basis: the
+  bracket (A1 3.60 A recovered in 60 iterations at perfect 80); untested on the aberrated flat probes.

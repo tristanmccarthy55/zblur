@@ -527,6 +527,9 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         fi
         # a released probe costs more per iteration [assumed: 1.5 x, within the 48 h limit]
         [ "$PROBE_UPDATE" = 1 ] && rtime=$(echo "$rtime" | awk -F: '{h = $1 * 1.5; if (h > 48) h = 48; printf "%02d:00:00", h}')
+        # CAMERA_BIN: the upsampled recon holds the fine model grid besides the camera's data; at 96G all six first camera recons were
+        # node-OOM-killed (exit 9:0) within 1.5-2.5 min, 2026-11-19. The camera legs of campaign/run_thin_atomfind.sh ran in its 175G class.
+        [ "$CAMERA_BIN" != 1 ] && rmem=175G
         ejdep=()
         if [ "$state" = whole ]; then
             rj=""; echo "  ${pname}: recon whole (checked), kernel only" >&2
