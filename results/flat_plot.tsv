@@ -1,117 +1,133 @@
-geom	line	x_mrad	fs_A	treatment	w80_A	fwhm_z_A	zshare	dip	side	peak_rad	clean	earlier_run	kernel	dose_e_per_A2	camera_bin
-single	A	30	0	true probe, fixed	9.0	3.12	0.507	0.20	0.54	0.458	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40	-	1
-single	A	40	0	true probe, fixed	8.0	3.14	0.297	-0.01	0.53	0.526	1	1	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40	-	1
-single	A	60	0	true probe, fixed	4.0	1.32	0.031	-0.05	0.04	1.522	1	1	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20	-	1
-single	A	80	0	true probe, fixed	3.0	1.25	0.012	-0.05	0.05	1.698	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20	-	1
-single	A	100	0	true probe, fixed	3.0	1.28	0.014	-0.03	0.04	1.634	1	1	Pb_a100_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20	-	1
-single	B	30	0	true probe, fixed	4.0	1.93	0.049	-0.11	0.08	1.152	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40	-	1
-single	B	40	0	true probe, fixed	3.0	1.70	0.025	-0.06	0.04	1.352	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40	-	1
-single	B	60	0	true probe, fixed	3.0	1.26	0.012	-0.05	0.05	1.703	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20	-	1
-single	A	30	0	released from the search's misses	8.0	3.70	0.522	0.19	0.58	0.331	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu	-	1
-single	A	40	0	released from the search's misses	6.0	2.55	0.241	-0.49	0.51	0.690	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu	-	1
-single	A	60	0	released from the search's misses	8.0	2.54	0.417	-0.95	0.27	0.649	0	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu	-	1
-single	A	80	0	released from the search's misses	4.0	1.36	0.376	-1.04	0.93	0.558	0	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu	-	1
-single	B	30	0	released from the search's misses	13.0	1.85	0.549	-0.64	0.79	0.700	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu	-	1
-single	B	40	0	released from the search's misses	12.0	1.10	0.769	-0.66	0.20	0.721	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu	-	1
-single	B	60	0	released from the search's misses	15.0	0.87	0.938	-0.92	0.50	0.639	0	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu	-	1
-single	A	80	0	released from the truth	3.0	1.17	0.012	-0.04	0.04	1.847	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu0	-	1
-single	B	30	0	released from the truth	4.0	2.01	0.044	-0.09	0.07	1.119	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu0	-	1
-single	A	30	0	released from a quarter of the misses	10.0	3.85	0.483	0.13	0.81	0.361	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu025	-	1
-single	A	40	0	released from a quarter of the misses	8.0	3.20	0.315	0.05	0.87	0.507	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu025	-	1
-single	A	60	0	released from a quarter of the misses	4.0	1.75	0.089	-0.07	0.10	1.148	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu025	-	1
-single	A	80	0	released from a quarter of the misses	4.0	1.68	0.079	-0.18	0.17	1.287	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu025	-	1
-single	B	30	0	released from a quarter of the misses	5.0	2.13	0.076	0.04	0.18	0.932	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu025	-	1
-single	B	40	0	released from a quarter of the misses	4.0	1.99	0.091	-0.22	0.13	1.014	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu025	-	1
-single	B	60	0	released from a quarter of the misses	4.0	1.56	0.091	-0.15	0.16	1.316	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu025	-	1
-single	A	30	0	released from half the misses	11.0	3.94	0.463	0.02	0.73	0.406	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu050	-	1
-single	A	40	0	released from half the misses	9.0	3.39	0.393	0.03	0.57	0.459	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu050	-	1
-single	A	60	0	released from half the misses	5.0	2.50	0.273	-0.49	0.42	0.747	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu050	-	1
-single	A	80	0	released from half the misses	4.0	1.58	0.116	-0.57	0.47	0.776	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu050	-	1
-single	B	30	0	released from half the misses	21.0	1.00	0.657	-1.16	0.71	0.648	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu050	-	1
-single	B	40	0	released from half the misses	7.0	1.96	0.371	-0.82	0.50	0.752	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu050	-	1
-single	B	60	0	released from half the misses	4.0	1.38	0.100	-0.44	0.46	0.889	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu050	-	1
-single	A	80	0	released, the A1 miss only	4.0	1.48	0.206	-0.89	0.79	0.507	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1	-	1
-single	B	30	0	released, the A1 miss only	18.0	1.07	0.889	-0.61	0.32	0.943	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1	-	1
-single	A	80	0	released, C1 C3 misses + A1 0.25 A	3.0	1.33	0.015	-0.07	0.07	1.611	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1x0p25	-	1
-single	B	30	0	released, C1 C3 misses + A1 0.25 A	4.0	1.70	0.050	-0.06	0.12	1.196	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1x0p25	-	1
-single	A	80	0	released, C1 C3 misses + A1 0.5 A	3.0	1.34	0.018	-0.08	0.08	1.566	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1x0p5	-	1
-single	B	30	0	released, C1 C3 misses + A1 0.5 A	4.0	1.71	0.056	-0.03	0.12	1.244	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1x0p5	-	1
-single	A	80	0	released, C1 C3 misses + A1 1.0 A	4.0	1.59	0.061	-0.16	0.20	1.157	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1x1p0	-	1
-single	B	30	0	released, C1 C3 misses + A1 1.0 A	6.0	2.22	0.131	0.05	0.27	0.867	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1x1p0	-	1
-single	A	80	0	released early (it 5), misses	3.0	1.54	0.420	-0.79	0.88	0.503	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_e5	-	1
-single	B	30	0	released early (it 5), misses	19.0	1.12	0.784	-0.99	0.85	0.685	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_e5	-	1
-single	A	80	0	released early (it 5), C1 C3 misses + A1 1.0 A	3.0	1.62	0.040	-0.19	0.20	1.218	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_e5_a1x1p0	-	1
-single	B	30	0	released early (it 5), C1 C3 misses + A1 1.0 A	7.0	2.97	0.198	-0.04	0.62	0.691	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_e5_a1x1p0	-	1
-single	A	80	0	released late (full engine only), misses	15.0	0.89	0.950	-0.98	0.57	0.592	0	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_late	-	1
-single	B	30	0	released late (full engine only), misses	12.0	1.43	0.718	-1.03	0.62	0.605	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_late	-	1
-single	A	30	0	released, misses without A1	10.0	2.34	0.385	0.13	0.38	0.435	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu_noa1	-	1
-single	A	40	0	released, misses without A1	8.0	3.50	0.328	0.10	0.79	0.439	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu_noa1	-	1
-single	A	60	0	released, misses without A1	4.0	1.97	0.047	-0.19	0.07	1.036	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_noa1	-	1
-single	A	80	0	released, misses without A1	3.0	1.29	0.013	-0.05	0.05	1.663	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_noa1	-	1
-single	B	30	0	released, misses without A1	4.0	2.12	0.059	-0.08	0.06	1.026	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_noa1	-	1
-single	B	40	0	released, misses without A1	3.0	1.42	0.013	-0.06	0.04	1.492	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu_noa1	-	1
-single	B	60	0	released, misses without A1	3.0	1.19	0.009	-0.04	0.04	1.849	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu_noa1	-	1
-single	B	30	0	released, misses, higher orders not given	10.0	0.96	0.855	-0.79	0.51	0.584	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_noho	-	1
-single	A	80	0	gain smoke: C1+A1 fit, gain 10	6.0	1.60	0.239	-0.75	0.83	0.388	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_sg10	-	1
-single	A	80	0	gain smoke: C1+A1 fit, gain 100	4.0	1.93	0.157	-0.04	0.14	1.066	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_sg100	-	1
-single	A	80	0	gain smoke: C1+A1 fit, gain 30	5.0	3.13	0.224	0.06	0.43	0.673	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_sg30	-	1
-single	A	80	0	smoke test: C1+A1 fit, 30 it	7.0	1.97	0.500	-0.53	0.83	0.230	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_smoke_af	-	1
-single	A	80	0	true probe, fixed	7.0	3.32	0.181	0.04	0.36	0.771	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20	1e+06	1
-single	A	30	0	released, misses without A1	14.0	21.95	0.796	0.94	0.99	0.474	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e6_NL40_pu_noa1	1e+06	1
-single	A	40	0	released, misses without A1	23.0	4.93	0.955	0.28	0.74	0.562	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e6_NL40_pu_noa1	1e+06	1
-single	A	60	0	released, misses without A1	8.0	0.78	0.721	-0.71	-0.03	1.482	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20_pu_noa1	1e+06	1
-single	A	80	0	released, misses without A1	12.0	1.87	0.677	-0.54	0.10	0.733	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20_pu_noa1	1e+06	1
-single	B	30	0	released, misses without A1	28.0	0.82	0.911	-1.08	0.09	2.209	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e6_NL40_pu_noa1	1e+06	1
-single	B	40	0	released, misses without A1	21.0	nan	0.839	-0.11	0.23	3.141	0	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e6_NL40_pu_noa1	1e+06	1
-single	B	60	0	released, misses without A1	12.0	nan	0.739	-0.28	0.50	1.306	0	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20_pu_noa1	1e+06	1
-single	A	30	0	released, misses without A1	22.0	11.99	0.759	0.86	0.96	0.300	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40_pu_noa1	1e+07	1
-single	A	40	0	released, misses without A1	17.0	7.39	0.667	0.41	0.90	0.491	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40_pu_noa1	1e+07	1
-single	A	60	0	released, misses without A1	8.0	3.46	0.253	-0.52	0.38	0.685	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20_pu_noa1	1e+07	1
-single	A	80	0	released, misses without A1	7.0	2.14	0.219	-0.49	0.32	1.108	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20_pu_noa1	1e+07	1
-single	B	30	0	released, misses without A1	12.0	2.17	0.139	-0.40	0.32	1.006	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e7_NL40_pu_noa1	1e+07	1
-single	B	40	0	released, misses without A1	8.0	2.33	0.190	-0.41	0.44	1.302	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40_pu_noa1	1e+07	1
-single	B	60	0	released, misses without A1	7.0	2.25	0.187	-0.38	0.31	1.083	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20_pu_noa1	1e+07	1
-single	A	30	0	true probe, fixed	23.0	11.38	0.768	0.71	0.93	0.162	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40	1e+08	1
-single	A	40	0	true probe, fixed	17.0	2.67	0.907	-0.68	0.39	0.385	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40	1e+08	1
-single	A	60	0	true probe, fixed	8.0	1.53	0.197	-0.24	0.43	0.835	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20	1e+08	1
-single	A	80	0	true probe, fixed	6.0	1.62	0.083	-0.15	0.21	1.209	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20	1e+08	1
-single	B	30	0	true probe, fixed	6.0	2.40	0.044	-0.08	0.25	0.857	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e8_NL40	1e+08	1
-single	B	40	0	true probe, fixed	7.0	1.93	0.113	-0.26	0.23	1.157	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40	1e+08	1
-single	B	60	0	true probe, fixed	6.0	1.76	0.092	-0.19	0.20	1.115	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20	1e+08	1
-single	A	30	0	released, misses without A1	23.0	10.89	0.784	0.69	0.88	0.179	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40_pu_noa1	1e+08	1
-single	A	40	0	released, misses without A1	18.0	2.65	0.939	-0.65	0.28	0.352	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40_pu_noa1	1e+08	1
-single	A	60	0	released, misses without A1	8.0	2.10	0.254	-0.11	0.51	0.586	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20_pu_noa1	1e+08	1
-single	A	80	0	released, misses without A1	6.0	1.47	0.082	-0.16	0.19	1.164	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20_pu_noa1	1e+08	1
-single	B	30	0	released, misses without A1	7.0	2.32	0.039	-0.08	0.26	0.874	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e8_NL40_pu_noa1	1e+08	1
-single	B	40	0	released, misses without A1	7.0	1.87	0.112	-0.25	0.22	1.209	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40_pu_noa1	1e+08	1
-single	B	60	0	released, misses without A1	6.0	1.55	0.077	-0.15	0.20	1.173	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20_pu_noa1	1e+08	1
-single	A	80	0.75	true probe, fixed	3.0	1.28	0.016	-0.06	0.06	1.614	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs0p75_NL20	-	1
-single	A	80	1.5	true probe, fixed	4.0	1.47	0.040	-0.11	0.16	1.302	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs1p5_NL20	-	1
-single	A	30	2.5	true probe, fixed	10.0	4.09	0.470	0.10	0.62	0.393	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40	-	1
-single	A	40	2.5	true probe, fixed	7.0	3.15	0.281	0.05	0.35	0.482	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40	-	1
-single	A	60	2.5	true probe, fixed	5.0	2.04	0.180	-0.04	0.26	0.806	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20	-	1
-single	A	80	2.5	true probe, fixed	4.0	2.13	0.129	-0.21	0.44	0.632	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20	-	1
-single	B	30	2.5	true probe, fixed	7.0	1.89	0.255	0.03	0.32	0.747	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs2p5_NL40	-	1
-single	A	30	2.5	released, misses without A1	8.0	3.39	0.492	0.17	0.72	0.469	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40_pu_noa1	-	1
-single	A	40	2.5	released, misses without A1	7.0	1.78	0.301	0.11	0.53	0.539	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40_pu_noa1	-	1
-single	A	60	2.5	released, misses without A1	5.0	2.06	0.167	-0.01	0.25	0.778	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20_pu_noa1	-	1
-single	A	80	2.5	released, misses without A1	4.0	2.09	0.073	-0.15	0.37	0.690	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20_pu_noa1	-	1
-single	B	30	2.5	released, misses without A1	7.0	1.95	0.119	-0.14	0.12	0.906	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs2p5_NL40_pu_noa1	-	1
-single	B	40	2.5	released, misses without A1	8.0	1.77	0.089	-0.11	0.17	1.024	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40_pu_noa1	-	1
-single	B	60	2.5	released, misses without A1	4.0	2.38	0.151	-0.34	0.39	0.615	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20_pu_noa1	-	1
-single	A	80	3.5	true probe, fixed	4.0	2.05	0.102	-0.37	0.37	0.614	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs3p5_NL20	-	1
-single	A	80	5	true probe, fixed	5.0	1.66	0.347	-0.43	0.78	0.380	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20	-	1
-single	A	30	5	released, misses without A1	9.0	2.86	0.397	0.06	0.45	0.474	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs5_NL40_pu_noa1	-	1
-single	A	40	5	released, misses without A1	7.0	4.10	0.328	-0.15	0.71	0.424	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs5_NL40_pu_noa1	-	1
-single	A	60	5	released, misses without A1	4.0	2.51	0.211	-0.59	0.17	0.597	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_pu_noa1	-	1
-single	A	80	5	released, misses without A1	4.0	2.68	0.127	-0.19	0.55	0.435	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_pu_noa1	-	1
-single	B	30	5	released, misses without A1	14.0	2.53	0.418	-0.06	0.51	0.362	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs5_NL40_pu_noa1	-	1
-single	B	40	5	released, misses without A1	13.0	2.48	0.339	-0.36	0.54	0.368	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_fs5_NL40_pu_noa1	-	1
-single	B	60	5	released, misses without A1	4.0	2.92	0.198	-0.33	0.77	0.439	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_pu_noa1	-	1
-single	A	30	7.29	released, misses without A1	10.0	3.40	0.354	-0.20	0.42	0.366	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs7p29_NL40_pu_noa1	-	1
-single	A	40	7.29	released, misses without A1	9.0	4.58	0.438	0.23	0.98	0.256	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs7p29_NL40_pu_noa1	-	1
-single	A	60	7.29	released, misses without A1	7.0	2.80	0.291	-0.50	0.57	0.310	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs7p29_NL20_pu_noa1	-	1
-single	A	80	7.29	released, misses without A1	8.0	3.59	0.348	-0.40	0.92	0.218	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs7p29_NL20_pu_noa1	-	1
-single	B	30	7.29	released, misses without A1	18.0	1.78	0.445	-0.14	0.29	0.374	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs7p29_NL40_pu_noa1	-	1
-single	B	40	7.29	released, misses without A1	20.0	2.46	0.630	-0.49	0.59	0.191	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_fs7p29_NL40_pu_noa1	-	1
-single	B	60	7.29	released, misses without A1	8.0	2.16	0.157	-0.55	0.76	0.322	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_fs7p29_NL20_pu_noa1	-	1
+geom	line	x_mrad	fs_A	treatment	w80_A	fwhm_z_A	zshare	dip	side	peak_rad	clean	earlier_run	kernel	dose_e_per_A2	camera_bin	w80_cont_A
+single	A	30	0	true probe, fixed	9.0	3.12	0.507	0.20	0.54	0.458	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40	-	1	8.42
+single	A	40	0	true probe, fixed	8.0	3.14	0.297	-0.01	0.53	0.526	1	1	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40	-	1	7.07
+single	A	60	0	true probe, fixed	4.0	1.32	0.031	-0.05	0.04	1.522	1	1	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20	-	1	3.22
+single	A	80	0	true probe, fixed	3.0	1.18	0.008	-0.02	0.10	1.815	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_detb4_NL20	-	4	2.27
+single	A	80	0	true probe, fixed	3.0	1.25	0.012	-0.05	0.05	1.698	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20	-	1	2.51
+single	A	100	0	true probe, fixed	3.0	1.28	0.014	-0.03	0.04	1.634	1	1	Pb_a100_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20	-	1	2.65
+single	B	30	0	true probe, fixed	5.0	2.11	0.200	-0.02	0.26	0.843	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_detb4_NL40	-	4	4.78
+single	B	30	0	true probe, fixed	4.0	1.93	0.049	-0.11	0.08	1.152	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40	-	1	3.56
+single	B	40	0	true probe, fixed	3.0	1.70	0.025	-0.06	0.04	1.352	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40	-	1	2.72
+single	B	60	0	true probe, fixed	3.0	1.26	0.012	-0.05	0.05	1.703	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20	-	1	2.47
+single	A	30	0	C1+A1 fit only, both engines, misses	10.0	6.17	0.557	0.27	0.90	0.335	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_afb	-	1	9.53
+single	A	40	0	C1+A1 fit only, both engines, misses	8.0	2.64	0.325	0.03	0.55	0.640	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_afb	-	1	7.35
+single	A	60	0	C1+A1 fit only, both engines, misses	4.0	1.52	0.069	0.03	0.09	1.397	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_afb	-	1	3.96
+single	A	80	0	C1+A1 fit only, both engines, misses	3.0	1.41	0.039	-0.10	0.06	1.488	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_afb	-	1	2.97
+single	B	30	0	C1+A1 fit only, both engines, misses	6.0	1.95	0.065	-0.69	0.53	0.684	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_afb	-	1	5.56
+single	B	40	0	C1+A1 fit only, both engines, misses	3.0	1.55	0.029	-0.03	0.05	1.338	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_afb	-	1	2.80
+single	B	60	0	C1+A1 fit only, both engines, misses	4.0	1.98	0.057	-0.12	0.10	1.141	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_afb	-	1	3.04
+single	A	30	0	released from the search's misses	8.0	3.70	0.522	0.19	0.58	0.331	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu	-	1	7.19
+single	A	40	0	released from the search's misses	6.0	2.55	0.241	-0.49	0.51	0.690	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu	-	1	5.38
+single	A	60	0	released from the search's misses	8.0	2.54	0.417	-0.95	0.27	0.649	0	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu	-	1	7.38
+single	A	80	0	released from the search's misses	4.0	1.36	0.376	-1.04	0.93	0.558	0	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu	-	1	3.05
+single	B	30	0	released from the search's misses	13.0	1.85	0.549	-0.64	0.79	0.700	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu	-	1	12.96
+single	B	40	0	released from the search's misses	12.0	1.10	0.769	-0.66	0.20	0.721	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu	-	1	11.64
+single	B	60	0	released from the search's misses	15.0	0.87	0.938	-0.92	0.50	0.639	0	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu	-	1	14.72
+single	A	80	0	released from the truth	3.0	1.17	0.012	-0.04	0.04	1.847	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu0	-	1	2.51
+single	B	30	0	released from the truth	4.0	2.01	0.044	-0.09	0.07	1.119	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu0	-	1	3.45
+single	A	30	0	released from a quarter of the misses	10.0	3.85	0.483	0.13	0.81	0.361	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu025	-	1	9.94
+single	A	40	0	released from a quarter of the misses	8.0	3.20	0.315	0.05	0.87	0.507	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu025	-	1	7.05
+single	A	60	0	released from a quarter of the misses	4.0	1.75	0.089	-0.07	0.10	1.148	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu025	-	1	3.93
+single	A	80	0	released from a quarter of the misses	4.0	1.68	0.079	-0.18	0.17	1.287	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu025	-	1	3.03
+single	B	30	0	released from a quarter of the misses	5.0	2.13	0.076	0.04	0.18	0.932	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu025	-	1	4.70
+single	B	40	0	released from a quarter of the misses	4.0	1.99	0.091	-0.22	0.13	1.014	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu025	-	1	3.38
+single	B	60	0	released from a quarter of the misses	4.0	1.56	0.091	-0.15	0.16	1.316	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu025	-	1	3.02
+single	A	30	0	released from half the misses	11.0	3.94	0.463	0.02	0.73	0.406	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu050	-	1	10.87
+single	A	40	0	released from half the misses	9.0	3.39	0.393	0.03	0.57	0.459	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu050	-	1	8.50
+single	A	60	0	released from half the misses	5.0	2.50	0.273	-0.49	0.42	0.747	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu050	-	1	4.63
+single	A	80	0	released from half the misses	4.0	1.58	0.116	-0.57	0.47	0.776	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu050	-	1	3.56
+single	B	30	0	released from half the misses	21.0	1.00	0.657	-1.16	0.71	0.648	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu050	-	1	20.11
+single	B	40	0	released from half the misses	7.0	1.96	0.371	-0.82	0.50	0.752	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu050	-	1	6.61
+single	B	60	0	released from half the misses	4.0	1.38	0.100	-0.44	0.46	0.889	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu050	-	1	3.81
+single	A	80	0	released, the A1 miss only	4.0	1.48	0.206	-0.89	0.79	0.507	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1	-	1	3.17
+single	B	30	0	released, the A1 miss only	18.0	1.07	0.889	-0.61	0.32	0.943	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1	-	1	17.68
+single	A	80	0	released, C1 C3 misses + A1 0.25 A	3.0	1.33	0.015	-0.07	0.07	1.611	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1x0p25	-	1	2.57
+single	B	30	0	released, C1 C3 misses + A1 0.25 A	4.0	1.70	0.050	-0.06	0.12	1.196	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1x0p25	-	1	3.52
+single	A	80	0	released, C1 C3 misses + A1 0.5 A	3.0	1.34	0.018	-0.08	0.08	1.566	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1x0p5	-	1	2.66
+single	B	30	0	released, C1 C3 misses + A1 0.5 A	4.0	1.71	0.056	-0.03	0.12	1.244	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1x0p5	-	1	3.79
+single	A	80	0	released, C1 C3 misses + A1 1.0 A	4.0	1.59	0.061	-0.16	0.20	1.157	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_a1x1p0	-	1	3.10
+single	B	30	0	released, C1 C3 misses + A1 1.0 A	6.0	2.22	0.131	0.05	0.27	0.867	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_a1x1p0	-	1	5.68
+single	A	80	0	released early (it 5), misses	3.0	1.54	0.420	-0.79	0.88	0.503	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_e5	-	1	2.90
+single	B	30	0	released early (it 5), misses	19.0	1.12	0.784	-0.99	0.85	0.685	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_e5	-	1	18.82
+single	A	80	0	released early (it 5), C1 C3 misses + A1 1.0 A	3.0	1.62	0.040	-0.19	0.20	1.218	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_e5_a1x1p0	-	1	2.93
+single	B	30	0	released early (it 5), C1 C3 misses + A1 1.0 A	7.0	2.97	0.198	-0.04	0.62	0.691	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_e5_a1x1p0	-	1	6.35
+single	A	80	0	released late (full engine only), misses	15.0	0.89	0.950	-0.98	0.57	0.592	0	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_late	-	1	14.44
+single	B	30	0	released late (full engine only), misses	12.0	1.43	0.718	-1.03	0.62	0.605	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_late	-	1	11.78
+single	A	30	0	released, misses without A1	10.0	2.34	0.385	0.13	0.38	0.435	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu_noa1	-	1	9.00
+single	A	40	0	released, misses without A1	8.0	3.50	0.328	0.10	0.79	0.439	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_NL40_pu_noa1	-	1	7.08
+single	A	60	0	released, misses without A1	4.0	1.97	0.047	-0.19	0.07	1.036	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_noa1	-	1	3.51
+single	A	80	0	released, misses without A1	3.0	1.29	0.013	-0.05	0.05	1.663	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_pu_noa1	-	1	2.55
+single	B	30	0	released, misses without A1	4.0	2.12	0.059	-0.08	0.06	1.026	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_noa1	-	1	3.56
+single	B	40	0	released, misses without A1	3.0	1.42	0.013	-0.06	0.04	1.492	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40_pu_noa1	-	1	2.49
+single	B	60	0	released, misses without A1	3.0	1.19	0.009	-0.04	0.04	1.849	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_NL20_pu_noa1	-	1	2.36
+single	B	30	0	released, misses, higher orders not given	10.0	0.96	0.855	-0.79	0.51	0.584	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40_pu_noho	-	1	9.83
+single	A	80	0	gain smoke: C1+A1 fit, gain 10	6.0	1.60	0.239	-0.75	0.83	0.388	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_sg10	-	1	5.27
+single	A	80	0	gain smoke: C1+A1 fit, gain 100	4.0	1.93	0.157	-0.04	0.14	1.066	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_sg100	-	1	3.90
+single	A	80	0	gain smoke: C1+A1 fit, gain 30	5.0	3.13	0.224	0.06	0.43	0.673	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_sg30	-	1	4.49
+single	A	80	0	smoke test: C1+A1 fit, 30 it	7.0	1.97	0.500	-0.53	0.83	0.230	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_NL20_smoke_af	-	1	6.06
+single	A	80	0	true probe, fixed	7.0	3.32	0.181	0.04	0.36	0.771	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20	1e+06	1	6.41
+single	A	30	0	released, misses without A1	14.0	21.95	0.796	0.94	0.99	0.474	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e6_NL40_pu_noa1	1e+06	1	13.65
+single	A	40	0	released, misses without A1	23.0	4.93	0.955	0.28	0.74	0.562	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e6_NL40_pu_noa1	1e+06	1	22.75
+single	A	60	0	released, misses without A1	8.0	0.78	0.721	-0.71	-0.03	1.482	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20_pu_noa1	1e+06	1	7.09
+single	A	80	0	released, misses without A1	12.0	1.87	0.677	-0.54	0.10	0.733	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20_pu_noa1	1e+06	1	11.11
+single	B	30	0	released, misses without A1	28.0	0.82	0.911	-1.08	0.09	2.209	0	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e6_NL40_pu_noa1	1e+06	1	27.07
+single	B	40	0	released, misses without A1	21.0	nan	0.839	-0.11	0.23	3.141	0	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e6_NL40_pu_noa1	1e+06	1	20.71
+single	B	60	0	released, misses without A1	12.0	nan	0.739	-0.28	0.50	1.306	0	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e6_NL20_pu_noa1	1e+06	1	11.01
+single	A	30	0	true probe, fixed	21.0	11.59	0.757	0.84	0.94	0.314	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40	1e+07	1	20.97
+single	A	40	0	true probe, fixed	18.0	7.38	0.665	0.60	0.86	0.469	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40	1e+07	1	17.24
+single	A	60	0	true probe, fixed	9.0	3.21	0.303	-0.46	0.28	0.700	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20	1e+07	1	8.98
+single	A	80	0	true probe, fixed	7.0	2.03	0.135	-0.20	0.19	1.203	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20	1e+07	1	6.71
+single	B	30	0	true probe, fixed	7.0	3.00	0.076	0.02	0.38	0.763	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e7_NL40	1e+07	1	6.24
+single	B	40	0	true probe, fixed	8.0	2.34	0.137	-0.25	0.23	1.203	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40	1e+07	1	7.89
+single	B	60	0	true probe, fixed	7.0	2.35	0.141	-0.27	0.21	1.085	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20	1e+07	1	6.58
+single	A	30	0	released, misses without A1	22.0	11.99	0.759	0.86	0.96	0.300	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40_pu_noa1	1e+07	1	21.88
+single	A	40	0	released, misses without A1	17.0	7.39	0.667	0.41	0.90	0.491	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40_pu_noa1	1e+07	1	16.43
+single	A	60	0	released, misses without A1	8.0	3.46	0.253	-0.52	0.38	0.685	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20_pu_noa1	1e+07	1	7.77
+single	A	80	0	released, misses without A1	7.0	2.14	0.219	-0.49	0.32	1.108	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20_pu_noa1	1e+07	1	6.35
+single	B	30	0	released, misses without A1	12.0	2.17	0.139	-0.40	0.32	1.006	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e7_NL40_pu_noa1	1e+07	1	11.44
+single	B	40	0	released, misses without A1	8.0	2.33	0.190	-0.41	0.44	1.302	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e7_NL40_pu_noa1	1e+07	1	7.14
+single	B	60	0	released, misses without A1	7.0	2.25	0.187	-0.38	0.31	1.083	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e7_NL20_pu_noa1	1e+07	1	6.20
+single	A	30	0	true probe, fixed	23.0	11.38	0.768	0.71	0.93	0.162	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40	1e+08	1	22.45
+single	A	40	0	true probe, fixed	17.0	2.67	0.907	-0.68	0.39	0.385	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40	1e+08	1	16.72
+single	A	60	0	true probe, fixed	8.0	1.53	0.197	-0.24	0.43	0.835	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20	1e+08	1	7.96
+single	A	80	0	true probe, fixed	6.0	1.62	0.083	-0.15	0.21	1.209	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20	1e+08	1	5.67
+single	B	30	0	true probe, fixed	6.0	2.40	0.044	-0.08	0.25	0.857	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e8_NL40	1e+08	1	5.37
+single	B	40	0	true probe, fixed	7.0	1.93	0.113	-0.26	0.23	1.157	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40	1e+08	1	6.93
+single	B	60	0	true probe, fixed	6.0	1.76	0.092	-0.19	0.20	1.115	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20	1e+08	1	5.73
+single	A	30	0	released, misses without A1	23.0	10.89	0.784	0.69	0.88	0.179	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40_pu_noa1	1e+08	1	22.75
+single	A	40	0	released, misses without A1	18.0	2.65	0.939	-0.65	0.28	0.352	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40_pu_noa1	1e+08	1	17.11
+single	A	60	0	released, misses without A1	8.0	2.10	0.254	-0.11	0.51	0.586	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20_pu_noa1	1e+08	1	7.78
+single	A	80	0	released, misses without A1	6.0	1.47	0.082	-0.16	0.19	1.164	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20_pu_noa1	1e+08	1	5.52
+single	B	30	0	released, misses without A1	7.0	2.32	0.039	-0.08	0.26	0.874	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_dose1e8_NL40_pu_noa1	1e+08	1	6.49
+single	B	40	0	released, misses without A1	7.0	1.87	0.112	-0.25	0.22	1.209	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_dose1e8_NL40_pu_noa1	1e+08	1	6.55
+single	B	60	0	released, misses without A1	6.0	1.55	0.077	-0.15	0.20	1.173	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_dose1e8_NL20_pu_noa1	1e+08	1	5.48
+single	A	80	0.75	true probe, fixed	3.0	1.28	0.016	-0.06	0.06	1.614	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs0p75_NL20	-	1	2.65
+single	A	80	1.5	true probe, fixed	4.0	1.47	0.040	-0.11	0.16	1.302	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs1p5_NL20	-	1	3.24
+single	A	30	2.5	true probe, fixed	10.0	4.09	0.470	0.10	0.62	0.393	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40	-	1	9.62
+single	A	40	2.5	true probe, fixed	7.0	3.15	0.281	0.05	0.35	0.482	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40	-	1	6.83
+single	A	60	2.5	true probe, fixed	5.0	2.04	0.180	-0.04	0.26	0.806	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20	-	1	4.94
+single	A	80	2.5	true probe, fixed	4.0	2.13	0.129	-0.21	0.44	0.632	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20	-	1	3.58
+single	B	30	2.5	true probe, fixed	7.0	1.89	0.255	0.03	0.32	0.747	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs2p5_NL40	-	1	6.52
+single	A	30	2.5	released, misses without A1	8.0	3.39	0.492	0.17	0.72	0.469	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40_pu_noa1	-	1	7.72
+single	A	40	2.5	released, misses without A1	7.0	1.78	0.301	0.11	0.53	0.539	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40_pu_noa1	-	1	6.54
+single	A	60	2.5	released, misses without A1	5.0	2.06	0.167	-0.01	0.25	0.778	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20_pu_noa1	-	1	4.73
+single	A	80	2.5	released, misses without A1	4.0	2.09	0.073	-0.15	0.37	0.690	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20_pu_noa1	-	1	3.27
+single	B	30	2.5	released, misses without A1	7.0	1.95	0.119	-0.14	0.12	0.906	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs2p5_NL40_pu_noa1	-	1	6.84
+single	B	40	2.5	released, misses without A1	8.0	1.77	0.089	-0.11	0.17	1.024	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_fs2p5_NL40_pu_noa1	-	1	7.06
+single	B	60	2.5	released, misses without A1	4.0	2.38	0.151	-0.34	0.39	0.615	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_fs2p5_NL20_pu_noa1	-	1	3.92
+single	A	80	3.5	true probe, fixed	4.0	2.05	0.102	-0.37	0.37	0.614	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs3p5_NL20	-	1	3.28
+single	A	80	5	true probe, fixed	5.0	1.66	0.347	-0.43	0.78	0.380	1	1	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20	-	1	4.73
+single	A	30	5	released, misses without A1	9.0	2.86	0.397	0.06	0.45	0.474	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs5_NL40_pu_noa1	-	1	8.47
+single	A	40	5	released, misses without A1	7.0	4.10	0.328	-0.15	0.71	0.424	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs5_NL40_pu_noa1	-	1	6.49
+single	A	60	5	released, misses without A1	4.0	2.51	0.211	-0.59	0.17	0.597	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_pu_noa1	-	1	3.47
+single	A	80	5	released, misses without A1	4.0	2.68	0.127	-0.19	0.55	0.435	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_pu_noa1	-	1	3.21
+single	B	30	5	released, misses without A1	14.0	2.53	0.418	-0.06	0.51	0.362	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs5_NL40_pu_noa1	-	1	13.51
+single	B	40	5	released, misses without A1	13.0	2.48	0.339	-0.36	0.54	0.368	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_fs5_NL40_pu_noa1	-	1	12.75
+single	B	60	5	released, misses without A1	4.0	2.92	0.198	-0.33	0.77	0.439	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_pu_noa1	-	1	3.81
+single	A	30	7.29	released, misses without A1	10.0	3.40	0.354	-0.20	0.42	0.366	1	0	Pb_a030_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs7p29_NL40_pu_noa1	-	1	9.48
+single	A	40	7.29	released, misses without A1	9.0	4.58	0.438	0.23	0.98	0.256	1	0	Pb_a040_ideal_df0_single_st0p1_w8_s0p25_bz40p000_fs7p29_NL40_pu_noa1	-	1	8.45
+single	A	60	7.29	released, misses without A1	7.0	2.80	0.291	-0.50	0.57	0.310	1	0	Pb_a060_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs7p29_NL20_pu_noa1	-	1	6.25
+single	A	80	7.29	released, misses without A1	8.0	3.59	0.348	-0.40	0.92	0.218	1	0	Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs7p29_NL20_pu_noa1	-	1	7.59
+single	B	30	7.29	released, misses without A1	18.0	1.78	0.445	-0.14	0.29	0.374	1	0	Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_fs7p29_NL40_pu_noa1	-	1	17.67
+single	B	40	7.29	released, misses without A1	20.0	2.46	0.630	-0.49	0.59	0.191	1	0	Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_fs7p29_NL40_pu_noa1	-	1	19.92
+single	B	60	7.29	released, misses without A1	8.0	2.16	0.157	-0.55	0.76	0.322	1	0	Pb_a080_flat60_single_st0p1_w8_s0p25_bz20p000_fs7p29_NL20_pu_noa1	-	1	7.85

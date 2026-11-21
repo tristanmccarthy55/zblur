@@ -108,7 +108,7 @@ def rows(packs):
         col = pg.core_column(r["K"], r["dx"])
         out.append(dict(kernel=r["kernel"], geom=r["geom"], line="A" if aber == "ideal" else "B", x=x, fs=r["fs"], tag=rtag(r["kernel"]),
                         dose=dose_of(r["kernel"]), camera=camera_of(r["kernel"]),
-                        fwhm=c["fwhm_z"], dip=c["dip"], side=c["side"], peak=c["peak"], w80=width(col, r["dz"], 0.8),
+                        fwhm=c["fwhm_z"], dip=c["dip"], side=c["side"], peak=c["peak"], w80=width(col, r["dz"], 0.8), w80c=width_cont(col, r["dz"]),
                         zshare=pg.zshare_of(col, r["dz"]), clean=bool(np.isfinite(c["fwhm_z"]) and c["dip"] > -0.9), early=early))
     return out
 
@@ -123,6 +123,18 @@ def width(p, dz, frac):
         if j <= n:
             best = min(best, j - i)
     return best * dz
+
+
+def width_cont(p, dz, frac=0.8, step=0.005):
+    """the shortest CONTINUOUS stretch holding frac of the centre column's positive phase, each slice's phase spread evenly over its
+    dz (2026-11-21: the whole-slice width() reads only 1, 2, 3 ... slices and hid differences under a slice)"""
+    q = np.clip(p, 0, None)
+    e = np.arange(len(q) + 1) * dz
+    F = np.concatenate([[0.0], np.cumsum(q)]) / max(q.sum(), 1e-30)
+    a = np.arange(0, e[-1], step)
+    Fa = np.interp(a, e, F)
+    ok = Fa + frac <= 1.0
+    return float((np.interp(Fa[ok] + frac, F, e) - a[ok]).min()) if ok.any() else float("nan")
 
 
 METRIC = {"w80": ("W80: depth holding 80 % of the atom's phase, A", 3.0),
@@ -165,11 +177,11 @@ def main(*packs):
     with open(os.path.join(HERE, "results", "flat_plot.tsv"), "w") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["geom", "line", "x_mrad", "fs_A", "treatment", "w80_A", "fwhm_z_A", "zshare", "dip", "side", "peak_rad", "clean", "earlier_run", "kernel",
-                    "dose_e_per_A2", "camera_bin"])
+                    "dose_e_per_A2", "camera_bin", "w80_cont_A"])
         for r in sorted(rs, key=lambda r: (r["geom"], r["fs"], r["dose"] or 0, r["tag"], r["line"], r["x"])):
             w.writerow([r["geom"], r["line"], f"{r['x']:g}", f"{r['fs']:g}", TREATMENT.get(r["tag"], r["tag"]), f"{r['w80']:.1f}", f"{r['fwhm']:.2f}",
                         f"{r['zshare']:.3f}", f"{r['dip']:.2f}", f"{r['side']:.2f}", f"{r['peak']:.3f}", int(r["clean"]), int(r["early"]), r["kernel"],
-                        "-" if r["dose"] is None else f"{r['dose']:g}", r["camera"]])
+                        "-" if r["dose"] is None else f"{r['dose']:g}", r["camera"], f"{r['w80c']:.2f}"])
     # the per-treatment panels: noiseless runs only (the dose runs get their own figure)
     for geom, fs in sorted({(r["geom"], r["fs"]) for r in rs if r["dose"] is None and r["camera"] == 1}):
         sub = [r for r in rs if r["fs"] == fs and r["geom"] == geom and r["dose"] is None and r["camera"] == 1]

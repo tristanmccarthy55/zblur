@@ -24,6 +24,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(HERE, "analysis"))
 sys.path.insert(0, os.path.join(HERE, "runs"))
 import fig_flat as ff  # noqa: E402
+import fig_probe as fpr  # noqa: E402
 import flat_plot as fp  # noqa: E402
 import window_loss as wl  # noqa: E402
 
@@ -33,7 +34,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
 
 PSF = os.path.expanduser("~/Desktop/zblur/gflat/psf")
-TAG = "_pu_noa1"
+TAG = "_afb"                                  # the C1 + A1 fit at gain 100 from the full search errors (P15)
+PROBES = os.path.expanduser("~/Desktop/zblur/probes/probes_afb")
 XS = (30, 40, 60, 80)
 DX, DZ = 0.04922, 1.0
 FLAT = {30: "Pb_a080_flat30_single_st0p1_w8_s0p25_bz40p000_rs90_NL40", 40: "Pb_a080_flat40_single_st0p1_w8_s0p25_bz40p000_NL40",
@@ -82,7 +84,7 @@ def atom(ax, kernel, zhalf=6.0, xhalf=1.5):
     m = np.abs(xx) <= xhalf
     ax.imshow(xz[:, m] / xz.max(), extent=[xx[m][0] - DX / 2, xx[m][-1] + DX / 2, z[-1] + DZ / 2, z[0] - DZ / 2], aspect="auto",
               cmap="inferno", vmin=0, vmax=1, interpolation="nearest")
-    ax.set_ylim(zhalf, -zhalf); ax.set_xlim(-xhalf, xhalf)
+    ax.set_ylim(zhalf, -zhalf); ax.set_xlim(-xhalf, xhalf); ax.set_facecolor("k")   # past the box's end: black, not white
     ax.text(0.04, 0.97, f"{xz.max():.2f} rad", transform=ax.transAxes, color="w", fontsize=6, va="top")
 
 
@@ -111,19 +113,44 @@ def main(*args):
             else:
                 axa.set_yticklabels([])
             axa.tick_params(labelsize=6)
-    sub = gs[5, :].subgridspec(1, 2, wspace=0.32)
-    for j, (key, ylab, lim, lab) in enumerate((("fwhm", "depth FWHM (Å)", 4.0, "c"), ("w80", "$W_{80}$ (Å)", 12.0, "d"))):
-        ax = fig.add_subplot(sub[0, j])
-        a0, b0 = ff.pick(rs, "", 0.0)
-        ff.lines(ax, a0, b0, key, faint=True)
-        a, b = ff.pick(rs, TAG, 0.0)
-        ff.lines(ax, a, b, key, labels=(j == 0))
-        if j == 0:
-            ax.plot([], [], ":", color="0.4", lw=1.2, label="probe known")
-            ax.legend(loc="lower left", frameon=False, fontsize=6.5)
-        ax.set_xlim(25, 85); ax.set_ylim(0, lim)
-        ax.set_xlabel("x (mrad)"); ax.set_ylabel(ylab)
-        ax.set_title(f"{lab}   " + ("depth FWHM" if key == "fwhm" else "depth holding 80 % of the phase"), loc="left", fontweight="bold", fontsize=8)
+    sub = gs[5, :].subgridspec(1, 2, wspace=0.25, width_ratios=[1, 1.1])
+    ax = fig.add_subplot(sub[0, 0])
+    a0, b0 = ff.pick(rs, "", 0.0)
+    ff.lines(ax, a0, b0, "w80c", faint=True)
+    a, b = ff.pick(rs, TAG, 0.0)
+    ff.lines(ax, a, b, "w80c")
+    ax.plot([], [], ":", color="0.4", lw=1.2, label="probe known")
+    ax.legend(loc="upper right", frameon=False, fontsize=6.5)
+    ax.set_xlim(25, 85); ax.set_ylim(0, 12)
+    ax.set_xlabel("x (mrad)"); ax.set_ylabel("$W_{80}$ (Å)")
+    ax.set_title("c   depth holding 80 % of the phase", loc="left", fontweight="bold", fontsize=8)
+    # (d) the probe the fit found: start (the search's errors), fitted, fitted minus true, across the aperture
+    pr = sub[0, 1].subgridspec(2, 3, wspace=0.06, hspace=0.25)
+    for i, (lab, kern) in enumerate((("perfect 80", PERF[80]), ("flat 30, 80", FLAT[30]))):
+        z = np.load(os.path.join(PROBES, f"recon_{kern}{TAG}.npz"))
+        T, F, S = (z[k].astype(complex) for k in ("true_k", "fitted_k", "start_k"))
+        n, da = int(z["n"]), float(z["d_alpha_mrad"])
+        m = np.abs(T) > 0.5 * np.abs(T).max()
+        G, _ = fpr.align(F, T, n); Sa, _ = fpr.align(S, T, n)
+        h = T.shape[0] // 2
+        for j, (title, A) in enumerate((("start", Sa * np.conj(T)), ("fitted", G * np.conj(T)), ("fitted, defocus removed", None))):
+            axq = fig.add_subplot(pr[i, j])
+            if A is None:                                  # the fitted error with its defocus part removed: what is left besides C1
+                ky, kx = np.mgrid[-h:h, -h:h] * da / 1000
+                d = np.angle(G * np.conj(T))
+                th2 = (kx ** 2 + ky ** 2)[m]
+                M = np.c_[np.ones_like(th2), th2]
+                c = np.linalg.lstsq(M, d[m], rcond=None)[0]
+                A = np.exp(1j * (d - c[0] - c[1] * (kx ** 2 + ky ** 2)))
+            axq.imshow(np.where(m, np.angle(A), np.nan), extent=[-h * da, h * da, -h * da, h * da], origin="lower", cmap="twilight",
+                       vmin=-np.pi, vmax=np.pi, interpolation="nearest")
+            r_ = float(z["convergence_mrad"]) * 1.05
+            axq.set_xlim(-r_, r_); axq.set_ylim(-r_, r_); axq.set_xticks([]); axq.set_yticks([])
+            if i == 0:
+                axq.set_title(title, fontsize=6.5, pad=2)
+            if j == 0:
+                axq.set_ylabel(lab, fontsize=6.5)
+    fig.text(0.535, 0.305, "d   phase error of the probe, start and fitted", fontweight="bold", fontsize=8)
     os.makedirs(out_dir, exist_ok=True)
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(out_dir, f"fig_angle.{ext}"), dpi=300, bbox_inches="tight")

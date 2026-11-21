@@ -276,3 +276,27 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
 - At every point W80 within one slice of the known-probe line and z-share within 0.03; the fitted probe's overlap with the truth
   at least the A1-right start's (0.944 at flat to x, 0.98-0.999 perfect 30-60), C1 left mostly to the atom's shift. Basis: the
   bracket (A1 3.60 A recovered in 60 iterations at perfect 80); untested on the aberrated flat probes.
+- **2026-11-20, the gain bracket's probes** (probe_pack + fig_probe on `_sg10/30/100`): overlap with the true probe 0.404 -> 0.616 /
+  0.930 / 0.907. The fitted-minus-true phase, fitted as C1 + A1 (piston removed): start C1 +1.3, A1a +3.6 A; gain 10 C1 +1.22, A1a
+  +2.22; gain 30 C1 +1.27, A1a +0.12; gain 100 C1 +1.49, A1a 0.00, A1b 0.00 A; what is left after C1 and A1 is 0.01 rad in all three.
+  So at gain 100 the fit removes the search's A1 error completely in 60 + 60 iterations, and nothing else is wrong with the probe; the
+  overlap stops at 0.91 only because of the defocus error, which the atom takes up by moving along the beam, so the data do not pin it
+  (it drifted 0.2 A the wrong way, at no cost to the atom). The first evidence that the probe is fitted from the data. Figure panel:
+  ~/Desktop/zblur/probes/probes_gain/fig_probe_gain.png (start: the astigmatic saddle; fitted: a round defocus bowl).
+- **2026-11-21, P15 at gain 100** (`_afb`, all seven points from the FULL search errors, the C1 + A1 fit in both engines, 200 + 200
+  it). Probes (probe_pack + a C1/A1 split of fitted minus true): A1 3.6 A -> 0.00-0.06 A at all seven; beyond C1 and A1 0.01-0.03 rad;
+  the defocus wandered to +-1.2-2.5 A (the atom takes it up, the data do not pin it), so overlaps 0.75-0.999. Atoms, continuous W80 /
+  z-share, fitted (known): perfect 30 9.53 / 0.557 (8.42 / 0.507), 40 7.35 / 0.325 (7.07 / 0.297), 60 3.96 / 0.069 (3.22 / 0.031), 80
+  2.97 / 0.039 (2.51 / 0.012); flat to 30 5.56 / 0.065 (3.56 / 0.049), 40 2.80 / 0.029 (2.72 / 0.025), 60 3.04 / 0.057 (2.47 / 0.012).
+  P15 partly holds: within ~0.3-0.7 A of the known line except flat to 30 (+2.0 A); z-share outside 0.03 at perfect 30 / 60 and flat
+  to 60. The A1-right start (`_pu_noa1`, A1 never wrong) gave 3.56 at flat to 30: the likely cost is the ~50 presolve iterations in
+  which the object formed under a wrong A1 (flat to 30 was also the most A1-sensitive point in P11). A second pass with the fitted
+  probe held is the standard remedy; untested. (Continuous W80: the shortest stretch holding 80 % of the phase with each slice's phase
+  spread evenly over its 1 A; the whole-slice W80 hid differences under a slice.)
+- **2026-11-21, P16 at 1e7** (rerun) and **P18 without noise**: known probe at 1e8 / 1e7, continuous W80: perfect 80 5.67 / 6.71,
+  flat to 30 5.37 / 6.24, flat to 40 6.93 / 7.89, flat to 60 5.73 / 6.58, perfect 60 7.96 / 8.98; perfect 30 and 40 break (17-22 A).
+  With noise the aberrated probes are no worse than perfect 80. Camera (712 -> 178 px; 914 -> 228 at flat to 30), no noise: perfect
+  80 2.27 / 0.008 (712 px: 2.51 / 0.012) holds; flat to 30 4.78 / 0.200 (3.56 / 0.049) loses: summed pixels cannot hold the fine
+  fringes the aberrated probe throws into its patterns, the effect Nguyen et al. 2024 show for detector pixel counts (their Fig. 3B,
+  text read). So opening an aberrated probe needs fine detector pixels, which at low dose hold few counts each.
+- **2026-11-21, P17** (Poisson): the four recons left no kernels (packs hold only manifests); logs asked for.
