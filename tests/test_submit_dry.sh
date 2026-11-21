@@ -262,4 +262,13 @@ o="$(dry env CAMERA_BIN=4 PROBE_UPDATE=1 bash runs/zb_submit.sh runs/gflat_fixed
 [ "$rc" != 0 ] && echo "$o" | grep -q 'fixed-probe runs only' && ok "CAMERA_BIN: a released probe refused" || bad "CAMERA_BIN with PROBE_UPDATE"
 o="$(dry env CAMERA_BIN=3 bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
 [ "$rc" != 0 ] && echo "$o" | grep -q 'CAMERA_BIN sums' && ok "CAMERA_BIN: not a power of 2 refused" || bad "CAMERA_BIN parse"
+# -- PROBE_FROM_TAG (2026-11-21): each recon holds the probe fitted by the same point's earlier run, a fresh object
+o="$(dry env PROBE_FROM_TAG=_afb RTAG=_afb2 GROUPING='32;16' bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+[ "$rc" = 0 ] && [ "$(echo "$o" | grep -c 'the fitted probe of recon_.*_NL[0-9]*_afb, held')" = 4 ] \
+  && [ "$(echo "$o" | grep 'job-name=zb_rec_' | grep -c -E 'PROBE_START|PROBE_C1')" = 0 ] && [ "$(echo "$o" | grep -c 'job-name=zb_rec_.*_afb2 ')" = 4 ] \
+  && ok "PROBE_FROM_TAG=_afb: four recons hold their point's fitted probe (no release), names _afb2" || { bad "PROBE_FROM_TAG wiring"; echo "$o" | grep -m3 -E 'NOT SUB|fitted' | cut -c1-200; }
+o="$(dry env PROBE_FROM_TAG=_afb PROBE_UPDATE=1 RTAG=_x bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'holds the fitted probe' && ok "PROBE_FROM_TAG with a released probe refused" || bad "PROBE_FROM_TAG with PROBE_UPDATE"
+o="$(dry env PROBE_FROM_TAG=_afb bash runs/zb_submit.sh runs/gflat_fixed.tsv)" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'needs an RTAG of its own' && ok "PROBE_FROM_TAG without an RTAG of its own refused" || bad "PROBE_FROM_TAG RTAG"
 [ "$fail" = 0 ] && echo "ALL OK" || { echo "SOME CHECKS FAILED"; echo "$out" | tail -5; exit 1; }

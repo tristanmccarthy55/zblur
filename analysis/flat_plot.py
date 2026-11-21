@@ -51,6 +51,7 @@ TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses"
              "_smoke_af": "smoke test: C1+A1 fit, 30 it",
              "_sg10": "gain smoke: C1+A1 fit, gain 10", "_sg30": "gain smoke: C1+A1 fit, gain 30", "_sg100": "gain smoke: C1+A1 fit, gain 100",
              "_poisson": "true probe, fixed, Poisson likelihood",
+             "_afb2": "second pass: the C1+A1-fitted probe held, a fresh object",
              "_pu_noho": "released, misses, higher orders not given"}
 EARLY = ("g0d", "g1")
 

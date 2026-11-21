@@ -138,6 +138,16 @@ noisy copies, so each pair sees the same noise. `gflat_cam`: perfect 80 and flat
 - At 1e8 and 1e7: if L1 misreading sub-1-count pixels is the cost (P17's mechanism), the camera beats the 712 px run at the same
   dose, most at 1e7; perfect 80 at 1e8 within one slice of noiseless. If it matches the 712 px run, counts per pixel are not it.
 
+## P19. Fit, then reconstruct (added 2026-11-21, before these runs)
+The user: flat to 30 "is the story point". `_afb2`: all seven points, each holding the probe its own `_afb` run fitted (A1 gone, the
+defocus wherever it drifted: up to 2.5 A), with a fresh object; zb_submit.sh PROBE_FROM_TAG=_afb (analysis/probe_export.py), main
+pipeline, 200 + 200 iterations, no noise.
+- If the object's history under the wrong A1 is what cost flat to 30 its 2 A: flat to 30 within 0.3 A of the A1-right start's 3.56 A
+  (continuous W80), every other point within 0.3 A of its known-probe value. Basis: `_pu_noa1` (A1 right from the start, C1 1.3 A
+  off) gave 3.56 at flat to 30; the drifted defocus should be taken up by moving the atom, as the 1.3 A was.
+- If flat to 30 stays near 5.6 A, the cause is the probe the fit left (most likely its 2.5 A of defocus), not the object's history.
+Also: P17 rerun with the Poisson branch fixed (aberfit db8262f; it called sumsq_cell(Psi), which does not resolve in LSQML).
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 

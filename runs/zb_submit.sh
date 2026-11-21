@@ -74,6 +74,13 @@
 # Names carry _detb<B>. Fixed probe only for now: a released start probe would be built on the camera's grid, not the fine one.
 #   CAMERA_BIN=4 DOSE=1e8 GROUPING="32;16" bash runs/zb_submit.sh runs/gflat_fixed.tsv
 #
+# PROBE_FROM_TAG=<rtag> (2026-11-21, "fit, then reconstruct": the C1 + A1 fit removed A1 at every point, but flat to 30's atom came back
+# 2 A longer than with the probe known, likely because its object formed under the wrong A1 before the fit got there): each recon
+# starts from, and holds, the probe fitted by the same point's recon_<...>_NL<n><rtag> (analysis/probe_export.py writes it as the
+# recon's probe_initial.mat at submission), with a fresh object. That run must be whole. Fixed probe, one mode, no camera; needs an
+# RTAG of its own.
+#   PROBE_FROM_TAG=_afb RTAG=_afb2 GROUPING="32;16" bash runs/zb_submit.sh runs/gflat.tsv
+#
 # THE WINDOW (2026-11-04). A row's solver window is its box / BIN (BIN 2). Column 15, side (optional; absent or - = the 70.008 A box, so
 # old files and their names are unchanged), makes the box a side x side A region and is named _rs<side>: side 210 is the campaign's 105 A
 # window. Every ARM row before this date ran with no side: a 35 A window with 32 % of the 80 mrad probe outside it, and their rings
@@ -139,12 +146,18 @@ if [ -n "$DOSE" ]; then
     awk -v x="$DOSE" 'BEGIN{exit !(x ~ /^[0-9]+(\.[0-9]+)?(e[0-9]+)?$/ && x + 0 > 0)}' || { echo "DOSE is a fluence in e/A^2 such as 1e6, not '${DOSE}'" >&2; exit 1; }
     [ "$CLEAN_RAW" = 1 ] && { echo "CLEAN_RAW takes the clean sims; run it without DOSE" >&2; exit 1; }
 fi
+PROBE_FROM_TAG="${PROBE_FROM_TAG:-}"
+if [ -n "$PROBE_FROM_TAG" ]; then
+    [ "$PROBE_UPDATE" = 0 ] && [ "$PROBE_MODES" = 1 ] || { echo "PROBE_FROM_TAG holds the fitted probe: not with PROBE_UPDATE or PROBE_MODES" >&2; exit 1; }
+    [ -n "$RTAG" ] && [ "$RTAG" != "$PROBE_FROM_TAG" ] || { echo "PROBE_FROM_TAG needs an RTAG of its own (e.g. ${PROBE_FROM_TAG}2)" >&2; exit 1; }
+fi
 CAMERA_BIN="${CAMERA_BIN:-1}"; UPS=0; CAMTAG=""
 case "$CAMERA_BIN" in 1|2|4|8) ;; *) echo "CAMERA_BIN sums B x B pixels: 1, 2, 4 or 8, not '${CAMERA_BIN}'" >&2; exit 1;; esac
 if [ "$CAMERA_BIN" != 1 ]; then
     UPS=$(awk -v b="$CAMERA_BIN" 'BEGIN{print int(log(b) / log(2) + 0.5)}'); CAMTAG="_detb${CAMERA_BIN}"
     [ "$PROBE_UPDATE" = 1 ] || [ "$PROBE_MODES" -gt 1 ] && { echo "CAMERA_BIN: fixed-probe runs only for now (a released start probe would be built on the camera's coarse grid, not the fine grid the upsampled recon models)" >&2; exit 1; }
     [ "$CLEAN_RAW" = 1 ] && { echo "CLEAN_RAW takes the clean sims; run it without CAMERA_BIN" >&2; exit 1; }
+    [ -z "$PROBE_FROM_TAG" ] || { echo "CAMERA_BIN with PROBE_FROM_TAG: not built (the fitted probe is on the fine grid)" >&2; exit 1; }
 fi
 # Phonon points need the frozen-phonon sigma fix (ptychoshelves-clean a8b9264, 2026-10-30): before it, abTEM 1.0.9 moved
 # every atom sqrt(3) too far. Their sims are named _T<T>v2 so the pre-fix _T<T> folders are never reused, and they are
@@ -327,6 +340,10 @@ ${QUEUED}
 " in *"
 zb_rec_${dname}_NL${nl}${RTAG}
 "*) refuse "zb_rec_${dname}_NL${nl}${RTAG} is still in the queue";; esac
+        if [ -n "$PROBE_FROM_TAG" ] && [ "$DRY_RUN" != "1" ]; then
+            psrc="${ZB_ROOT}/recon_${dname}_NL${nl}${PROBE_FROM_TAG}"
+            [ "$(recon_state "$psrc")" = whole ] || refuse "${psrc}: not a whole reconstruction to take the probe from"
+        fi
         st=$(recon_state "$rdir")
         case "$st:$REDO" in
             leftover:1|whole:1|none:*) ;;
@@ -494,6 +511,8 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             if [ "$fs" != "0" ] || [ "$src" != "0" ]; then pstart=mixed; else pstart=seeded; fi
         fi
         [ "$PROBE_UPDATE" = 1 ] && pstart="$pstart_pu"
+        psrc="${ZB_ROOT}/recon_${dname}_NL${nl}${PROBE_FROM_TAG}"
+        [ -n "$PROBE_FROM_TAG" ] && pstart="the fitted probe of $(basename "$psrc"), held"
         if [ "$DRY_RUN" != "1" ] && [ "$state" != whole ]; then
             mkdir -p "${rdir}/01"
             mdir="$sdir"; [ "$CAMERA_BIN" != 1 ] && mdir="$cdir"      # sim_meta and the true probe: the camera's when there is one
@@ -506,7 +525,14 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
                 ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial_true.mat"
                 rm -f "${rdir:?}/01/probe_initial.mat" "${rdir:?}/01/probe_initial.json"
             else
-                ln -sf "${mdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial.mat"    # the true probe (held fixed when 1 mode)
+                if [ -n "$PROBE_FROM_TAG" ]; then
+                    # the probe fitted by the same point's earlier run, written as a file (never through a link to a sim's probe)
+                    ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial_true.mat"
+                    "$GUARD_PY" "${HERE}/../analysis/probe_export.py" --recon "$psrc" --out "${rdir}/01/probe_initial.mat" >&2 \
+                        || refuse "could not write the fitted probe of ${psrc}"
+                else
+                    ln -sf "${mdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial.mat"    # the true probe (held fixed when 1 mode)
+                fi
             fi
         fi
         rexp="ALL,NLAYERS=${nl},SIM_BASE=${rdir}/,REGLAYER=0,PROBE_MODES=${PROBE_MODES},NITER=${NITER},SAVE_EVERY=${NITER},GROUPING=${GROUPING},BETA_LSQ=${BETA_LSQ}"
