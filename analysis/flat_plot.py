@@ -53,6 +53,7 @@ TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses"
              "_poisson": "true probe, fixed, Poisson likelihood",
              "_afb2": "second pass: the C1+A1-fitted probe held, a fresh object",
              "_a1fit": "A1 fit only (C1 left at the search value), both engines",
+             "_a1fitp": "A1 fit only, Poisson likelihood", "_m8": "8 probe modes, released from the known mixed state",
              "_pu_noho": "released, misses, higher orders not given"}
 EARLY = ("g0d", "g1")
 

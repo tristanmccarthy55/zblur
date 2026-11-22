@@ -156,6 +156,17 @@ both engines, C1 and C3 left at the search's values (+1.3, +49 A), 200 + 200 it 
   its `_pu_noa1` value (A1 fitted to < 0.1 A, the defocus as the start had it). Basis: `_pu_noa1` and the bracket; the presolve's ~50
   iterations under the wrong A1 did not matter (P19).
 
+## P21-P22. Figure 2 at Poisson, and coherence with probe modes (added 2026-11-22, before these runs)
+P21, dose: three tracks (perfect 30, flat to 30 at 80, perfect 80), 712 px, Poisson (aberfit db8262f). Probe known: the three at 1e6,
+perfect 30 at 1e8 / 1e7. Fitted (`_a1fitp`): A1 fitted from the full search errors, gain 100, C1 / C3 left, at 1e8 / 1e7 (1e6 after its
+copies exist). Expectations: perfect 30 under Poisson is one atom again at 1e8 / 1e7 (W80 under 12 A; L1 gave 21-22); perfect 80 at 1e6
+within ~1.5 A of noiseless; the fitted runs within 0.5 A of their known-probe Poisson values at 1e8 and 1e7, A1 fitted to < 0.2 A;
+at 1e6 the fit may stall. The fit has not run under Poisson before.
+P22, coherence: focal spread 5 and 7.29 A, all seven points, 8 probe modes released from the sim's own mixed state (PROBE_MODES=8,
+NITER 250, main pipeline). If the one-mode penalty (flat to 30 / 40 opened to 80 worse than stopping at 30 / 40 from 5 A) came from
+the single coherent mode: with modes flat to 30 and 40 no worse than perfect 30 and 40 at both spreads. The 80 mrad wall at 7.29 A (80
+no better than 60) stays: modes describe the incoherence, they do not undo its loss of contrast.
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 
@@ -330,4 +341,9 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
   (6.71); flat to 30 1e8 6.88 (5.37), 1e7 6.91 (6.24), z-share 0.37. For the perfect probe fuller pixels recover most of the 1e8 loss
   (P17's mechanism, counts per pixel under the L1 model, supported); for the aberrated probe they cost more than they give at every
   dose, as without noise (its fringes need fine pixels). A trade-off: if Poisson (P17) recovers the loss at 712 px, fine pixels win.
-
+- **2026-11-22, P17 (Poisson), probe known**: continuous W80 / z-share at 712 px, Poisson (L1; camera): perfect 80 1e8 2.60 / 0.013
+  (5.67; 3.20), 1e7 2.95 / 0.032 (6.71; 5.77): the perfect probe's whole dose cost at 1e8 was the noise model, and 1e7 costs 0.4 A.
+  Flat to 30: 1e8 5.64 / 0.065 (5.37; 6.88), 1e7 6.31 / 0.122 (6.24; 6.91): no gain. Not the small scan: 93 % of the flat-to-30
+  probe lies within the 8 A scan (window_loss chi, at its focus), so its atom gets ~93 % of the nominal dose. Possibly the aberrated
+  probe's dose efficiency (Nguyen et al. 2024 Fig. 4F: probe structure moves the dose needed by orders of magnitude); untested.
+  Dose figure settings: 712 px, Poisson.
