@@ -167,6 +167,23 @@ NITER 250, main pipeline). If the one-mode penalty (flat to 30 / 40 opened to 80
 the single coherent mode: with modes flat to 30 and 40 no worse than perfect 30 and 40 at both spreads. The 80 mrad wall at 7.29 A (80
 no better than 60) stays: modes describe the incoherence, they do not undo its loss of contrast.
 
+## P23. How far the flat-to-30 corrector can be opened (added 2026-11-22, before these runs)
+`runs/gopen30.tsv`: the corrector flat only to 30 mrad (flat_a080_f030's tableau unchanged) behind apertures of 40, 50, 60, 70 mrad,
+against the perfect probe of the same aperture; the 80 mrad points are gflat's flat to 30 and perfect 80. Probe known, 712 px; no noise
+(main pipeline) and Poisson at 1e7 and 1e8 (aberfit db8262f). Metric: continuous W80 (`flat_plot.width_cont`). "Breaks rank" is fixed
+now: the opened corrector's W80 more than 1 A above the perfect probe's at the same aperture.
+- The tableau's phase over the disc, piston and tilt removed (`window_loss.chi`, this session): 0.2 / 0.8 / 2.4 / 6.1 / 13 / 27 / 54 /
+  99 waves peak to valley at 30 / 40 / 50 / 60 / 70 / 80 / 90 / 100 mrad (Strehl 0.99 / 0.81 / 0.21 / < 0.01 above).
+- Measured already: no noise, perfect 8.42 / 7.07 / 3.22 / 2.51 A at 30 / 40 / 60 / 80, flat to 30 at 80 3.56 A (1.05 A apart);
+  Poisson, perfect 80 2.95 / 2.60 A and flat to 30 at 80 6.31 / 5.64 A at 1e7 / 1e8 (3.4 / 3.0 A apart).
+- Expectation, no noise: within 0.3 A of the perfect probe at 40 and 50, within 0.6 A at 60 and 70; the opened line falls all the way
+  to 80. Under noise the separation starts earlier: within 0.5 A at 40 and 50, past 1 A from 60 or 70 (where the phase passes ~6
+  waves), growing to the 3 A already measured at 80. So the break is expected at 60-70 mrad, not at 80.
+- Also read: whether the opened line still falls with aperture under noise (opening still pays, less than it should) or turns up
+  (opening past the break costs depth). Share of the opened corrector's probe outside the solver window (window_loss, this session):
+  0.27 % in 35 A at 70 mrad; 6.4 / 2.2 % in 35 / 45 A at 80; 15 / 2.4 % in 45 / 80 A at 90; 14 / 7.4 % in 80 / 105 A at 100. 90 and
+  100 are past this recipe; that growth is stated as the cost, not run.
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 

@@ -1,0 +1,15 @@
+# THE OPENED CORRECTOR (2026-11-22, P23; the user: "how much we can open up 30 before it breaks rank and loses electron efficiency").
+# The corrector flat only to 30 mrad (flat_a080_f030's tableau, runs/flat_tableaux.tsv rows flat_a0XX_f030) behind an aperture of
+# 40, 50, 60, 70 mrad (80 is gflat's flat30), against the perfect probe of the same aperture (50 and 70 new; 30, 40, 60, 80 in gflat).
+# Its probe stays compact to 70 mrad (window_loss: 0.27 % outside the 35 A window at 70); outside a 45 A window 2.2 % at 80, 80 A 2.4 % at 90, 105 A 7.4 % at 100,
+# past this recipe. Recipe as gflat: 0.1 A steps over 8 A, recorded to 200 mrad, 0.25 A sim slices, 1 A recon slices; the opened
+# corrector in the 40 A box (as flat30 at 80), perfect 50 in the 40 A box, perfect 70 in the 20 A box (as perfect 60 and 80).
+#   GROUPING="32;16" bash runs/zb_submit.sh runs/gopen30.tsv                         # probe known, no noise
+#   DOSE=1e7 LIKELIHOOD=poisson RTAG=_poisson PTYCHO_ROOT=<aberfit> ...               # probe known, 1e7, Poisson (after the sims)
+# el	alpha	aber	c1	geom	step	win	det	slice	zvac	fs	src	T	nl_list	side
+Pb	40	flat30	-	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	50	flat30	-	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	60	flat30	-	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	70	flat30	-	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	50	ideal	0	single	0.1	8	200	0.25	10.2375	0	0	-	40
+Pb	70	ideal	0	single	0.1	8	200	0.25	0.2375	0	0	-	20

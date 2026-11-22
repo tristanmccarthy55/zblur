@@ -100,16 +100,23 @@ def rows(packs):
             continue
         seen.add(r["kernel"])
         c = blobs.core(r)
-        aber = r["aber"]
-        x = float(r["alpha"]) if aber == "ideal" else (float(aber[4:]) if aber.startswith("flat") else None)
-        if x is None:
+        aber, alpha = r["aber"], float(r["alpha"])
+        # line A: the perfect probe, x = aperture. Line B: the 80 mrad aperture flat to x. Line O<X> (gopen30, 2026-11-22): the
+        # corrector flat to X opened to an aperture other than 80, x = that aperture (its x = 80 point is line B's x = X).
+        if aber == "ideal":
+            line, x = "A", alpha
+        elif aber.startswith("flat"):
+            line, x = ("B", float(aber[4:])) if alpha == 80 else (f"O{float(aber[4:]):g}", alpha)
+        else:
             continue
-        # gflat's own slicing and boxes: 1 A recon slices, a 40 A box at 30 and 40 mrad, 20 A above (earlier runs hold others)
-        if abs(r["dz"] - 1.0) > 0.05 or abs(float(r["boxz_A"]) - (40.0 if x <= 40 else BOX_HIGH[r["geom"]])) > 0.01:
+        # gflat's own slicing and boxes: 1 A recon slices, a 40 A box at 30 and 40 mrad, 20 A above (earlier runs hold others);
+        # gopen30 adds the opened corrector and the perfect 50 mrad probe, both in the 40 A box
+        box = 40.0 if (x <= 40 or line[0] == "O" or (line == "A" and x == 50 and r["geom"] == "single")) else BOX_HIGH[r["geom"]]
+        if abs(r["dz"] - 1.0) > 0.05 or abs(float(r["boxz_A"]) - box) > 0.01:
             continue
         early = os.path.basename(os.path.dirname(os.path.dirname(r["file"]))) in EARLY
         col = pg.core_column(r["K"], r["dx"])
-        out.append(dict(kernel=r["kernel"], geom=r["geom"], line="A" if aber == "ideal" else "B", x=x, fs=r["fs"], tag=rtag(r["kernel"]),
+        out.append(dict(kernel=r["kernel"], geom=r["geom"], line=line, x=x, fs=r["fs"], tag=rtag(r["kernel"]),
                         dose=dose_of(r["kernel"]), camera=camera_of(r["kernel"]),
                         fwhm=c["fwhm_z"], dip=c["dip"], side=c["side"], peak=c["peak"], w80=width(col, r["dz"], 0.8), w80c=width_cont(col, r["dz"]),
                         zshare=pg.zshare_of(col, r["dz"]), clean=bool(np.isfinite(c["fwhm_z"]) and c["dip"] > -0.9), early=early))
