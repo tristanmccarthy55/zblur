@@ -148,6 +148,14 @@ pipeline, 200 + 200 iterations, no noise.
 - If flat to 30 stays near 5.6 A, the cause is the probe the fit left (most likely its 2.5 A of defocus), not the object's history.
 Also: P17 rerun with the Poisson branch fixed (aberfit db8262f; it called sumsq_cell(Psi), which does not resolve in LSQML).
 
+## P20. Fit only A1 (added 2026-11-22, before these runs)
+The defocus is not pinned by a lone atom's data (moving the atom takes it up), so letting the fit move it buys nothing, and at flat to 30
+its 2.5 A drift brings a ghost. `_a1fit`: all seven points from the full search errors, PROBE_ABER_FIT=A1 at gain 100 (cap 0.01 A) in
+both engines, C1 and C3 left at the search's values (+1.3, +49 A), 200 + 200 it (aberfit db8262f).
+- Flat to 30 within 0.3 A of the A1-right start's 3.56 A, its ghost gone (beyond-3-slices share near 9 %); every point within 0.3 A of
+  its `_pu_noa1` value (A1 fitted to < 0.1 A, the defocus as the start had it). Basis: `_pu_noa1` and the bracket; the presolve's ~50
+  iterations under the wrong A1 did not matter (P19).
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 
@@ -310,3 +318,16 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
   fringes the aberrated probe throws into its patterns, the effect Nguyen et al. 2024 show for detector pixel counts (their Fig. 3B,
   text read). So opening an aberrated probe needs fine detector pixels, which at low dose hold few counts each.
 - **2026-11-21, P17** (Poisson): the four recons left no kernels (packs hold only manifests); logs asked for.
+- **2026-11-22, P19 (second pass)**: continuous W80 / z-share, two passes (known; one pass): perfect 30 9.07 / 0.418 (8.42; 9.53),
+  40 7.26 / 0.286 (7.07; 7.35), 60 3.07 / 0.030 (3.22; 3.96), 80 2.43 / 0.010 (2.51; 2.97); flat to 40 2.57 / 0.020 (2.72; 2.80), 60
+  2.57 / 0.018 (2.47; 3.04): six points within 0.1-0.7 A of the probe known. Flat to 30: 5.47 / 0.060 (3.56; 5.56): P19's second branch,
+  the probe not the object's history. But the atom itself is right: its core along the beam (+0.09 +0.34 +0.33 +0.08 rad) is the
+  known-probe core (+0.15 +0.37 +0.32 +0.09), two slices deeper (the drifted defocus), core-only W80 (+-6 slices) 3.71 against 3.28 A.
+  What W80 counts is a faint ghost, ~+0.03 rad a slice 3-8 A above and below (~8 % of the peak): 19 % of the positive phase beyond 3
+  slices against 9 %. The fitted flat-to-30 probe is the truth plus 2.51 A of defocus (its overlap 0.748 is exactly a 2.51 A defocus's,
+  0.749; A1 0.06 A, rest 0.03 rad); the A1-right start (defocus 1.3 A off) has no ghost; perfect 80 takes its 2.1 A drift with none.
+- **2026-11-22, P18 with noise** (4 x 4 camera, probe known; continuous W80, 712 px in brackets): perfect 80 1e8 3.20 (5.67), 1e7 5.77
+  (6.71); flat to 30 1e8 6.88 (5.37), 1e7 6.91 (6.24), z-share 0.37. For the perfect probe fuller pixels recover most of the 1e8 loss
+  (P17's mechanism, counts per pixel under the L1 model, supported); for the aberrated probe they cost more than they give at every
+  dose, as without noise (its fringes need fine pixels). A trade-off: if Poisson (P17) recovers the loss at 712 px, fine pixels win.
+
