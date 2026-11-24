@@ -7,7 +7,8 @@ phase across its aperture (wrapped, the flat disc dashed) above the atom it reco
 Next two rows: the perfect probe with an aperture of x, the same way. Bottom: (c) the continuous W80, the depth holding 80 % of the
 atom's phase, against x for both lines, the probe found by the fit (solid) and known (dotted); (d) the probe's phase error across
 the aperture for perfect 80 and flat 30: start, fitted, fitted with its defocus part removed. The atoms and the solid lines are TAG
-(`_afb`, the C1 + A1 fit at gain 100 from the search's full errors, P15; 2026-11-24 docstring brought up to date); no noise. Phases from the simulated
+(`_afb2`: the C1 + A1 fit at gain 100 from the search's full errors, P15, then a second pass with that probe held, P19;
+the A1-only fit, P20, did worse at 5 of 7 points); panel d is the first pass's probe (PROBE_TAG `_afb`); no noise. Phases from the simulated
 tableaux (runs/flat_tableaux.tsv, runs/window_loss.py chi, checked against abTEM); kernels from ~/Desktop/zblur/gflat.
 
     ~/hyperspy-bundle/bin/python analysis/fig_angle.py [out_dir]
@@ -35,7 +36,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
 
 PSF = os.path.expanduser("~/Desktop/zblur/gflat/psf")
-TAG = "_afb"                                  # the C1 + A1 fit at gain 100 from the full search errors (P15)
+TAG = "_afb2"                                 # atoms and solid lines: the second pass, the fitted probe held (P19; P20 kept it, 2026-11-24)
+PROBE_TAG = "_afb"                            # panel d: the C1 + A1 fit at gain 100 from the full search errors (P15), the probe _afb2 holds
 PROBES = os.path.expanduser("~/Desktop/zblur/probes/probes_afb")
 XS = (30, 40, 60, 80)
 DX, DZ = 0.04922, 1.0
@@ -128,7 +130,7 @@ def main(*args):
     # (d) the probe the fit found: start (the search's errors), fitted, fitted minus true, across the aperture
     pr = sub[0, 1].subgridspec(2, 3, wspace=0.06, hspace=0.25)
     for i, (lab, kern) in enumerate((("perfect 80", PERF[80]), ("flat 30, 80", FLAT[30]))):
-        z = np.load(os.path.join(PROBES, f"recon_{kern}{TAG}.npz"))
+        z = np.load(os.path.join(PROBES, f"recon_{kern}{PROBE_TAG}.npz"))
         T, F, S = (z[k].astype(complex) for k in ("true_k", "fitted_k", "start_k"))
         n, da = int(z["n"]), float(z["d_alpha_mrad"])
         m = np.abs(T) > 0.5 * np.abs(T).max()
