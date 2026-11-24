@@ -4,9 +4,10 @@
 
 Top two rows: an 80 mrad aperture over a corrector phase-flat only to x (x = 30, 40, 60; 80 is the perfect probe), each with the
 phase across its aperture (wrapped, the flat disc dashed) above the atom it reconstructs (x-z section through the atom's peak).
-Next two rows: the perfect probe with an aperture of x, the same way. Bottom: the depth extent against x for both lines, as FWHM
-(c) and as W80, the depth holding 80 % of the atom's phase (d), the probe released (solid) and known (dotted). Every reconstruction
-here starts from the crystal search's C1 and C3 errors with A1 right (`_pu_noa1`, P9/P10); no noise. Phases from the simulated
+Next two rows: the perfect probe with an aperture of x, the same way. Bottom: (c) the continuous W80, the depth holding 80 % of the
+atom's phase, against x for both lines, the probe found by the fit (solid) and known (dotted); (d) the probe's phase error across
+the aperture for perfect 80 and flat 30: start, fitted, fitted with its defocus part removed. The atoms and the solid lines are TAG
+(`_afb`, the C1 + A1 fit at gain 100 from the search's full errors, P15; 2026-11-24 docstring brought up to date); no noise. Phases from the simulated
 tableaux (runs/flat_tableaux.tsv, runs/window_loss.py chi, checked against abTEM); kernels from ~/Desktop/zblur/gflat.
 
     ~/hyperspy-bundle/bin/python analysis/fig_angle.py [out_dir]
