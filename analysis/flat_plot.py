@@ -58,7 +58,8 @@ TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses"
              "_m8i140": "8 probe modes, released from the known mixed state, 140 + 140 it",
              "_hq0": "C1+A1 fit, no start error (P24 control)", "_hq_a2_0125": "C1+A1 fit, A2 off by 1/8 wave",
              "_hq_a2_05": "C1+A1 fit, A2 off by 1/2 wave", "_hq_a3_05": "C1+A1 fit, A3 off by 1/2 wave",
-             "_hq_s3_05": "C1+A1 fit, S3 off by 1/2 wave", "_hq_a2_05f": "C1+A1+A2 fit, A2 off by 1/2 wave"}
+             "_hq_s3_05": "C1+A1 fit, S3 off by 1/2 wave", "_hq_a2_05f": "C1+A1+A2 fit, A2 off by 1/2 wave",
+             "_dfh25": "true probe held, defocus off by 2.5 A", "_dfh20": "true probe held, defocus off by 2.0 A"}
 EARLY = ("g0d", "g1")
 
 

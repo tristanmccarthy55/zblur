@@ -213,6 +213,26 @@ noiseless run at NL20 as the reference.
 - These kernels have dz 2 A; flat_plot reads 1 A slices only, so they are read on their own and drawn as a separate, marked
   point in Figure 2 (perfect 30 at 2 A slices).
 
+## P26. Where flat to 30's ghost comes from (added 2026-11-24, before these runs)
+The two-pass flat-to-30 atom carries a faint ghost (~0.03 rad a slice, 3-8 A above and below; P19 outcome) while its fitted
+probe is the truth plus 2.51 A of defocus. Same 45 A window and same 2.2 % outside as the clean true-probe run, so not the old
+window ringing (32 % outside a 35 A window). Two explanations, tested with the true probe HELD plus a fixed defocus error (PROBE_UPDATE=1,
+START_ERR=C1=<d>, PROBE_START = PROBE_START2 = 1000 > the iterations, so the probe never moves), no fit, no noise:
+- (W) the window: the defocus acts differently on the probe cut at the window edge. Against it: for every scan position the
+  window edge is >= 17 A from the atom (8 A scan, 45 A window), and 2.5 A of defocus moves light sideways by <= 0.2 A (0.5 A at the
+  grid's Nyquist angle), so an edge effect cannot reach the atom's column.
+- (S) the slice grid: a defocus error is absorbed by moving the atom along z, cleanly only by whole 1 A slices. The two-pass
+  atom moved two slices, not 2.51 A (its core is split over two slices as the known one is), leaving ~0.5 A unabsorbed. The
+  fraction off a whole slice orders the three runs seen: 0.49 (flat 30 two-pass, ghost), 0.3 (flat 30 start with A1 right,
+  1.3 A, none), 0.1 (perfect 80 fit, 2.1 A, none). Three points, suggestive only.
+| run | (W) predicts | (S) predicts |
+|---|---|---|
+| `_dfh25` flat 30, +2.5 A | ghost | ghost |
+| `_dfh20` flat 30, +2.0 A | ghost | no ghost |
+| `_dfh25` perfect 80, +2.5 A | no ghost | ghost, perhaps fainter |
+Ghost = more than 12 % of the positive phase beyond 3 slices of the peak (known-probe flat 30: 9 %, two-pass: 19 %). If flat 30 at
++2.5 A held shows no ghost, neither holds: the ghost needs the fit's history, and P19's "probe, not object history" is revisited.
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 
