@@ -202,6 +202,15 @@ there (flat to 40): A2 0.061, S3 0.388, A3 0.141 waves.
   and A3 would have to be fitted. A tableau-sized error, B2 (zero in the flat probes, so START_SCALE cannot make one), perfect
   80 and flat to 30 are left for a full test.
 
+## P25. Perfect 30 under noise on thicker slices (added 2026-11-24, before these runs)
+Perfect 30 diverged under Poisson at 1e8, 1e7 and 1e6 on 40 slices of 1 A (P21 outcome). The same sim and noisy copies, 10 slices of
+4 A (NL10: its noiseless atom is 8.4 A long at 1 A slices, so 4 A samples it at about Nyquist; the user: "we can lower the
+slicing on it"). Probe known, Poisson (aberfit dc5ddc4), plus the noiseless run at NL10 as the reference.
+- Expectation: noiseless at NL10 8-10 A (continuous W80; coarser slices cannot make the atom shorter than ~1 slice). At 1e8 and 1e7 an
+  atom again, within 3 A of its NL10 noiseless value; at 1e6 possibly not. If it still diverges at 4 A, slicing was not the cause.
+- These kernels have dz 4 A; flat_plot reads 1 A slices only, so they are read on their own and drawn as a separate, marked
+  point in Figure 2 (perfect 30 at 4 A slices).
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 
