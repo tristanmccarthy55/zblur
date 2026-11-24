@@ -54,7 +54,11 @@ TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses"
              "_afb2": "second pass: the C1+A1-fitted probe held, a fresh object",
              "_a1fit": "A1 fit only (C1 left at the search value), both engines",
              "_a1fitp": "A1 fit only, Poisson likelihood", "_m8": "8 probe modes, released from the known mixed state",
-             "_pu_noho": "released, misses, higher orders not given"}
+             "_pu_noho": "released, misses, higher orders not given",
+             "_m8i140": "8 probe modes, released from the known mixed state, 140 + 140 it",
+             "_hq0": "C1+A1 fit, no start error (P24 control)", "_hq_a2_0125": "C1+A1 fit, A2 off by 1/8 wave",
+             "_hq_a2_05": "C1+A1 fit, A2 off by 1/2 wave", "_hq_a3_05": "C1+A1 fit, A3 off by 1/2 wave",
+             "_hq_s3_05": "C1+A1 fit, S3 off by 1/2 wave", "_hq_a2_05f": "C1+A1+A2 fit, A2 off by 1/2 wave"}
 EARLY = ("g0d", "g1")
 
 

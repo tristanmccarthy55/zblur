@@ -184,6 +184,24 @@ now: the opened corrector's W80 more than 1 A above the perfect probe's at the s
   0.27 % in 35 A at 70 mrad; 6.4 / 2.2 % in 35 / 45 A at 80; 15 / 2.4 % in 45 / 80 A at 90; 14 / 7.4 % in 80 / 105 A at 100. 90 and
   100 are past this recipe; that growth is stated as the cost, not run.
 
+## P24. How well the terms the fit leaves must be known: a quick test (added 2026-11-24, before these runs)
+Flat to 40 opened to 80 mrad, no noise, the C1 + A1 fit of Figure 1's first pass (`_afb`'s settings: gain 100, cap 0.01 A, both
+engines, 200 + 200 it), started from the TRUE C1, C3 and A1 (START_ERR empty), with one higher-order term wrong in the start probe
+(START_SCALE on the tableau's own term, its angle kept). Errors are the amplitude at the 80 mrad edge, in waves. The tableau's terms
+there (flat to 40): A2 0.061, S3 0.388, A3 0.141 waves.
+- `_hq0` control (no error): 2.6-2.9 A (known 2.72, `_afb` 2.80).
+- `_hq_a2_0125` (A2 x 3.052, 1/8 wave): within 0.3 A of the control.
+- `_hq_a2_05` (A2 x 9.208, 1/2 wave) and `_hq_a3_05` (A3 x 4.550, 1/2 wave): more than 1 A above the control, or the atom splits.
+  No lower term shares their symmetry, so the fit cannot take any of it. Basis: an unfitted A1 error of 0.58 waves (3.6 A) took
+  flat to 40 to 11.6 A (`_pu`).
+- `_hq_s3_05` (S3 x 2.288, 1/2 wave): within 0.3 A of the control. 3/4 of a star error (rms over the disc) has A1's symmetry, and
+  the A1 fit takes it, leaving ~1/8 wave.
+- `_hq_a2_05f` (A2 off by 1/2 wave, A2 added to the fit): within 0.3 A of the control.
+- Rule under test: what neither a gauge (a shift across or along the beam) nor a fitted term absorbs must be known to ~1/8 wave
+  at the aperture edge. The tableau's own 95 % intervals are 3-8 waves at 80 mrad (arm200f_tableau.tsv, run3, at 300 kV), so A2
+  and A3 would have to be fitted. A tableau-sized error, B2 (zero in the flat probes, so START_SCALE cannot make one), perfect
+  80 and flat to 30 are left for a full test.
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 
@@ -364,3 +382,23 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
   probe lies within the 8 A scan (window_loss chi, at its focus), so its atom gets ~93 % of the nominal dose. Possibly the aberrated
   probe's dose efficiency (Nguyen et al. 2024 Fig. 4F: probe structure moves the dose needed by orders of magnitude); untested.
   Dose figure settings: 712 px, Poisson.
+- **2026-11-24, P20 fails** (`_a1fit`, A1 fitted alone, C1 / C3 left at the search's values; continuous W80, `_pu_noa1` in brackets):
+  perfect 30 / 40 / 60 / 80 9.89 / 7.66 / 3.67 / 2.76 (9.00 / 7.08 / 3.51 / 2.55), flat to 30 / 40 / 60 4.45 / 2.90 / 2.75 (3.56 / 2.49 /
+  2.36). Within 0.3 A at 60 and 80 only (2 of 7). Flat to 30: the far ghosts are gone, but the core is longer upstream and half as
+  strong (peak 0.58 rad against 1.15 known, 1.02 two-pass; z-share 0.178 against 0.060 two-pass). The two-pass recipe (P19, `_afb2`) is
+  better at 5 of 7 points and stays Figure 1's.
+- **2026-11-24, P21** (Poisson, 712 px; images looked at):
+  - Perfect 30 under Poisson does NOT come back: at 1e8, 1e7 and 1e6 the reconstruction diverged. Its phase hits +-pi through the
+    volume, so the "W80" values (18.3, 4.9, 13.8 A) are noise and mean nothing. The fitted perfect 30 runs left no kernel (logs not
+    yet read). Under L1 it broke too. A likely cause, untested: 40 slices of 1 A where a 30 mrad probe's depth of field is ~45 A
+    (2 lambda / alpha^2), so the noise has free directions along z. It is a statement about this recipe, not about 30 mrad.
+  - Perfect 80 at 1e6: 4.13 A, one compact atom (P21's "within ~1.5 A of noiseless": 1.62, just misses).
+  - Flat to 30 at 1e6: no atom (noise throughout).
+  - Fitted (A1 only, `_a1fitp`): perfect 80 2.88 / 3.09 A at 1e8 / 1e7, within 0.3 A of its known-probe Poisson values (2.60 /
+    2.95). Flat to 30 7.10 A at 1e8 (known 5.64; an upstream ghost at -5 to -7 A) and broken at 1e7 (an X-shaped artefact). The fit
+    holds under noise for the perfect probe and not for flat to 30.
+  - Figure 2 then reads: perfect 80 keeps its atom to 1e6; flat to 30 opened to 80 to 1e7, with the probe known; perfect 30 cannot
+    be reconstructed on 1 A slices at any of these doses.
+- **2026-11-24, P22** (coherence, 8 modes, 250 + 250 it): every 40-slice point runs ~870 s an iteration in the full engine (~400 s at
+  20 slices), ~72 h in all against the 48 h limit. Perfect 30 / 40 and flat to 40 at both spreads are cancelled, to be rerun at
+  140 + 140 it (`_m8i140`, ~41 h); the 20-slice points and flat to 30 (19 h, faster for a reason not looked into) finish as run.
