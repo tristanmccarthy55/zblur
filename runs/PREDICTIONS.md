@@ -442,6 +442,10 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
     holds under noise for the perfect probe and not for flat to 30.
   - Figure 2 then reads: perfect 80 keeps its atom to 1e6; flat to 30 opened to 80 to 1e7, with the probe known; perfect 30 cannot
     be reconstructed on 1 A slices at any of these doses.
+  - 1e6 fitted (`_a1fitp`, pulled 2026-11-25, images looked at): perfect 80 no atom (streaks 8-15 A down the column;
+    "W80" 14.96 is noise), though the same data give a compact 4.13 A atom with the probe known; flat 30 no atom; perfect 30
+    no atom (its 1e8 / 1e7 fitted runs stopped on NaN). P21's "at 1e6 the fit may stall": it fails. At 1e6 finding the probe,
+    not the data, sets the limit (for this A1-only refinement).
   - 2026-11-25, the fitted line at 1e6 (`_a1fitp`, kernels re-extracted after my scancel killed the first kernel jobs; images
     looked at): perfect 80 has no atom (streaks 5-15 A off the kernel centre; its known-probe run at 1e6 is a compact 4.13 A atom),
     flat to 30 none, perfect 30 none. P21's "at 1e6 the fit may stall": it does. At 1e6 the probe fit, not the data, loses the
