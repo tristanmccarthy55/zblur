@@ -263,6 +263,18 @@ really need our partial coherence ones to be using the search but also having 8 
   modes (perfect 80 at 5 A: occupancies 0.43 / 0.30 / 0.16 / 0.07, from make_mixed_probe on a perfect disc). Within 0.3 A at 30
   and 40 mrad, where the state is near coherent (first mode 0.96 and 0.89 at 5 A).
 - Caveat: P22 ran 250 + 250 iterations at 20 slices; these run 140 + 140 everywhere.
+- Split, 2026-11-25, before any run (the user: "separate this from the finite source size part"). Two legs, same recipe:
+  - Focal spread alone (5, 7.29 A; src 0) with 8 modes.
+  - Source alone (0.1, 0.2 A FWHM; fs 0) with 16 modes.
+  - Share of the state held (make_mixed_probe on a perfect disc, 712 px): focal spread, 8 modes >= 99.8 % at every aperture.
+    Source 0.1 A, 8 modes >= 99.8 %. Source 0.2 A, 8 modes hold 97.6 / 90.6 % at 60 / 80 mrad, 16 modes 99.9 / 99.3 %. Source
+    0.4 A is left out: 16 modes hold 74 % at 80 mrad, and the sim's 16 configurations under-sample it (simulator audit).
+  - Each leg: the probe known (one mode, the reference), `_afbc` and the modes run.
+  - Expectation, source leg: modes bring the atom back to within 0.5 A of its coherent value at 0.1 and 0.2 A (mixed-state
+    ptychography describes the source's incoherence exactly, given enough modes); one mode leaves it wider across and along the
+    beam at 0.2 A, most at 80 mrad.
+  - Unknown: whether 16 modes on 40 slices fit an L40's 48 GB. The second smoke test (`_smk16`, flat 40 at 0.2 A, 16 modes,
+    40 slices) answers it.
 
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
