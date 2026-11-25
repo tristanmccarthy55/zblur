@@ -442,6 +442,10 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
     holds under noise for the perfect probe and not for flat to 30.
   - Figure 2 then reads: perfect 80 keeps its atom to 1e6; flat to 30 opened to 80 to 1e7, with the probe known; perfect 30 cannot
     be reconstructed on 1 A slices at any of these doses.
+  - 2026-11-25, the fitted line at 1e6 (`_a1fitp`, kernels re-extracted after my scancel killed the first kernel jobs; images
+    looked at): perfect 80 has no atom (streaks 5-15 A off the kernel centre; its known-probe run at 1e6 is a compact 4.13 A atom),
+    flat to 30 none, perfect 30 none. P21's "at 1e6 the fit may stall": it does. At 1e6 the probe fit, not the data, loses the
+    perfect 80 atom.
 - **2026-11-24, P22** (coherence, 8 modes, 250 + 250 it): every 40-slice point runs ~870 s an iteration in the full engine (~400 s at
   20 slices), ~72 h in all against the 48 h limit. Perfect 30 / 40 and flat to 40 at both spreads are cancelled, to be rerun at
   140 + 140 it (`_m8i140`, ~41 h); the 20-slice points and flat to 30 (19 h, faster for a reason not looked into) finish as run.
