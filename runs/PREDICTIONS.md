@@ -275,6 +275,9 @@ really need our partial coherence ones to be using the search but also having 8 
     beam at 0.2 A, most at 80 mrad.
   - Unknown: whether 16 modes on 40 slices fit an L40's 48 GB. The second smoke test (`_smk16`, flat 40 at 0.2 A, 16 modes,
     40 slices) answers it.
+- Scope, 2026-11-25 (the user: "four for now ... getting more is trivial once we know things behave"): perfect 30,
+  flat 30 opened to 80, flat 40 opened to 80, perfect 80, in both legs. The known-probe references at 5 and 7.29 A are new
+  except perfect 80 at 5 A. The 16-mode runs go in 2 or 4 segments, chosen from `_smk16`'s time per iteration.
 
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
