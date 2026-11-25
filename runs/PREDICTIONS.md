@@ -233,6 +233,18 @@ START_ERR=C1=<d>, PROBE_START = PROBE_START2 = 1000 > the iterations, so the pro
 Ghost = more than 12 % of the positive phase beyond 3 slices of the peak (known-probe flat 30: 9 %, two-pass: 19 %). If flat 30 at
 +2.5 A held shows no ghost, neither holds: the ghost needs the fit's history, and P19's "probe, not object history" is revisited.
 
+## P27. Figure 2's fitted line with Figure 1's recipe (added 2026-11-25, before these runs)
+Why: P21's fitted dose runs (`_a1fitp`) fit A1 alone because they were queued on 22 Nov before P20 came back, on P20's
+prediction that leaving C1 alone would avoid flat 30's defocus drift. P20 failed (2 of 7), so Figure 1 kept the two-pass C1 + A1
+recipe and the two figures now differ in recipe for no reason the data support. This puts the dose line on Figure 1's recipe:
+first pass `_afbp` (C1 + A1 fit, gain 100, cap 0.01 A, both engines, from the full search errors), then `_afb2p` (that fitted
+probe held, a fresh object), Poisson, 712 px, perfect 80 and flat 30, 1e8 / 1e7 / 1e6. Perfect 30 waits on P25 (2 A slices).
+- Perfect 80, second pass: within 0.5 A of its known-probe Poisson values (2.60 / 2.95 / 4.13 A at 1e8 / 1e7 / 1e6).
+- Flat 30, second pass: within 1 A of its known-probe Poisson values (5.64 / 6.31 A) at 1e8 and 1e7; no atom at 1e6 (none with the
+  probe known). The first pass may break at 1e7 as A1-only did (`_a1fitp`); if it does, the second pass holds a wrong probe and
+  breaks too.
+- Read beside `_a1fitp`: whether fitting C1 as well changes anything under noise.
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 
