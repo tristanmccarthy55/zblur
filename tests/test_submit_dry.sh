@@ -222,7 +222,33 @@ pc1=$(awk -v a="$(echo "$f30" | cut -f5)" 'BEGIN{printf "%.4f", a + 1.3}')
 o="$(dry env PROBE_UPDATE=1 START_ERR='C1=0:C3=0:A1=0' START_SCALE='C50=0:C23=0' RTAG=_pu_noho GROUPING='32;16' bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
 echo "$o" | grep 'job-name=zb_rec_Pb_a080_flat40_.*_pu_noho ' | grep -q 'PROBE_SCALE=C50=0:C23=0' && ok "START_SCALE reaches the start probe" || bad "START_SCALE"
 o="$(dry env PROBE_UPDATE=1 PROBE_MODES=8 bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
-[ "$rc" != 0 ] && ! echo "$o" | grep -q '^DRY\[' && ok "PROBE_UPDATE=1 with modes refused" || bad "update + modes"
+[ "$rc" != 0 ] && ! echo "$o" | grep -q '^DRY\[' && echo "$o" | grep -q 'nothing to mix' && ok "PROBE_UPDATE=1 with modes on coherent rows refused" || bad "update + modes, coherent"
+# -- PROBE_UPDATE=1 + PROBE_MODES (2026-11-25): the searched start, then the mixed state built on it; _pum<M>; and SEGMENTS
+TB=$(mktemp); awk -F'\t' -v OFS='\t' '/^#/{print; next} ($3=="ideal" && $2==80) || $3=="flat30" {$11 = 5; print}' runs/gflat.tsv >"$TB"
+o="$(dry env PROBE_UPDATE=1 PROBE_MODES=8 PROBE_START=5 PROBE_START2=1 GROUPING='32;16' bash runs/zb_submit.sh "$TB")" && rc=0 || rc=$?
+rr=$(echo "$o" | grep 'job-name=zb_rec_')
+[ "$rc" = 0 ] && [ "$(echo "$rr" | grep -c '_fs5_NL[0-9]*_pum8 ')" = 2 ] && [ "$(echo "$rr" | grep 'PROBE_MIXED=8' | grep 'PROBE_C1=' | grep -c 'PROBE_SET=C12=3.6')" = 2 ] \
+  && [ "$(echo "$rr" | awk '{print gsub(/PROBE_START=/, "")}' | sort -u)" = 1 ] \
+  && ok "PROBE_UPDATE=1 + 8 modes: the searched start, its mixed state, one PROBE_START, names _pum8" || { bad "update + modes wiring"; echo "$o" | grep -m3 -E 'NOT SUB|zb_rec' | cut -c1-300; }
+o="$(dry env PROBE_UPDATE=1 PROBE_MODES=8 PROBE_START=5 PROBE_START2=1 NITER=140 SEGMENTS=2 GROUPING='32;16' bash runs/zb_submit.sh "$TB")" && rc=0 || rc=$?
+P=Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_pum8
+r1=$(echo "$o" | grep "job-name=zb_rec_${P}_c1 "); sg=$(echo "$o" | grep "job-name=zb_seg_${P}_c2 "); r2=$(echo "$o" | grep "job-name=zb_rec_${P} "); ps=$(echo "$o" | grep "job-name=zb_psf_${P} ")
+id(){ echo "$1" | sed -E 's/^DRY\[([0-9]+)\].*/dry\1/'; }
+[ "$rc" = 0 ] && [ -n "$r1" ] && [ -n "$sg" ] && [ -n "$r2" ] \
+  && [[ "$r1" == *"NITER=70,SAVE_EVERY=70,"* && "$r1" == *"NITER_PRE=140"* && "$r1" == *"PROBE_MIXED=8"* && "$r1" == *"SIM_BASE=/zbroot/recon_${P}_c1/"* ]] \
+  && [[ "$sg" == *"afterok:$(id "$r1") "* && "$sg" == *"probe_export.py' --recon '/zbroot/recon_${P}_c1' --out '/zbroot/recon_${P}/01/probe_initial.mat' --all-modes"* ]] \
+  && [[ "$r2" == *"afterok:$(id "$sg") "* && "$r2" == *"RESTART_DIR=/zbroot/recon_${P}_c1,"* && "$r2" == *"NITER=70,"* && "$r2" != *"PROBE_MIXED"* && "$r2" != *"PROBE_C1"* && "$r2" != *"NITER_PRE"* ]] \
+  && [[ "$ps" == *"afterok:$(id "$r2") "* ]] && [ "$(echo "$o" | grep -c 'job-name=zb_rec_')" = 4 ] \
+  && ok "SEGMENTS=2: segment 1 (presolve + 70) -> every mode handed over -> segment 2 (70, from segment 1's object) -> kernel" \
+  || { bad "SEGMENTS wiring"; echo "$o" | grep -m4 -E "NOT SUB|${P}" | cut -c1-300; }
+o="$(dry env PROBE_UPDATE=1 PROBE_MODES=8 NITER=140 SEGMENTS=3 bash runs/zb_submit.sh "$TB")" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'splits the full engine' && ok "SEGMENTS: NITER not a multiple refused" || bad "SEGMENTS split"
+o="$(dry env SEGMENTS=2 bash runs/zb_submit.sh "$TB")" && rc=0 || rc=$?
+[ "$rc" != 0 ] && echo "$o" | grep -q 'released-probe runs' && ok "SEGMENTS on a fixed probe refused" || bad "SEGMENTS fixed"
+o="$(dry env PROBE_MODES=8 NITER=140 SEGMENTS=2 GROUPING='32;16' bash runs/zb_submit.sh "$TB")" && rc=0 || rc=$?
+[ "$rc" = 0 ] && echo "$o" | grep "job-name=zb_rec_Pb_a080_ideal_df0_single_st0p1_w8_s0p25_bz20p000_fs5_NL20_m8_c1 " | grep -q 'PROBE_MIXED=8' \
+  && ! echo "$o" | grep 'job-name=zb_rec_' | grep -q 'PROBE_C1' && ok "SEGMENTS with modes from the true state: _m8, no search" || bad "SEGMENTS + true-state modes"
+rm -f "$TB"
 o="$(dry env PROBE_UPDATE=1 START_ERR='C5=3' bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?
 [ "$rc" != 0 ] && echo "$o" | grep -q 'START_ERR takes' && ok "START_ERR: an unknown term refused" || bad "START_ERR"
 o="$(dry env START_SCALE='C50=0' bash runs/zb_submit.sh runs/gflat.tsv)" && rc=0 || rc=$?

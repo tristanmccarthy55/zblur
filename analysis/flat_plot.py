@@ -61,7 +61,10 @@ TREATMENT = {"": "true probe, fixed", "_pu": "released from the search's misses"
              "_hq_s3_05": "C1+A1 fit, S3 off by 1/2 wave", "_hq_a2_05f": "C1+A1+A2 fit, A2 off by 1/2 wave",
              "_dfh25": "true probe held, defocus off by 2.5 A", "_dfh20": "true probe held, defocus off by 2.0 A",
              "_afbp": "C1+A1 fit, both engines, misses, Poisson likelihood",
-             "_afb2p": "second pass: the C1+A1-fitted probe held, Poisson likelihood"}
+             "_afb2p": "second pass: the C1+A1-fitted probe held, Poisson likelihood",
+             "_afbc": "C1+A1 fit from the search, 1 mode, 140 + 140 it",
+             "_afbm8": "C1+A1 fit from the search, 8 modes mixed on the searched start, 140 + 140 it",
+             "_smk8": "smoke: search + 8 modes + fit, 10 + 10 it in two segments"}
 EARLY = ("g0d", "g1")
 
 

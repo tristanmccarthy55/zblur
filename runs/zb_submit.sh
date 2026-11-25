@@ -125,13 +125,16 @@ GRIDSP=3; BIN=2; CELL_Z=3.905; THIN=5; PHONON_N=16; LAM=0.0196877
 NITER="${NITER:-200}"; BETA_LSQ="${BETA_LSQ:-0.05}"; GROUPING="${GROUPING:-32}"; RTAG="${RTAG:-}"
 PROBE_MODES="${PROBE_MODES:-1}"; PROBE_START="${PROBE_START:-40}"; PROBE_START2="${PROBE_START2:-20}"
 case "$PROBE_MODES" in ''|*[!0-9]*|0) echo "PROBE_MODES must be a whole number >= 1, not '${PROBE_MODES}'" >&2; exit 1;; esac
-[ "$PROBE_MODES" -gt 1 ] && [ -z "$RTAG" ] && RTAG="_m${PROBE_MODES}"
+[ "$PROBE_MODES" -gt 1 ] && [ -z "$RTAG" ] && [ "${PROBE_UPDATE:-0}" != 1 ] && RTAG="_m${PROBE_MODES}"
 PROBE_UPDATE="${PROBE_UPDATE:-0}"; START_ERR="${START_ERR-C1=1.3:C3=49:A1=3.6}"; START_SCALE="${START_SCALE:-}"
 case "$PROBE_UPDATE" in 0|1) ;; *) echo "PROBE_UPDATE must be 0 or 1, not '${PROBE_UPDATE}'" >&2; exit 1;; esac
 ERR_C1=0; ERR_C3=0; ERR_A1=0
 if [ "$PROBE_UPDATE" = 1 ]; then
-    [ "$PROBE_MODES" = 1 ] || { echo "PROBE_UPDATE=1 is the one-mode route; PROBE_MODES above 1 releases the probe already" >&2; exit 1; }
-    [ -z "$RTAG" ] && RTAG="_pu"
+    # with PROBE_MODES > 1 (2026-11-25, the user: "partial coherence ones using the search but also 8 probe modes"): the
+    # job writes the searched coherent start, then the mixed state of the row's focal spread / source built on it
+    # (run_recon_synthetic_ML.slurm PROBE_C1 + PROBE_MIXED, sim/make_mixed_probe.py --base); a fit (PROBE_ABER_FIT,
+    # aberfit 186e322 on) moves every mode alike. Named _pum<M> by default, never _m<M> (the modes from the true state).
+    [ -z "$RTAG" ] && { if [ "$PROBE_MODES" -gt 1 ]; then RTAG="_pum${PROBE_MODES}"; else RTAG="_pu"; fi; }
     for kv in $(echo "$START_ERR" | tr ':,' '  '); do
         v="${kv#*=}"
         awk -v x="$v" 'BEGIN{exit !(x ~ /^-?[0-9]+(\.[0-9]+)?$/)}' || { echo "START_ERR: '${kv}' is not a number in A" >&2; exit 1; }
@@ -158,6 +161,21 @@ if [ "$CAMERA_BIN" != 1 ]; then
     [ "$PROBE_UPDATE" = 1 ] || [ "$PROBE_MODES" -gt 1 ] && { echo "CAMERA_BIN: fixed-probe runs only for now (a released start probe would be built on the camera's coarse grid, not the fine grid the upsampled recon models)" >&2; exit 1; }
     [ "$CLEAN_RAW" = 1 ] && { echo "CLEAN_RAW takes the clean sims; run it without CAMERA_BIN" >&2; exit 1; }
     [ -z "$PROBE_FROM_TAG" ] || { echo "CAMERA_BIN with PROBE_FROM_TAG: not built (the fitted probe is on the fine grid)" >&2; exit 1; }
+    [ "${SEGMENTS:-1}" = 1 ] || { echo "CAMERA_BIN with SEGMENTS: not built" >&2; exit 1; }
+fi
+# SEGMENTS=<S> (2026-11-25, checkpoints; the user: "it'll take a while ... and to checkpoint it"): one released-probe
+# reconstruction as S chained jobs, so no job nears the 48 h limit and a failed segment costs only itself. Segment 1 runs
+# the presolve (NITER_PRE = NITER) and NITER / S full-engine iterations into recon_<point>_c1; each later one continues
+# (the driver's RESTART_DIR: the object from the previous segment's *_recons.h5) for NITER / S more, its probe written
+# from the previous segment's probe, every mode (analysis/probe_export.py --all-modes, a small CPU job between them);
+# the last writes the run's own recon dir, so the kernel and its name are as for one job. A submission resumes after the
+# last whole segment it finds; a segment left unfinished needs REDO=1, as a recon does.
+SEGMENTS="${SEGMENTS:-1}"
+case "$SEGMENTS" in ''|*[!0-9]*|0) echo "SEGMENTS must be a whole number >= 1, not '${SEGMENTS}'" >&2; exit 1;; esac
+if [ "$SEGMENTS" -gt 1 ]; then
+    [ $((NITER % SEGMENTS)) = 0 ] || { echo "SEGMENTS=${SEGMENTS} splits the full engine's NITER=${NITER} evenly: make NITER a multiple of it" >&2; exit 1; }
+    [ "$PROBE_MODES" -gt 1 ] || [ "$PROBE_UPDATE" = 1 ] || { echo "SEGMENTS is for released-probe runs (PROBE_MODES > 1 or PROBE_UPDATE=1)" >&2; exit 1; }
+    [ -z "$PROBE_FROM_TAG" ] || { echo "SEGMENTS with PROBE_FROM_TAG: not built" >&2; exit 1; }
 fi
 # Phonon points need the frozen-phonon sigma fix (ptychoshelves-clean a8b9264, 2026-10-30): before it, abTEM 1.0.9 moved
 # every atom sqrt(3) too far. Their sims are named _T<T>v2 so the pre-fix _T<T> folders are never reused, and they are
@@ -351,6 +369,23 @@ zb_rec_${dname}_NL${nl}${RTAG}
             *) refuse "${rdir} holds an earlier attempt that is not whole: $("$GUARD_PY" "$CHECK" recon "$rdir" 2>&1 | head -1). REDO=1 clears it and runs again on the same sim";;
         esac
         [ "$st" = whole ] || NEED=$(awk -v n="$NEED" 'BEGIN{print n + 3}')     # a recon dir: 2-4 GB [records], kernels ~1 MB
+        if [ "$PROBE_UPDATE" = 1 ] && [ "$PROBE_MODES" -gt 1 ] && [ "$fs" = "0" ] && [ "$src" = "0" ]; then
+            refuse "${name}: modes on the searched start need a partially coherent row (its fs and src are 0: nothing to mix)"
+        fi
+        if [ "$SEGMENTS" -gt 1 ] && [ "$st" != whole ]; then
+            for k in $(seq 1 $((SEGMENTS - 1))); do
+                case "
+${QUEUED}
+" in *"
+zb_rec_${dname}_NL${nl}${RTAG}_c${k}
+"*|*"
+zb_seg_${dname}_NL${nl}${RTAG}_c$((k + 1))
+"*) refuse "segment ${k} of ${rdir}, or its hand-over to the next, is still in the queue";; esac
+                sk=$(recon_state "${rdir}_c${k}")
+                [ "$sk" = leftover ] && [ "$REDO" != 1 ] && refuse "${rdir}_c${k} holds a segment that is not whole: $("$GUARD_PY" "$CHECK" recon "${rdir}_c${k}" 2>&1 | head -1). REDO=1 clears it and the chain runs again from there"
+                [ "$sk" = whole ] || NEED=$(awk -v n="$NEED" 'BEGIN{print n + 3}')
+            done
+        fi
     done
 done <"$PTS"
 if [ -n "$CUT" ] && [ "$ALLOW_CUT" != "1" ]; then
@@ -511,6 +546,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
             if [ "$fs" != "0" ] || [ "$src" != "0" ]; then pstart=mixed; else pstart=seeded; fi
         fi
         [ "$PROBE_UPDATE" = 1 ] && pstart="$pstart_pu"
+        [ "$PROBE_UPDATE" = 1 ] && [ "$PROBE_MODES" -gt 1 ] && pstart="${pstart_pu}, the ${PROBE_MODES}-mode mixed state built on it"
         psrc="${ZB_ROOT}/recon_${dname}_NL${nl}${PROBE_FROM_TAG}"
         [ -n "$PROBE_FROM_TAG" ] && pstart="the fitted probe of $(basename "$psrc"), held"
         if [ "$DRY_RUN" != "1" ] && [ "$state" != whole ]; then
@@ -535,13 +571,14 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
                 fi
             fi
         fi
-        rexp="ALL,NLAYERS=${nl},SIM_BASE=${rdir}/,REGLAYER=0,PROBE_MODES=${PROBE_MODES},NITER=${NITER},SAVE_EVERY=${NITER},GROUPING=${GROUPING},BETA_LSQ=${BETA_LSQ}"
-        if [ "$PROBE_MODES" -gt 1 ]; then
-            rexp="${rexp},PROBE_START=${PROBE_START},PROBE_START2=${PROBE_START2},PROBE_SUPPORT_FFT=1"
-            [ "$pstart" = mixed ] && rexp="${rexp},PROBE_MIXED=${PROBE_MODES}"
-        fi
-        [ "$PROBE_UPDATE" = 1 ] && rexp="${rexp},PROBE_START=${PROBE_START},PROBE_START2=${PROBE_START2},PROBE_SUPPORT_FFT=1,${pu}"
-        [ "$CAMERA_BIN" != 1 ] && rexp="${rexp},UPSAMPLING=${UPS}"
+        rx(){ echo "ALL,NLAYERS=${nl},SIM_BASE=$1/,REGLAYER=0,PROBE_MODES=${PROBE_MODES},NITER=$2,SAVE_EVERY=$2,GROUPING=${GROUPING},BETA_LSQ=${BETA_LSQ}"; }
+        rprobe=""      # the start probe's settings (segment 1 of a chain, or the one job)
+        if [ "$PROBE_MODES" -gt 1 ] || [ "$PROBE_UPDATE" = 1 ]; then rprobe=",PROBE_START=${PROBE_START},PROBE_START2=${PROBE_START2},PROBE_SUPPORT_FFT=1"; fi
+        # the mixed state: of the true probe (modes alone), or of the searched start the job writes just before it (with PROBE_UPDATE)
+        if [ "$PROBE_MODES" -gt 1 ] && { [ "$pstart" = mixed ] || [ "$PROBE_UPDATE" = 1 ]; }; then rprobe="${rprobe},PROBE_MIXED=${PROBE_MODES}"; fi
+        [ "$PROBE_UPDATE" = 1 ] && rprobe="${rprobe},${pu}"
+        [ "$CAMERA_BIN" != 1 ] && rprobe="${rprobe},UPSAMPLING=${UPS}"
+        rexp="$(rx "$rdir" "$NITER")${rprobe}"
         if [ "$nl" -le 20 ]; then rtime=10:00:00; elif [ "$nl" -le 40 ]; then rtime=24:00:00; else rtime=48:00:00; fi
         [ "$PROBE_MODES" -gt 1 ] && rtime=48:00:00         # modes multiply the work: the crystal's 8-mode legs ran ~2.4x
         rmem=96G
@@ -559,6 +596,49 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
         ejdep=()
         if [ "$state" = whole ]; then
             rj=""; echo "  ${pname}: recon whole (checked), kernel only" >&2
+        elif [ "$SEGMENTS" -gt 1 ]; then
+            # the chain (SEGMENTS, above): resume after the last whole segment; a later one's leftovers go (REDO=1, preflight)
+            per=$((NITER / SEGMENTS)); k0=1
+            while [ "$k0" -lt "$SEGMENTS" ] && [ "$(recon_state "${rdir}_c${k0}")" = whole ]; do k0=$((k0 + 1)); done
+            [ "$k0" -gt 1 ] && echo "  ${pname}: segments 1-$((k0 - 1)) whole, the chain resumes at ${k0}" >&2
+            rj=""; segdep=(${dep[@]+"${dep[@]}"})
+            for k in $(seq "$k0" "$SEGMENTS"); do
+                if [ "$k" -lt "$SEGMENTS" ]; then dk="${rdir}_c${k}"; jn="zb_rec_${pname}_c${k}"; else dk="$rdir"; jn="zb_rec_${pname}"; fi
+                dprev="${rdir}_c$((k - 1))"
+                if [ "$DRY_RUN" != "1" ] && [ "$k" -lt "$SEGMENTS" ]; then
+                    if [ "$(recon_state "$dk")" = leftover ]; then
+                        echo "  ${pname}: clearing segment ${k}'s earlier attempt (slurm logs kept)" >&2
+                        rm -rf "${dk:?}/analysis"; find "${dk}/01" -maxdepth 1 -type d -name 'MLs_*' -exec rm -rf {} + 2>/dev/null || true
+                        find "${dk}/01" \( -name 'Niter*.mat' -o -name 'exit_wave*.mat' \) -type f -delete 2>/dev/null || true
+                    fi
+                    mkdir -p "${dk}/01"
+                    for f in data_dp.hdf5 data_position.hdf5; do ln -sf "${cdir}/01/${f}" "${dk}/01/${f}"; done; ln -sf "${sdir}/01/sim_meta.mat" "${dk}/01/sim_meta.mat"
+                    [ "$PROBE_UPDATE" = 1 ] && ln -sf "${sdir}/01/aberrations.json" "${dk}/01/aberrations.json"
+                    ln -sf "${sdir}/01/probe_initial_true.mat" "${dk}/01/probe_initial_true.mat"
+                    rm -f "${dk:?}/01/probe_initial.mat" "${dk:?}/01/probe_initial.json"      # written by the job (1) or the hand-over (2..)
+                fi
+                if [ "$DRY_RUN" != "1" ] && [ "$k" = "$SEGMENTS" ]; then     # the run's own dir: its probe comes from the hand-over, never a link
+                    ln -sf "${sdir}/01/probe_initial_true.mat" "${rdir}/01/probe_initial_true.mat"
+                    rm -f "${rdir:?}/01/probe_initial.mat" "${rdir:?}/01/probe_initial.json"
+                fi
+                if [ "$k" = 1 ]; then
+                    # segment 1: the start probe as for one job, the whole presolve, the first share of the full engine
+                    rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="$jn" --time="$rtime" --mem="$rmem" ${segdep[@]+"${segdep[@]}"} \
+                         --output="${dk}/slurm_%j.out" --error="${dk}/slurm_%j.err" \
+                         --export="$(rx "$dk" "$per"),NITER_PRE=${NITER}${rprobe}" "${PTYCHO_ROOT}/run_recon_synthetic_ML.slurm")
+                else
+                    # the hand-over: every mode of the previous segment's probe, as a file; then the full engine from its object
+                    hdep=(); [ -n "$rj" ] && hdep=(--dependency="afterok:${rj}")
+                    hj=$(submit --job-name="zb_seg_${pname}_c${k}" --time=00:20:00 --mem=8G --cpus-per-task=1 ${hdep[@]+"${hdep[@]}"} \
+                         --output="${ZB_ROOT}/logs/zb_seg_%j.out" --error="${ZB_ROOT}/logs/zb_seg_%j.err" \
+                         --wrap="'${PYBIN}' '${HERE}/../analysis/probe_export.py' --recon '${dprev}' --out '${dk}/01/probe_initial.mat' --all-modes")
+                    rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="$jn" --time="$rtime" --mem="$rmem" --dependency="afterok:${hj}" \
+                         --output="${dk}/slurm_%j.out" --error="${dk}/slurm_%j.err" \
+                         --export="$(rx "$dk" "$per"),RESTART_DIR=${dprev},PROBE_START=1,PROBE_START2=1,PROBE_SUPPORT_FFT=1" \
+                         "${PTYCHO_ROOT}/run_recon_synthetic_ML.slurm")
+                fi
+            done
+            ejdep=(--dependency="afterok:${rj}")
         else
             rj=$(submit --chdir="$PTYCHO_ROOT" --job-name="zb_rec_${dname}_NL${nl}${RTAG}" --time="$rtime" --mem="$rmem" \
                  ${dep[@]+"${dep[@]}"} --output="${rdir}/slurm_%j.out" --error="${rdir}/slurm_%j.err" \
@@ -570,6 +650,7 @@ while IFS=$'\t' read -r el alpha aber c1 geom step win det slice zvac fs src T n
              --output="${ZB_ROOT}/logs/zb_psf_%j.out" --error="${ZB_ROOT}/logs/zb_psf_%j.err" \
              --wrap="'${PYBIN}' '${CHECK}' recon '${rdir}' || exit 1; git -C '${PTYCHO_ROOT}' rev-parse --short HEAD > '${ZB_ROOT}/psf/psf_${pname}_pin.txt'; '${PYBIN}' '${PTYCHO_ROOT}/analysis/atomfind/extract_psf.py' '${rdir}' '${pname}' --zdrop ${zdrop} ${xargs} --out '${ZB_ROOT}/psf'")
         EXTRACT_JOBS+=("$ej"); PSF_NAMES+=("$pname")
+        [ "$SEGMENTS" -gt 1 ] && pstart="${pstart}; in ${SEGMENTS} segments"      # the label only, after every test of pstart
         [ "$DRY_RUN" = "1" ] || printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
             "$dname" "$nl" "$dz" "$zdrop" "$boxz" "$zvac" "$el" "$alpha" "$aber" "$c1" "$geom" "$step" "$win" "$det" "$dx" "$slice" \
             "$fs" "$src" "$T" "$BETA_LSQ" "$GROUPING" "$NITER" "${RTAG:--}" "$pname" "${sj:-reused}" "${rj:-reused}" "$ej" "$PIN" "$MEXSUM" \

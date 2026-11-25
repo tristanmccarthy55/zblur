@@ -245,6 +245,25 @@ probe held, a fresh object), Poisson, 712 px, perfect 80 and flat 30, 1e8 / 1e7 
   breaks too.
 - Read beside `_a1fitp`: whether fitting C1 as well changes anything under noise.
 
+## P28. Partial coherence as an experimentalist would reconstruct it (added 2026-11-25, before these runs)
+Why: P22's 8 modes start from the sim's own mixed state built on the TRUE probe, which no experimentalist has. The user: "we
+really need our partial coherence ones to be using the search but also having 8 probe modes ... and to checkpoint it".
+- Recipe (`_afbm8`): the search's misses as the start (C1 +1.3, C3 +49, A1 +3.6 A); the 8-mode mixed state of the row's focal
+  spread built on that start (make_mixed_probe --base); the C1 + A1 fit of Figure 1 (gain 100, cap 0.01 A, both engines), its step
+  applied to every mode (aberfit 186e322); 140 + 140 iterations in two segments (SEGMENTS=2: presolve + 70, then 70 more from the
+  first segment's object and all 8 modes).
+- Beside it, `_afbc`: one mode, the same start, fit and iterations, in one job.
+- Points: all seven, at focal spread 5 and 7.29 A, no noise.
+- First a smoke test, `_smk8` (perfect 80 at 5 A, 10 + 10 iterations in two segments). Its logs must show: 8 modes; the mixed
+  state built on the searched start; the fit moving A1; `RESTART: continuing from ..._c1`; the hand-over writing 8 modes; a finite
+  error in both segments.
+- Expectation: `_afbm8` within 0.5 A (continuous W80) of P22's true-state modes at the same point (`_m8`; `_m8i140` at 40 slices)
+  wherever those form an atom: the fit takes A1 out of all modes as it does out of one.
+- `_afbm8` no worse than `_afbc` anywhere. Better at the 80 mrad apertures, most at 7.29 A, where the state spreads over several
+  modes (perfect 80 at 5 A: occupancies 0.43 / 0.30 / 0.16 / 0.07, from make_mixed_probe on a perfect disc). Within 0.3 A at 30
+  and 40 mrad, where the state is near coherent (first mode 0.96 and 0.89 at 5 A).
+- Caveat: P22 ran 250 + 250 iterations at 20 slices; these run 140 + 140 everywhere.
+
 ## Reading note, added 2026-11-04 before any run of `g1w`
 P5 stands as written, but its numbers cannot decide it alone: the cut lone atom at NL 20 itself shows only -0.22 / +0.22 (`analysis/blobs.py`), under P5's +-0.3-0.5. So read P5 on `runs/g1w.tsv`'s two rows side by side (35 and 105 A windows, otherwise the same, `dip` and `side` from `analysis/blobs.py`, at NL 20; NL 28 is 0.71 A, at the slice floor). Row 1 rings and row 2 does not: the window did it. Both ring: P5 fails. Neither rings: the recording or the step did it. This does not separate the 70 A box from the 35 A window.
 

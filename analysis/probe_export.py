@@ -10,6 +10,10 @@ probe_initial_true.mat untransposed (ptychoshelves-clean/analysis/kick_probe.py,
 matter. Prints the shift- and phase-invariant overlap with the true probe. Used by runs/zb_submit.sh PROBE_FROM_TAG (2026-11-21).
 
     python analysis/probe_export.py --recon <recon dir> --out <dir>/01/probe_initial.mat
+
+--all-modes (2026-11-25, the checkpointed mode runs, zb_submit.sh SEGMENTS): every mode, written N x N x 1 x M as
+sim/make_mixed_probe.py writes them (the live loader keeps a 4-D probe as modes), for the next segment of a run that
+continues from this one (RESTART_DIR); the overlap printed is the dominant mode's.
 """
 from __future__ import annotations
 
@@ -25,6 +29,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--recon", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--all-modes", action="store_true", help="write every mode (N x N x 1 x M), not the dominant one")
     a = ap.parse_args(argv)
     import h5py
     from scipy.io import loadmat, savemat
@@ -33,11 +38,15 @@ def main(argv=None):
         raise SystemExit(f"probe_export: no *_recons.h5 under {a.recon}/analysis")
     with h5py.File(h5[-1], "r") as f:
         P = np.asarray(f["reconstruction/probes"][...]).squeeze()
-    if P.ndim == 3:                                            # modes on whichever axis is shortest (kick_probe.modes_of)
-        P = np.moveaxis(P, -1, 0) if P.shape[-1] < P.shape[0] else P
-        P = P[int(np.argmax((np.abs(P) ** 2).sum(axis=(1, 2))))]
-    if not np.isfinite(P).all():
+    if P.ndim == 2:
+        M = P[None]
+    elif P.ndim == 3:                                          # modes on whichever axis is shortest (kick_probe.modes_of)
+        M = np.moveaxis(P, -1, 0) if P.shape[-1] < P.shape[0] else P
+    else:
+        raise SystemExit(f"probe_export: probe of shape {P.shape} in {h5[-1]}: expected N x N or modes x N x N")
+    if not np.isfinite(M).all():
         raise SystemExit(f"probe_export: the probe in {h5[-1]} is not finite")
+    P = M[int(np.argmax((np.abs(M) ** 2).sum(axis=(1, 2))))]   # the dominant mode
     T = np.asarray(loadmat(os.path.join(a.recon, "01", "probe_initial_true.mat"))["probe"]).squeeze()
     if P.shape != T.shape:
         raise SystemExit(f"probe_export: probe {P.shape} is not on the true probe's grid {T.shape}")
@@ -45,8 +54,11 @@ def main(argv=None):
     ov = float(np.abs(x).max() / (np.linalg.norm(P) * np.linalg.norm(T)))
     if os.path.lexists(a.out):
         os.remove(a.out)                                       # never write through a link (it could be a sim's own probe)
-    savemat(a.out, {"probe": P.astype(np.complex64), "p": {"binning": False, "detector": {"binning": False}}})
-    print(f"probe_export: {os.path.relpath(h5[-1], a.recon)} -> {a.out} (overlap with the true probe {ov:.3f})")
+    W = np.moveaxis(M, 0, -1)[:, :, None, :] if a.all_modes else P          # N x N x 1 x M, as make_mixed_probe.py
+    savemat(a.out, {"probe": W.astype(np.complex64), "p": {"binning": False, "detector": {"binning": False}}})
+    occ = (np.abs(M) ** 2).sum(axis=(1, 2)); occ = occ / occ.sum()
+    what = f"{M.shape[0]} modes (shares {' '.join(f'{x:.3f}' for x in np.sort(occ)[::-1])})" if a.all_modes else "the dominant mode"
+    print(f"probe_export: {os.path.relpath(h5[-1], a.recon)} -> {a.out}, {what} (dominant mode's overlap with the true probe {ov:.3f})")
     return 0
 
 
