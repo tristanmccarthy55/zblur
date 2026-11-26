@@ -26,8 +26,9 @@ PAPER = os.path.join(os.path.dirname(HERE), "ptychoshelves-clean", "report", "ab
 SLIDES = [
     ("Fig. 1  The atom against aperture", "npj_atoms_aperture", None, [
         "a: perfect probe, aperture 30, 40, 60 and 80 mrad",
-        "b: 80 mrad aperture over a corrector flat only to 30, 40 and 60 mrad (dashed circle); the phase across the aperture above, "
-        "the atom below; each column has the same x as panel a above it",
+        "b: 80 mrad aperture over a corrector flat only to 30, 40, 60 and 80 mrad (dashed circle); the phase across the aperture above, "
+        "the atom below; each column has the same x as panel a above it. Flat to 80 is the perfect 80 mrad probe: its phase is flat and "
+        "its atom is the last one in a",
         "x–z through each atom's peak, scaled to its own peak; probe refined in two passes (C1 and A1)",
         "W80: the depth holding 80 % of the atom's phase. Peak: the atom's highest phase",
         "The perfect 30 and 40 mrad peaks are low (0.51, 0.63 rad) because the atom's total phase, 0.97 and 1.07 rad·Å, is spread over "
@@ -188,7 +189,7 @@ def plain_box(slide, x, y, w, h, head, text):
 
 def main(figs=None, out=None):
     figs = figs or os.path.join(PAPER, "figs", "npj")
-    out = out or os.path.join(PAPER, "figure_list_2026-11-26.pptx")
+    out = out or os.path.join(PAPER, "FigPPT.pptx")
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(W), Inches(H)
     s = prs.slides.add_slide(prs.slide_layouts[0])
