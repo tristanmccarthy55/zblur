@@ -239,7 +239,7 @@ def fig_dose_atoms(out):
     fig = plt.figure(figsize=(120 * MM, 118 * MM))
     gs = GridSpec(4, 4, figure=fig, left=0.17, right=0.89, top=0.94, bottom=0.08, hspace=0.08, wspace=0.07)
     for i, (key, t0, tn, lab, col, ls) in enumerate(DOSE_ROWS):
-        for j, dose in enumerate((None, "1e8", "1e7", "1e6")):
+        for j, dose in enumerate(("1e6", "1e7", "1e8", None)):
             ax = fig.add_subplot(gs[i, j])
             im = atom(ax, d.kname(key, t0) if dose is None else d.kname(key, tn, dose), left=(j == 0), bottom=(i == 3),
                       fail=DOSE_FAIL.get((key, tn, dose)))
