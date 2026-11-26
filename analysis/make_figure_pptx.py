@@ -62,8 +62,8 @@ SLIDES = [
         "90 and 100 mrad not run: they need windows of 80 Å and over 105 Å"]),
     ("Fig. 7  The crystal", None,
      "PTO/STO superlattice: found atoms drawn over the truth (x–z through a Pb column and a Ti–O column) for flat to 30 used at 30, opened "
-     "to 50 and 80, and the perfect 80 mrad probe. Below: Pb and Ti found in the right place, against guessing.", [
-        "Score: right element within 0.5 Å in depth, against guessing (Supp. Note 7)",
+     "to 50 and 80, and the perfect 80 mrad probe. Below: the share of Pb and Ti found in the right place.", [
+        "Score: the right element within 0.6 Å in plane and 0.5 Å in depth (Supp. Note 7)",
         "With the coherence wall and a monochromated beam",
         "Runs: to set up"]),
     ("Fig. 8  Vibration and cooling", None,
