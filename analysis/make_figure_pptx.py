@@ -38,49 +38,44 @@ SLIDES = [
         "x = 80 is the same probe on both lines",
         "Flat to 40 and 60 opened to 80: 2.57 and 2.57 Å refined, within 6 % of the probe known; perfect 80: 2.43 Å",
         "Flat to 30 opened to 80: 5.47 Å refined against 3.56 Å with the probe known (54 % longer)"]),
-    ("Fig. 3  The search's A1 error: the atoms", "npj_a1_atoms", None, [
-        "a: start probe with the search's C1 and C3 errors and the true A1; b: A1 also 3.6 Å off; probe not refined",
-        "Waves: that A1 error at each probe's own aperture edge",
-        "Every probe where it reaches 1/3 wave or more breaks: perfect 60 (0.33 waves), perfect 80 and the three flat probes (0.59 waves)",
-        "Perfect 30 and 40 (0.08 and 0.15 waves) keep one atom; W80 9.00 to 7.19 Å and 7.08 to 5.38 Å, peak 0.48 to 0.34 and 0.61 to 0.69 rad"]),
-    ("Fig. 4  Depth extent against dose", "npj_dose_line", None, [
+    ("Fig. 3  Depth extent against dose", "npj_dose_line", None, [
         "Poisson likelihood on the full patterns (712 pixels; 914 for flat to 30)",
         "Solid: probe known; dashed: A1 refined, C1 held at the search's value; ×: no atom or broken",
         "Perfect 80 keeps its atom to 10⁶ e Å⁻² with the probe known (4.13 Å); the refinement fails there",
-        "Flat to 30 at 80 is lost at 10⁶; perfect 30 diverges at all three doses on 1 Å slices (Supp. Fig. 9)",
+        "Flat to 30 at 80 is lost at 10⁶; perfect 30 diverges at all three doses on 1 Å slices (Supp. Fig. 10)",
         "To do: the refined line with the two-pass C1 + A1 recipe"]),
-    ("Fig. 5  The atoms at each dose", "npj_dose_atoms", None, [
-        "The atoms behind Fig. 4: x–z through the peak, each scaled to its own peak",
+    ("Fig. 4  The atoms at each dose", "npj_dose_atoms", None, [
+        "The atoms behind Fig. 3: x–z through the peak, each scaled to its own peak",
         "Rows: perfect 80 and flat to 30 at 80, each with the probe known and with A1 refined",
         "No atom: noise or streaks along the column. Broken: an X-shaped artefact in place of the atom"]),
-    ("Fig. 6  Focal spread", "npj_focal_spread", None, [
+    ("Fig. 5  Focal spread", "npj_focal_spread", None, [
         "W80 against x at an rms focal spread of 0, 2.5, 5 and 7.29 Å (0.10, 0.21 and 0.30 eV FWHM for Cc = 1.4 mm)",
         "One coherent probe mode, started from the search's C1 and C3 errors with the true A1",
         "From 5 Å, flat to 30 or 40 opened to 80 is longer than before opening (13.51 and 12.75 Å against 8.47 and 6.49 Å at 5 Å)",
         "At 7.29 Å the perfect 80 atom is longer than the perfect 60 one (7.59 against 6.25 Å)",
-        "To do: 8 probe modes (Supp. Fig. 11); source size on these probes"]),
-    ("Fig. 7  How far a flat-to-30 corrector can be opened", None,
+        "To do: 8 probe modes (Supp. Fig. 12); source size on these probes"]),
+    ("Fig. 6  How far a flat-to-30 corrector can be opened", None,
      "W80 against aperture, 40 to 80 mrad: the perfect probe at x beside the flat-to-30 corrector opened to x. No noise, and Poisson at "
      "10⁷ and 10⁸ e Å⁻². Inset: the share of the probe outside the solver's window.", [
         "Runs: gopen30 (P23) submitted; the simulations are waiting for slots",
         "Prediction: more than 1 Å from the perfect probe at 60–70 mrad under noise",
         "90 and 100 mrad not run: they need windows of 80 Å and over 105 Å"]),
-    ("Fig. 8  The crystal", None,
+    ("Fig. 7  The crystal", None,
      "PTO/STO superlattice: found atoms drawn over the truth (x–z through a Pb column and a Ti–O column) for flat to 30 used at 30, opened "
      "to 50 and 80, and the perfect 80 mrad probe. Below: Pb and Ti found in the right place, against guessing.", [
         "Score: right element within 0.5 Å in depth, against guessing (Supp. Note 7)",
         "With the coherence wall and a monochromated beam",
         "Runs: to set up"]),
-    ("Fig. 9  Vibration and cooling", None,
+    ("Fig. 8  Vibration and cooling", None,
      "The crystal at room temperature, liquid nitrogen and liquid helium, probe opened to 80 mrad: found atoms over the truth, and Pb and "
      "Ti found in the right place against temperature.", [
         "Frozen phonons, independent (Einstein) displacements",
         "Needs new runs after the √3 phonon fix (new simulation names)"]),
-    ("Fig. 10  Today's microscopes", None,
+    ("Fig. 9  Today's microscopes", None,
      "Instrument classes, by their numbers only (energy spread, chromatic aberration, source size), placed on the focal-spread and source "
      "results, with the aperture each class can use.", [
         "No brand names: numbers only",
-        "Needs Fig. 6 and Supp. Figs 4 and 5 finished: probe modes, source size on the flat probes"]),
+        "Needs Fig. 5 and Supp. Figs 5 and 6 finished: probe modes, source size on the flat probes"]),
     ("Supp. Fig. 1  Ronchigrams of the flat probes", None,
      "Ronchigrams of the probes flat to 30, 40 and 60 mrad opened to 80 mrad (amorphous carbon, abTEM), beside the phase across each "
      "aperture.", [
@@ -92,50 +87,55 @@ SLIDES = [
         "A1 error left: 2.22, 0.12 and 0.00 Å of 3.6 Å",
         "A draft exists (fig_probe.py), not yet in npj style",
         "Could be a sentence in the SI instead"]),
-    ("Supp. Fig. 3  The A1 ladder", "npj_a1_ladder", None, [
+    ("Supp. Fig. 3  The search's A1 error: the atoms", "npj_a1_atoms", None, [
+        "a: start probe with the search's C1 and C3 errors and the true A1; b: A1 also 3.6 Å off; probe not refined",
+        "Waves: that A1 error at each probe's own aperture edge",
+        "Every probe where it reaches 1/3 wave or more breaks: perfect 60 (0.33 waves), perfect 80 and the three flat probes (0.59 waves)",
+        "Perfect 30 and 40 (0.08 and 0.15 waves) keep one atom; W80 9.00 to 7.19 Å and 7.08 to 5.38 Å, peak 0.48 to 0.34 and 0.61 to 0.69 rad"]),
+    ("Supp. Fig. 4  The A1 ladder", "npj_a1_ladder", None, [
         "A1 error of 0, 0.25, 0.5, 1.0 and 3.6 Å in the start probe; the search's C1 and C3 errors kept; probe not refined",
         "a: W80; b: peak phase; perfect 80 mrad and flat to 30 opened to 80",
         "Dotted: the π/4 criterion for twofold astigmatism at the 80 mrad edge, λ/4α² = 0.77 Å",
         "W80 hides the damage to perfect 80 at 3.6 Å (3.05 Å); its peak falls from 1.80 to 0.66 rad"]),
-    ("Supp. Fig. 4  Source size", "npj_source", None, [
+    ("Supp. Fig. 5  Source size", "npj_source", None, [
         "Perfect 80 mrad, true probe held, no noise; source 0, 0.05, 0.1, 0.2 and 0.4 Å FWHM",
         "a: W80 2.51, 2.57, 3.15, 3.72 and 4.21 Å; b: peak 1.86, 1.76, 1.27, 0.38 and 0.23 rad",
-        "The atom stays single but spreads sideways and fades (Supp. Fig. 5)",
+        "The atom stays single but spreads sideways and fades (Supp. Fig. 6)",
         "16 random position shifts leave the beam more coherent than the stated source, so these are optimistic",
         "To do: source size on the flat probes"]),
-    ("Supp. Fig. 5  Source size: the atoms", "npj_source_atoms", None, [
+    ("Supp. Fig. 6  Source size: the atoms", "npj_source_atoms", None, [
         "Perfect 80 mrad, true probe held, no noise: source 0, 0.1, 0.2 and 0.4 Å FWHM",
         "x–z through the peak, each scaled to its own peak",
         "The atom spreads sideways and fades as the source grows"]),
-    ("Supp. Fig. 6  Flat to 30: the faint tail after refinement", "npj_ghost", None, [
+    ("Supp. Fig. 7  Flat to 30: the faint tail after refinement", "npj_ghost", None, [
         "a: depth profiles (core phase) with the probe known, refined in two passes (C1 and A1), and A1 refined alone",
         "b: the three atoms",
         "Two passes: the core matches the probe known, plus a faint tail 3–8 Å away; A1 alone: no far tail, peak 0.58 against 1.15 rad",
         "To do: true probe held with 2.0 and 2.5 Å of defocus added (P26), for the tail's cause"]),
-    ("Supp. Fig. 7  Camera pixels", "npj_camera", None, [
+    ("Supp. Fig. 8  Camera pixels", "npj_camera", None, [
         "No noise, true probe held; patterns summed 4 × 4 into a camera",
         "Perfect 80: 2.51 Å at 712 px, 2.27 Å at 178 px. Flat to 30: 3.56 Å at 914 px, 4.78 Å at 228 px",
         "The aberrated probe's fine pattern features need fine pixels (Nguyen et al. 2024)"]),
-    ("Supp. Fig. 8  W80 from the histogram, not a KDE", "npj_kde", None, [
+    ("Supp. Fig. 9  W80 from the histogram, not a KDE", "npj_kde", None, [
         "Change in W80 when the depth profile is smoothed with a Gaussian KDE of bandwidth 0.25, 0.5 and 1.0 Å; true-probe atoms",
         "At 0.5 Å: perfect 80 +18 %, perfect 30 +3 %",
         "A KDE adds its own width and squeezes the differences measured; the histogram matches what a slice is in the model"]),
-    ("Supp. Fig. 9  Perfect 30 mrad under noise", "npj_p30noise", None, [
+    ("Supp. Fig. 10  Perfect 30 mrad under noise", "npj_p30noise", None, [
         "1 Å slices, probe known, Poisson: the phase runs to ±π at 10⁸, 10⁷ and 10⁶ e Å⁻²",
         "2 Å slices, no noise: W80 11.25 Å and peak 0.90 rad, against 8.42 Å and 0.46 rad on 1 Å slices",
         "To do: 2 Å slices under noise (P25)"]),
-    ("Supp. Fig. 10  Higher-order aberrations the fit leaves", None,
+    ("Supp. Fig. 11  Higher-order aberrations the fit leaves", None,
      "Flat to 40 at 80 mrad, no noise, C1 and A1 fitted: the control, A2 off by 1/8 and 1/2 wave, A3 and S3 off by 1/2 wave, and A2 off by "
      "1/2 wave with A2 fitted. The atom and W80 for each.", [
         "Runs: P24, 3 of 6 pulled, not yet scored",
         "Tests whether the 1/8-wave rule holds beyond A1",
         "Full test later: tableau-sized errors in every term"]),
-    ("Supp. Fig. 11  Probe modes under partial coherence", None,
-     "W80 against x at 5 and 7.29 Å of focal spread with 8 probe modes, beside the single-mode result of Fig. 6, and the occupancies the "
+    ("Supp. Fig. 12  Probe modes under partial coherence", None,
+     "W80 against x at 5 and 7.29 Å of focal spread with 8 probe modes, beside the single-mode result of Fig. 5, and the occupancies the "
      "modes reached.", [
         "Runs: P22; the 20-slice points are done, the 40-slice points are rerunning at 140 + 140 iterations",
         "Methods must say the iteration counts differ"]),
-    ("Supp. Fig. 12  Finding atoms in the crystal", None,
+    ("Supp. Fig. 13  Finding atoms in the crystal", None,
      "The finder on one column: preprocessing, the column seed, matching pursuit placing single-atom responses, Gauss–Newton refinement, "
      "element assignment; then the found atoms with their 95 % depth intervals over the truth.", [
         "Goes with Supp. Note 7",
