@@ -212,6 +212,9 @@ noiseless run at NL20 as the reference.
   and if that fails too, slicing was not the cause.
 - These kernels have dz 2 A; flat_plot reads 1 A slices only, so they are read on their own and drawn as a separate, marked
   point in Figure 2 (perfect 30 at 2 A slices).
+  - Outcome so far (2026-11-26, the noise-free reference only; images looked at): perfect 30 on 2 A slices, no noise, W80 11.25 A
+    and peak 0.90 rad, against 8.42 A and 0.46 rad on 1 A slices. "Within 1 A of the 1 A value" fails: the 2 A atom is stronger
+    but 2.83 A longer. The noisy 2 A runs are not pulled yet.
 
 ## P26. Where flat to 30's ghost comes from (added 2026-11-24, before these runs)
 The two-pass flat-to-30 atom carries a faint ghost (~0.03 rad a slice, 3-8 A above and below; P19 outcome) while its fitted
