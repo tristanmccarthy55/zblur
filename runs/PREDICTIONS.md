@@ -462,6 +462,14 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
   probe lies within the 8 A scan (window_loss chi, at its focus), so its atom gets ~93 % of the nominal dose. Possibly the aberrated
   probe's dose efficiency (Nguyen et al. 2024 Fig. 4F: probe structure moves the dose needed by orders of magnitude); untested.
   Dose figure settings: 712 px, Poisson.
+- **Correction, 2026-11-27, to the P17 entry above:** "93 % of the flat-to-30 probe lies within the 8 A scan" is wrong and
+  could not be reproduced. window_loss (the window guard's own function, square, centred) gives 59 % at the probe's focal
+  plane, and 54-62 % from 20 A above to 20 A below it. Flat to 40 gives 86-98 %; perfect 80, perfect 30 and flat to 60
+  give 98-99 %. So the flat-to-30 atom gets about 60 % of the nominal dose.
+  - That is part of its dose cost, but not most of it: at 1e8 (about 6e7 delivered) it is still 5.64 A, against 2.95 A
+    for perfect 80 at 1e7.
+  - In a crystal the tails beyond the scan land on other atoms, not on vacuum, so the lone atom overstates an extended
+    probe's dose cost.
 - **2026-11-24, P20 fails** (`_a1fit`, A1 fitted alone, C1 / C3 left at the search's values; continuous W80, `_pu_noa1` in brackets):
   perfect 30 / 40 / 60 / 80 9.89 / 7.66 / 3.67 / 2.76 (9.00 / 7.08 / 3.51 / 2.55), flat to 30 / 40 / 60 4.45 / 2.90 / 2.75 (3.56 / 2.49 /
   2.36). Within 0.3 A at 60 and 80 only (2 of 7). Flat to 30: the far ghosts are gone, but the core is longer upstream and half as
