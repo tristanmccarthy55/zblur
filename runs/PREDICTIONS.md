@@ -490,3 +490,23 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
 - **2026-11-24, P22** (coherence, 8 modes, 250 + 250 it): every 40-slice point runs ~870 s an iteration in the full engine (~400 s at
   20 slices), ~72 h in all against the 48 h limit. Perfect 30 / 40 and flat to 40 at both spreads are cancelled, to be rerun at
   140 + 140 it (`_m8i140`, ~41 h); the 20-slice points and flat to 30 (19 h, faster for a reason not looked into) finish as run.
+
+## P29. The equal-footing outer search (added 2026-11-27, before it runs)
+Why: the first search's A1 miss (3.6 A, 0.58 waves) was the largest, but its A1 grid was the coarsest (4.8 waves a step at
+80 mrad, one 5 x 5 stage, never refined after C1 and C3), and B2, A2, S3, A3 were handed over exactly. Every fitted lone-atom
+result starts from that search's misses. The user: "a rock solid outer search is needed ... add in S3 A3 too".
+- Recipe (ptyco_pipeline aberfit f7af0ac, campaign/zsearch.py): the same crystal, tableau and settings as the first search (5-cell
+  PTO/STO, 80 mrad, focal spread 2.5 A, source 0.1 A, probe held, 50 + 50 iterations per trial).
+- Blocks: C1 x C3, A1, B2, A2, S3, A3. Each starts on a 5 x 5 grid over +- its 95 % interval and halves its step each stage
+  until the step is <= 0.5 waves at the edge. Then one check round at the last step.
+- Size: 31 stages x 25 trials, ~930 GPU-h.
+- Start: C1, C3 and A1 as the first search drew them. B2, A2, S3 and A3 drawn from their intervals: 2.17, 2.04, 2.36 and
+  1.88 waves off. Every truth lies inside its first grid.
+- Expectation: every term ends within about a tenth of its last step, so <= 0.05 waves at the edge, A1 included; A1 is then
+  not the largest miss. No answer in the check round moves by more than a quarter of its step.
+- First search, for comparison: C1 0.21, C3 0.025, A1 0.58 waves.
+- If a term stays well above 0.05 waves, the crystal's data (probe held) pin that term less well. That is a property of
+  the measurement, and the paper states it.
+- What follows from the result: the capture-range test of the lone-atom fit (0.5, 1, 2 and 4 times these misses), and a
+  decision on redoing Figures 1-2. Any redo fits every searched term ("let our probe update be free"), and the fit gains
+  S3 and A3 first. The coherence full set waits for this.
