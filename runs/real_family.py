@@ -21,8 +21,13 @@ aligned DCOR/ASCOR the round aberrations up to fifth order are nulled through th
 and even the largest residual A5 (0.4 mm, large-gap pole piece) allows at least ~39 mrad at 300 kV. An S-CORR on a Themis Z keeps
 the phase within pi/2 to ~50 mrad at 30 kV (arXiv 2102.12159), ~36-40 mrad scaled to 300 kV. So a well-aligned Spectra-class
 instrument is flat to ~35-40 mrad (the family's 38 mrad row); flat to 30 is the same corrector less well aligned, the harder
-case the calibration is run on. Not modelled: the sixth-order three-lobe D6 (abTEM's polar terms stop at fifth order; the S-CORR
-corrects it, Uhlemann et al. 2022 offset it with D4).
+case the calibration is run on. This matches the corrector generations of Uhlemann et al. 2022 (Microsc. Microanal. 28 S1, 2630,
+Table 1, objective lens gap ~5 mm, 30-300 kV): conventional (Cs ~ 0) pi/4 to 27-30 mrad, limited by A5 = 6-3 mm; advanced (A5 ~ 0:
+DCOR/ASCOR and their kind) pi/4 to 35-40 mrad, limited by the sixth-order three-lobe D6 = 9-2 mm; a new three-hexapole design
+(D6 ~ 0) >= 70 mrad. LIMITATION, not modelled: abTEM's polar terms stop at fifth order, so the probe carries no D6. A real
+35-40 mrad corrector holds 2-9 mm of intrinsic D6, about 3-14 waves at 80 mrad if written like the other terms (theta^7 / 7);
+it is stable, and in the calibration it would sit in the m = 3 block with A2 and D4 (Uhlemann: D6 phase shifts of several pi/4
+can be counterbalanced by lower-order aberrations of the same multiplicity).
 
 THE FAMILY: C5 and A5 kept as measured (intrinsic) while that can reach X (to ~39 mrad); beyond, a better corrector, better aligned: every
 measured term and the aligned leftovers x s, C5 and A5 included (the old flat family's rule), stated in the row's note. Within the measured corrector: A1 = 1 A and C21 = 30 A (aligned leftovers, inside the pi/4 tolerance at 40 mrad,
