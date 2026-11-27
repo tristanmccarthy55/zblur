@@ -470,6 +470,28 @@ aperture flat only to x (`runs/flat_family.py`). y: depth FWHM from `analysis/bl
     for perfect 80 at 1e7.
   - In a crystal the tails beyond the scan land on other atoms, not on vacuum, so the lone atom overstates an extended
     probe's dose cost.
+- **2026-11-28, P24 (quick test of the terms the fit leaves; flat 40 at 80 mrad, no noise, C1 + A1 fit; images looked at).**
+  Continuous W80 and peak phase:
+  - Control (`_hq0`, no start error): 2.63 A, peak 1.22 rad (probe known: 2.72 A, 1.59 rad). As predicted (2.6-2.9).
+  - A2 off by 1/8 wave: 2.92 A (+0.29 on the control), one clean atom. Just inside the 0.3 A predicted.
+  - A2 off by 1/2 wave: 16.4 A; A3 off by 1/2 wave: 12.5 A. Both split into blobs about 5 A apart along the beam. As predicted.
+  - S3 off by 1/2 wave: 3.81 A (+1.18 on the control), with a faint second blob 5 A downstream (12 % of the phase beyond 3
+    slices). FAILS "within 0.3 A". The A1 fit takes much of it (A2 and A3 at the same 1/2 wave break), but not the 3/4
+    predicted.
+  - A2 off by 1/2 wave with A2 added to the fit: 2.83 A (+0.20). As predicted: fitting the term recovers it.
+  - Reading: a term the fit cannot absorb must be known to about 1/8 wave at the edge (A2: fine at 1/8, broken at 1/2); a
+    term in the fit is recovered from 1/2 wave. Partial absorption (S3 by A1) helps, but less than the rms projection says.
+- **2026-11-28, P26 (where flat 30's ghost comes from; true probe held with a fixed defocus error, no fit, no noise; images looked at).**
+  Beyond 3 slices of the peak (ghost line 12 %): flat 30 +2.5 A 10.3 % (W80 3.18 A, peak 1.35 rad); flat 30 +2.0 A 8.0 %
+  (3.24 A, 1.51 rad); perfect 80 +2.5 A 4.9 % (2.65 A). Known flat 30: 8.9 %, 3.56 A; the two-pass run: 18.6 %, 5.47 A.
+  - No ghost in any of the three. Per P26's own rule, neither the window nor the slice grid explains it: a pure +2.5 A
+    defocus error on the true probe makes no ghost.
+  - What differs in the two-pass probe, untested:
+    - the sign of its 2.51 A drift (it may be -2.5 in this convention);
+    - the search's C3 error (+49 A), which the C1 + A1 fit never touched (the A1-right start carried C3 +49 with 1.3 A of
+      defocus and had no ghost);
+    - the exported probe itself (support mask, normalisation).
+  - The draft's "appears as the defocus drifted" stays a correlation. A pure defocus error alone does not make it.
 - **2026-11-24, P20 fails** (`_a1fit`, A1 fitted alone, C1 / C3 left at the search's values; continuous W80, `_pu_noa1` in brackets):
   perfect 30 / 40 / 60 / 80 9.89 / 7.66 / 3.67 / 2.76 (9.00 / 7.08 / 3.51 / 2.55), flat to 30 / 40 / 60 4.45 / 2.90 / 2.75 (3.56 / 2.49 /
   2.36). Within 0.3 A at 60 and 80 only (2 of 7). Flat to 30: the far ghosts are gone, but the core is longer upstream and half as
