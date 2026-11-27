@@ -1,0 +1,18 @@
+# PRIORS for the calibration search (runs/real_family.py, 2026-11-27). true_C_A is the record only; the search draws its start
+# inside the bound and is confined to it. bound_A: +- per component (vectors) or +- (scalars). C10 row: C1 as the search sets
+# it (abTEM defocus = -C10, the tableaux' c1 column).
+key	name	n	m	true_C_A	true_phi_rad	bound_A	bound_waves_80	source
+C10	C1	1	0	-0.999827	0	3950	642	essentially unknown: 100 x our tableau's 95 % interval (39.5 A)
+C12	A1	1	2	1	0.4	5900	959	essentially unknown: 100 x our tableau's 95 % interval (59 A)
+C21	B2	2	1	30	1.1	56400	489	essentially unknown: 100 x our tableau's 95 % interval (564 A)
+C23	A2	2	3	106.198	0.67777	33400	290	essentially unknown: 100 x our tableau's 95 % interval (334 A)
+C30	C3	3	0	-5540.32	0	8040	4.18	our tableau's 95 % interval (campaign/arm200f_tableau.tsv, run 3)
+C32	S3	3	2	4268.15	3.03862	15520	8.07	our tableau's 95 % interval (campaign/arm200f_tableau.tsv, run 3)
+C34	A3	3	4	515.82	0.833831	9540	4.96	our tableau's 95 % interval (campaign/arm200f_tableau.tsv, run 3)
+C41	B4	4	1	144126	2.46091	2.029e+06	67.5	max(|Yucelen 2018|, |Sawada 2017| + its error)
+C43	D4	4	3	207339	0.058178	1.244e+06	41.4	max(|Yucelen 2018|, |Sawada 2017| + its error)
+C45	A4	4	5	54110.5	0.939336	155430	5.17	max(|Yucelen 2018|, |Sawada 2017| + its error)
+C50	C5	5	0	6.14e+06	0	1.062e+07	23.6	max(|Yucelen 2018|, |Sawada 2017| + its error)
+C52	S5	5	2	151712	0.2	900000	2	3 x Yucelen 2018 (the only measured value found)
+C54	R5	5	4	637189	0.7	3.78e+06	8.39	3 x Yucelen 2018 (the only measured value found)
+C56	A5	5	6	1.99e+06	0.436332	4e+06	8.88	Hartel 2019: 0.03-0.4 mm for DCOR/ASCOR-class correctors
