@@ -424,12 +424,15 @@ MAN="${ZB_ROOT}/manifests/${TAG}_${TS}.tsv"
 # was called from (not --chdir) -- the campaign driver cd's to its repo for the same reason. Under DRY_RUN, print it and
 # hand out numbered fake ids (a counter file, since each call runs in a $( ) subshell) so the dependencies can be read.
 if [ "$DRY_RUN" = "1" ]; then DRY_CTR="$(mktemp "${TMPDIR:-/tmp}/zbdry.XXXXXX")"; echo 0 >"$DRY_CTR"; trap 'rm -f "$DRY_CTR"' EXIT; fi
+# ZB_EXCLUDE (2026-11-28): nodes no job may land on, as --exclude on every sbatch. Default sea009 (its GPU fails: MATLAB
+# falls back to the CPU and is killed, 2026-11-25; still in service 2026-11-28). ZB_EXCLUDE= for none.
+ZB_EXCLUDE="${ZB_EXCLUDE-sea009}"
 submit() {
     if [ "$DRY_RUN" = "1" ]; then
         local n; n=$(( $(cat "$DRY_CTR") + 1 )); echo "$n" >"$DRY_CTR"
-        echo "DRY[${n}] (cd ${PTYCHO_ROOT}) sbatch $*" >&2; echo "dry${n}"
+        echo "DRY[${n}] (cd ${PTYCHO_ROOT}) sbatch ${ZB_EXCLUDE:+--exclude=${ZB_EXCLUDE} }$*" >&2; echo "dry${n}"
     else
-        ( cd "$PTYCHO_ROOT" && sbatch --parsable "$@" )
+        ( cd "$PTYCHO_ROOT" && sbatch --parsable ${ZB_EXCLUDE:+--exclude="$ZB_EXCLUDE"} "$@" )
     fi
 }
 [ "$DRY_RUN" = "1" ] || mkdir -p "${ZB_ROOT}/logs" "${ZB_ROOT}/psf" "${ZB_ROOT}/manifests"

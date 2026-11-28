@@ -116,10 +116,14 @@ git show 88e3ad4:runs/zb_submit.sh >"$T/zb_ref.sh"     # the last script before 
 norm(){ grep '^DRY\[' | sed -E "s#--wrap=[^|]*check_outputs\.py' recon '[^']*' \|\| exit 1; #--wrap=#; s#; rc=[$][?]; miss=0; for f in .*##; s/[0-9]{8}_[0-9]{6}/TS/g"; }
 e=""; for f in runs/g0.tsv runs/g0c_det.tsv runs/g0c_slices.tsv runs/g0d.tsv runs/g1.tsv runs/g1b.tsv runs/g1m.tsv runs/g1v2.tsv; do
   a="$(DRY_RUN=1 ALLOW_DIRTY=1 PTYCHO_ROOT="$PR" ZB_ROOT=/zbroot PACK_DIR=/pack SHARE=/share bash "$T/zb_ref.sh" "$f" 2>&1 | norm)"
-  b="$(dry env ALLOW_CUT=1 bash runs/zb_submit.sh "$f" | norm)"
+  b="$(dry env ALLOW_CUT=1 ZB_EXCLUDE= bash runs/zb_submit.sh "$f" | norm)"      # the reference predates ZB_EXCLUDE
   [ -n "$a" ] && [ "$a" = "$b" ] || { e="${e} ${f}"; diff <(echo "$a") <(echo "$b") | head -4 | cut -c1-200 || true; }
 done
 [ -z "$e" ] && ok "all 8 old files: names, exports, times, dependencies as 88e3ad4's script" || bad "lines differ from 88e3ad4's:${e}"
+# -- ZB_EXCLUDE (2026-11-28): by default every job keeps off sea009 (its GPU fails); ZB_EXCLUDE= drops the flag
+x="$(dry env ALLOW_CUT=1 bash runs/zb_submit.sh runs/g0.tsv | grep '^DRY\[')"
+nx=$(echo "$x" | grep -c .); ne=$(echo "$x" | grep -c -- '--exclude=sea009 ')
+[ "$nx" -gt 0 ] && [ "$nx" = "$ne" ] && ok "ZB_EXCLUDE: every sbatch (${nx}) carries --exclude=sea009 by default" || bad "ZB_EXCLUDE: ${ne} of ${nx} sbatch lines exclude sea009"
 # -- g1v2_redo.tsv is g1v2's first five rows, verbatim
 [ "$(grep -v '^#' runs/g1v2_redo.tsv)" = "$(grep -v '^#' runs/g1v2.tsv | head -5)" ] && ok "g1v2_redo.tsv = g1v2 rows 1-5, verbatim" || bad "g1v2_redo.tsv rows"
 # -- a side: named, exported, sized from the row; a row that cannot fit refused
